@@ -7,16 +7,47 @@ import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import "./globals.css";
+import { Metadata } from 'next'
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
 
-export const metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "Next.js and Supabase Starter Kit",
-  description: "The fastest way to build apps with Next.js and Supabase",
-};
+export const metadata: Metadata = {
+  title: {
+    default: 'SunlightTennis.ro - Tennis Club Management Platform',
+    template: '%s | SunlightTennis.ro'
+  },
+  description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
+  keywords: ['tennis', 'court booking', 'tennis club', 'tennis community', 'tennis lessons', 'tennis partner'],
+  authors: [{ name: 'SunlightTennis' }],
+  creator: 'SunlightTennis',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://sunlighttennis.ro',
+    title: 'SunlightTennis.ro - Tennis Club Management Platform',
+    description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
+    siteName: 'SunlightTennis.ro'
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'SunlightTennis.ro - Tennis Club Management Platform',
+    description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
+    creator: '@sunlighttennis'
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
+}
 
 const geistSans = Geist({
   display: "swap",
