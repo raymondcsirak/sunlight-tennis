@@ -11,7 +11,6 @@
 5. Set up Supabase project:
    - Create new project
    - Configure database region
-   - Set up development and production environments
 6. Install and configure Supabase client libraries.
 7. Create a Dockerfile for containerization.
 8. Set up Supabase real-time client:
@@ -29,11 +28,9 @@
 1. Implement database schema in Supabase:
    - Create initial migrations using Supabase CLI
    - Set up Row Level Security (RLS) policies
-   - Configure database backups
    - Implement database triggers for automated tasks
 2. Configure Supabase Authentication:
    - Set up email authentication
-   - Configure social providers (Google, Facebook)
    - Implement password reset flow
    - Set up email templates
 3. Set up monitoring:

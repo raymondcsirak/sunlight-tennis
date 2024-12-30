@@ -42,29 +42,28 @@ A user-friendly web platform designed to transform how tennis enthusiasts connec
 
 ```
 tennis-platform/
-├── src/                   # Source code for the application
-│   ├── app/               # Next.js app router
-│   │   ├── (auth)/        # Authentication routes
-│   │   ├── (dashboard)/   # User dashboard routes
-│   │   ├── (public)/      # Public-facing routes
-│   │   └── landing/       # Landing page components
-│   ├── components/        # Reusable UI components
-│   │   ├── ui/            # Shadcn/UI components
-│   │   ├── dashboard/     # Dashboard-specific components
-│   │   ├── auth/          # Authentication components
-│   │   └── landing/       # Landing page specific components
-│   ├── lib/               # Utility functions
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── utils/         # Helper utilities
-│   │   └── validators/    # Input validation schemas
-│   ├── server/            # Server-side logic
-│   │   ├── actions/       # Server Actions
-│   │   └── queries/       # Server-side data fetching
-│   ├── types/             # TypeScript type definitions
-│   └── public/            # Static assets (images, icons, etc.)
+├── app/               # Next.js app router
+│   ├── (auth)/        # Authentication routes
+│   ├── (dashboard)/   # User dashboard routes
+│   ├── (public)/      # Public-facing routes
+│   └── landing/       # Landing page components
+├── components/        # Reusable UI components
+│   ├── ui/            # Shadcn/UI components
+│   ├── dashboard/     # Dashboard-specific components
+│   ├── auth/          # Authentication components
+│   └── landing/       # Landing page specific components
+├── lib/               # Utility functions
+│   ├── hooks/         # Custom React hooks
+│   ├── utils/         # Helper utilities
+│   └── validators/    # Input validation schemas
+├── server/            # Server-side logic
+│   ├── actions/       # Server Actions
+│   └── queries/       # Server-side data fetching
+├── types/             # TypeScript type definitions
+└── public/            # Static assets (images, icons, etc.)
 ├── tests/                 # Test cases and related utilities
 ├── scripts/               # Deployment/build scripts
-├── .env                   # Environment variables
+├── .env.local             # Environment variables
 ├── .eslintrc.json         # ESLint configuration
 ├── .prettierrc            # Prettier configuration
 ├── Dockerfile             # Docker container configuration
