@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  // ... other config
+  images: {
+    domains: ['jaioqrcuedkbqjwglmnv.supabase.co'],
+  },
 }
 
 module.exports = nextConfig 

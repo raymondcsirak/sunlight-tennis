@@ -1,17 +1,14 @@
-import DeployButton from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
 import HeaderAuth from "@/components/header-auth";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import "./globals.css";
 import { Metadata } from 'next'
 
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
+const geistSans = Geist({
+  subsets: ["latin"],
+});
 
 export const metadata: Metadata = {
   title: {
@@ -49,16 +46,11 @@ export const metadata: Metadata = {
   },
 }
 
-const geistSans = Geist({
-  display: "swap",
-  subsets: ["latin"],
-});
-
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
     <html lang="en" className={geistSans.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
@@ -68,41 +60,74 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <main className="min-h-screen flex flex-col items-center">
-            <div className="flex-1 w-full flex flex-col gap-20 items-center">
-              <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-                <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-                  <div className="flex gap-5 items-center font-semibold">
-                    <Link href={"/"}>Next.js Supabase Starter</Link>
-                    <div className="flex items-center gap-2">
-                      <DeployButton />
-                    </div>
-                  </div>
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+          <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-sm border-b">
+            <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
+              <div className="flex justify-between items-center h-full">
+                <Link href="/" className="text-xl font-bold">
+                  SunlightTennis
+                </Link>
+                <div className="flex items-center gap-4">
+                  <HeaderAuth />
+                  <ThemeSwitcher />
                 </div>
-              </nav>
-              <div className="flex flex-col gap-20 max-w-5xl p-5">
-                {children}
               </div>
+            </nav>
+          </header>
 
-              <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-                <p>
-                  Powered by{" "}
-                  <a
-                    href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-                    target="_blank"
-                    className="font-bold hover:underline"
-                    rel="noreferrer"
-                  >
-                    Supabase
-                  </a>
-                </p>
-                <ThemeSwitcher />
-              </footer>
+          {children}
+
+          <footer className="bg-muted py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">About Us</h3>
+                  <p className="text-muted-foreground">
+                    SunlightTennis is your premier destination for tennis enthusiasts,
+                    offering court bookings, player matching, and progress tracking.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+                  <ul className="space-y-2">
+                    <li>
+                      <Link href="/courts" className="text-muted-foreground hover:text-foreground">
+                        Courts
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/partners" className="text-muted-foreground hover:text-foreground">
+                        Find Partners
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/profile" className="text-muted-foreground hover:text-foreground">
+                        Profile
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Contact</h3>
+                  <address className="text-muted-foreground not-italic">
+                    123 Tennis Court Street<br />
+                    Bucharest, Romania<br />
+                    <a href="tel:+40123456789" className="hover:text-foreground">
+                      +40 123 456 789
+                    </a>
+                    <br />
+                    <a href="mailto:contact@sunlighttennis.ro" className="hover:text-foreground">
+                      contact@sunlighttennis.ro
+                    </a>
+                  </address>
+                </div>
+              </div>
+              <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
+                <p>© {new Date().getFullYear()} SunlightTennis. All rights reserved.</p>
+              </div>
             </div>
-          </main>
+          </footer>
         </ThemeProvider>
       </body>
     </html>
-  );
+  )
 }
