@@ -83,6 +83,7 @@ State Management and Data Fetching
 React 19 and Next.js 15 Best Practices
 
 - use npm for package management
+- use the app router
 
 Component Architecture
 

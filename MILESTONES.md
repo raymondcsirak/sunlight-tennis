@@ -62,49 +62,331 @@
 
 ---
 
-## Milestone 4: User Profiles and Authorization
+## Milestone 4: User Profiles and Skill Assessment
 
 ### Tasks
 
-1. Implement Supabase auth hooks and middleware.
-2. Set up Row Level Security policies for user data.
+1. Implement enhanced skill assessment system:
+
+   - Create three-category assessment interface (Forehand, Backhand, Serve)
+   - Build 5-level rating system for each category
+   - Implement detailed skill descriptions
+   - Add assessment history tracking
+   - Create skill update validation logic
+
+2. Set up Row Level Security policies for user data:
+
+   - Configure profile access controls
+   - Set up skill data protection
+   - Implement achievement visibility rules
+
 3. Create user profile pages with:
-   - Self-rating mechanism (1-10 scale)
-   - Trophy showcase
-   - Performance history section
-4. Implement real-time profile features:
+
+   - Profile information display and editing
+   - Skill level visualization
+   - Assessment history
+   - Performance statistics
+
+4. Set up experience tracking system:
+
+   - Create player_experience table
+   - Implement XP calculation logic
+   - Add level progression tracking
+   - Build XP history visualization
+
+5. Implement real-time profile features:
+
    - Live status indicators
-   - Real-time profile updates
-   - Presence detection
-   - Online status management
-5. Set up storage buckets for user avatars and media.
-6. Implement real-time notifications:
-   - Friend requests
-   - Match invitations
-   - System announcements
+   - Real-time skill updates
+   - XP gain notifications
+   - Level-up alerts
 
----
+6. Set up storage buckets for user avatars and media:
+   - Configure Supabase storage
+   - Implement image upload
+   - Add avatar cropping
+   - Create media management utilities
 
-## Milestone 5: Partner Finder Feature
+## Milestone 5: User Dashboard Development
 
 ### Tasks
 
-1. Develop a matching algorithm using Supabase database functions.
-2. Implement real-time partner search:
-   - Live player availability updates
-   - Real-time matching notifications
-   - Presence-based search filtering
-   - Instant match confirmations
-3. Create match history tracking using PostgreSQL.
-4. Build real-time player discovery:
-   - Online player list
-   - Current activity status
-   - Court availability integration
-   - Instant messaging capabilities
+1. Create dashboard layout structure:
 
----
+   - Build responsive dashboard shell
+   - Implement navigation sidebar
+   - Create header with quick actions
+   - Add notification center
+   - Design mobile-responsive layout
 
-## Milestone 6: Court Rental System
+2. Implement main dashboard components:
+
+   - Player stats overview card
+     - Current level and XP
+     - Win/loss ratio
+     - Recent match results
+     - Next scheduled matches
+   - Skill visualization section
+     - Radar chart for skill levels
+     - Progress indicators
+     - Improvement suggestions
+   - Activity calendar
+     - Upcoming matches
+     - Court bookings
+     - Training sessions
+     - Tournament schedules
+
+3. Build analytics section:
+
+   - Match performance charts
+     - Win rate over time
+     - Match frequency
+     - Average match duration
+     - Preferred playing times
+   - Skill progression tracking
+     - Historical skill levels
+     - Improvement rate
+     - Training impact analysis
+   - Achievement progress
+     - XP gain rate
+     - Trophy completion status
+     - Milestone tracking
+     - Ranking in different categories
+
+4. Create notification system:
+
+   - Real-time notification center
+     - Match requests
+     - Court booking confirmations
+     - Achievement unlocks
+     - System announcements
+   - Notification preferences
+     - Category filtering
+     - Priority settings
+     - Delivery methods (in-app, email)
+   - Notification history
+     - Searchable archive
+     - Category filtering
+     - Action tracking
+
+5. Implement quick actions:
+
+   - Create match request
+   - Book court
+   - Find partner
+   - View match history
+   - Schedule training
+   - Update availability
+
+6. Add social features:
+
+   - Friends list
+     - Online status
+     - Recent activity
+     - Quick match creation
+   - Club announcements
+     - Upcoming events
+     - Tournament news
+     - Community updates
+   - Social feed
+     - Recent matches
+     - Achievement shares
+     - Club activities
+
+7. Create settings section:
+   - Profile settings
+   - Notification preferences
+   - Privacy controls
+   - Display preferences
+   - Account management
+
+### Testing Requirements
+
+1. Performance Testing:
+
+   - Dashboard load time optimization
+   - Real-time updates efficiency
+   - Data fetching strategies
+   - Component render optimization
+
+2. Usability Testing:
+
+   - Navigation patterns
+   - Information hierarchy
+   - Mobile responsiveness
+   - Accessibility compliance
+
+3. Integration Testing:
+
+   - Real-time data updates
+   - Notification delivery
+   - Action completions
+   - State management
+
+4. Analytics Accuracy:
+   - Statistics calculations
+   - Chart data accuracy
+   - Progress tracking
+   - Performance metrics
+
+## Implementation Details
+
+### Dashboard Layout
+
+```typescript
+// app/(dashboard)/dashboard/layout.tsx
+export default function DashboardLayout({
+  children
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader />
+        <main className="flex-1 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {children}
+          </div>
+        </main>
+      </div>
+      <NotificationCenter />
+    </div>
+  )
+}
+```
+
+### Analytics Components
+
+```typescript
+// components/dashboard/SkillRadarChart.tsx
+import { RadarChart } from 'recharts';
+
+export function SkillRadarChart({ skills }: { skills: PlayerSkills }) {
+  const data = [
+    { subject: 'Forehand', value: skills.forehandLevel },
+    { subject: 'Backhand', value: skills.backhandLevel },
+    { subject: 'Serve', value: skills.serveLevel },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Skill Levels</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <RadarChart data={data} {...chartConfig} />
+      </CardContent>
+    </Card>
+  )
+}
+```
+
+### Real-time Features
+
+```typescript
+// hooks/useNotifications.ts
+export function useNotifications() {
+  const supabase = useSupabaseClient();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel("notifications")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          setNotifications((prev) => [payload.new, ...prev]);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
+
+  return notifications;
+}
+```
+
+## Milestone 6: Partner Finder and Match System
+
+### Tasks
+
+1. Create match request system:
+
+   - Build request creation interface
+   - Implement date/time selection
+   - Add court preference selection
+   - Create notes/requirements field
+
+2. Develop match browsing system:
+
+   - Create request listing interface
+   - Implement filtering (date, time, skill level)
+   - Add sorting capabilities
+   - Build search functionality
+
+3. Implement match confirmation flow:
+
+   - Create request acceptance system
+   - Build confirmation notifications
+   - Implement automatic court booking
+   - Add calendar integration
+
+4. Build post-match system:
+
+   - Create match result recording
+   - Implement winner selection
+   - Add score tracking
+   - Build match history
+
+5. Develop XP and achievement integration:
+   - Implement match completion XP
+   - Add winning bonus XP
+   - Create streak tracking
+   - Build trophy unlocks
+
+## Milestone 7: Trophy and Achievement System
+
+### Tasks
+
+1. Implement platform engagement trophies:
+
+   - First login detection
+   - Login streak tracking
+   - Profile completion monitoring
+   - Page visit counting
+
+2. Create match achievement trophies:
+
+   - Victory tracking
+   - Streak monitoring
+   - Tournament participation
+   - Special achievements
+
+3. Build activity-based trophies:
+
+   - Booking milestones
+   - Training session achievements
+   - Court usage tracking
+   - Community participation
+
+4. Develop trophy showcase:
+   - Create trophy display UI
+   - Add trophy details view
+   - Implement progress tracking
+   - Build achievement notifications
+
+## Milestone 7: Court Rental System
 
 ### Tasks
 
@@ -131,7 +413,7 @@
 
 ---
 
-## Milestone 7: Training Sessions
+## Milestone 8: Training Sessions
 
 ### Tasks
 
@@ -150,28 +432,6 @@
    - Session progress tracking
    - Dynamic skill assessments
    - Instant coach communications
-
----
-
-## Milestone 8: Gamification System
-
-### Tasks
-
-1. Design real-time achievement system:
-   - Instant trophy notifications
-   - Live progress updates
-   - Real-time leaderboards
-   - Achievement broadcasts
-2. Implement dynamic scoring:
-   - Live point calculations
-   - Real-time rank updates
-   - Instant milestone notifications
-   - Performance streak tracking
-3. Create community features:
-   - Live achievement feeds
-   - Real-time challenges
-   - Instant congratulations system
-   - Social interaction tracking
 
 ---
 
@@ -202,42 +462,22 @@
 
 ---
 
-## Milestone 10: Performance Analytics Dashboard
+## Milestone 10: Analytics and Performance
 
 ### Tasks
 
-1. Create real-time analytics:
-   - Live performance metrics
-   - Real-time court utilization
-   - Active user tracking
-   - Revenue monitoring
-2. Implement dynamic visualizations:
-   - Live data updates
-   - Real-time charts
-   - Interactive filters
-   - Automated refreshes
-3. Add monitoring features:
-   - Connection health tracking
-   - Performance metrics
-   - Error monitoring
-   - Usage analytics
+1. Implement performance tracking:
 
----
+   - Match statistics
+   - Skill progression
+   - XP gain analytics
+   - Achievement metrics
 
-## Milestone 11: Payment Integration
-
-### Tasks
-
-1. Implement real-time payment features:
-   - Instant payment confirmation
-   - Live transaction tracking
-   - Real-time refund status
-   - Balance updates
-2. Create payment monitoring:
-   - Transaction webhooks
-   - Payment status updates
-   - Failure notifications
-   - Subscription tracking
+2. Create admin analytics:
+   - User engagement metrics
+   - Court utilization stats
+   - Revenue tracking
+   - System performance monitoring
 
 ---
 

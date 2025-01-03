@@ -92,31 +92,208 @@ tennis-platform/
 
 ## 🏆 Gamification System
 
-### Trophy Categories
+### Skill Assessment System
 
-1. **Match Achievements**
+#### Self-Assessment Categories
 
-   - First Match Played
-   - Consecutive Winning Streak
-   - Tournament Participation
-   - Skill Level Milestones
+Each category is rated on a 5-level scale:
 
-2. **Platform Engagement**
+1. **Forehand**
 
-   - Newcomer Badge
-   - Community Leader
-   - Long-term Membership Rewards
+   - Level 1: Beginner - Inconsistent contact, learning basic form
+   - Level 2: Novice - Can maintain basic rallies, developing consistency
+   - Level 3: Intermediate - Consistent form, can direct the ball with some power
+   - Level 4: Advanced - Good control, can generate power and spin
+   - Level 5: Expert - Excellent placement, variety of shots, consistent weapon
 
-3. **Activity Trophies**
-   - Training Enthusiast
-   - Court Booking Champion
-   - Skill Progression Tracker
+2. **Backhand**
+
+   - Level 1: Beginner - Basic contact, learning proper grip
+   - Level 2: Novice - Can return with basic consistency
+   - Level 3: Intermediate - Stable form, developing directional control
+   - Level 4: Advanced - Good control on both slice and topspin
+   - Level 5: Expert - Reliable shot, can attack and defend effectively
+
+3. **Serve**
+   - Level 1: Beginner - Learning basic motion and toss
+   - Level 2: Novice - Can get serves in, developing consistency
+   - Level 3: Intermediate - Consistent first serve, developing second serve
+   - Level 4: Advanced - Reliable first and second serves, some power
+   - Level 5: Expert - Various serve types, can target spots effectively
+
+### Experience (XP) System
+
+#### XP Earning Activities
+
+1. **Platform Engagement**
+
+   - First Login: 100 XP
+   - Daily Login Streak: 20 XP/day
+   - Profile Completion: 200 XP
+   - Page Visits:
+     - Every 10 visits: 50 XP
+     - Every 50 visits: 300 XP
+     - Every 100 visits: 1000 XP
+
+2. **Match Activity**
+
+   - Match Participation: 100 XP
+   - Match Victory: 200 XP
+   - Tournament Entry: 300 XP
+   - Tournament Victory: 1000 XP
+   - Winning Streak Bonuses:
+     - 3 matches: 500 XP
+     - 5 matches: 1000 XP
+     - 10 matches: 2500 XP
+
+3. **Booking Activity**
+   - First Court Booking: 100 XP
+   - Every 5 Bookings: 250 XP
+   - Every 20 Bookings: 1000 XP
+   - Training Session Booking: 150 XP
+   - Group Training Participation: 200 XP
+
+### Trophy System
+
+#### Platform Engagement Trophies
+
+1. **Welcome Trophies**
+
+   - 🎾 First Serve (First Login)
+   - 📱 Digital Champion (Complete Profile)
+   - 🌟 Rising Star (Reach 1000 XP)
+
+2. **Dedication Trophies**
+   - 📅 Weekly Warrior (7-day login streak)
+   - 🏆 Monthly Master (30-day login streak)
+   - 💫 Platform Pioneer (100 page visits)
+   - 🎯 Engagement Expert (500 page visits)
+
+#### Match Achievement Trophies
+
+1. **Victory Trophies**
+
+   - 🥉 Bronze Racquet (First Match Win)
+   - 🥈 Silver Server (5 Match Wins)
+   - 🥇 Golden Games (25 Match Wins)
+   - 👑 Court King/Queen (50 Match Wins)
+
+2. **Streak Trophies**
+
+   - 🔥 Hot Streak (3 consecutive wins)
+   - ⚡ Lightning Strike (5 consecutive wins)
+   - 💫 Unstoppable (10 consecutive wins)
+
+3. **Tournament Trophies**
+   - 🏅 Tournament Debut (First Tournament Entry)
+   - 🏆 Tournament Triumph (Tournament Victory)
+   - 👑 Grand Slam (Win 4 Tournaments)
+
+#### Activity Trophies
+
+1. **Booking Achievements**
+
+   - 📅 First Timer (First Court Booking)
+   - 🎾 Regular Player (10 Court Bookings)
+   - ⭐ Court Champion (50 Court Bookings)
+   - 💫 Booking Master (100 Court Bookings)
+
+2. **Training Achievements**
+   - 📚 Learning Lover (First Training Session)
+   - 📖 Training Enthusiast (10 Training Sessions)
+   - 🎓 Training Master (25 Training Sessions)
+   - 🏆 Elite Student (50 Training Sessions)
+
+### Level System
+
+- Players advance through levels based on XP
+- Each level unlocks new features or perks
+- Level Thresholds:
+  - Level 1: 0 XP
+  - Level 2: 1,000 XP
+  - Level 3: 2,500 XP
+  - Level 4: 5,000 XP
+  - Level 5: 10,000 XP
+  - Additional levels continue with appropriate scaling
 
 ### Design Principles
 
 - Transparent and motivational progression system
 - Persistent achievement tracking
 - Encouraging user growth and community participation
+
+## 🤝 Partner Finder System
+
+### Match Request System
+
+#### Creating Requests
+
+1. **Request Details**
+
+   - Preferred Date and Time
+   - Duration (1 hour/1.5 hours/2 hours)
+   - Skill Level Preferences
+   - Court Preferences (if any)
+   - Additional Notes
+
+2. **Request Visibility**
+   - Visible to players within ±1 skill level by default
+   - Option to make request visible to all players
+   - Option to make request private (invite-only)
+
+#### Browsing Requests
+
+1. **Filter Options**
+
+   - Date Range
+   - Time of Day
+   - Skill Level
+   - Court Type
+   - Request Status (Open/Pending/Confirmed)
+
+2. **Sorting Options**
+   - Date (Newest/Oldest)
+   - Skill Level Match (Best Match First)
+   - Time of Day
+
+### Match Confirmation Flow
+
+1. **Request Stage**
+
+   - Player A creates match request
+   - Request appears in matching system
+
+2. **Acceptance Stage**
+
+   - Player B accepts request
+   - Player A receives notification
+   - Both players must confirm within 24 hours
+
+3. **Confirmation Stage**
+   - System automatically books court if available
+   - Both players receive confirmation
+   - Calendar invites sent to both players
+
+### Post-Match System
+
+1. **Match Result Recording**
+
+   - Automatic notification 15 minutes after scheduled end time
+   - Both players must confirm match result
+   - Score entry required for XP calculation
+   - Dispute resolution system if players disagree
+
+2. **XP and Trophy Distribution**
+
+   - Winner receives victory XP
+   - Both players receive participation XP
+   - Relevant trophies awarded automatically
+   - Streak calculations updated
+
+3. **Match History**
+   - Result recorded in both players' histories
+   - Statistics updated (win/loss ratio, total matches, etc.)
+   - Achievement progress updated
 
 ## 🎾 Core Features
 
@@ -487,6 +664,65 @@ async function LandingPage() {
      type TEXT,
      earned_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
      metadata JSONB,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+   );
+   ```
+
+### Gamification and Matchmaking Entities
+
+6. **Match Requests**
+
+   ```sql
+   CREATE TABLE match_requests (
+     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+     creator_id UUID REFERENCES auth.users(id),
+     preferred_date DATE,
+     preferred_time TIME,
+     duration INTERVAL,
+     skill_level_min INTEGER,
+     skill_level_max INTEGER,
+     court_preference UUID REFERENCES courts(id),
+     status TEXT DEFAULT 'open',
+     notes TEXT,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+   );
+   ```
+
+7. **Match Request Responses**
+
+   ```sql
+   CREATE TABLE match_request_responses (
+     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+     request_id UUID REFERENCES match_requests(id),
+     responder_id UUID REFERENCES auth.users(id),
+     status TEXT DEFAULT 'pending',
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+   );
+   ```
+
+8. **Player Experience**
+
+   ```sql
+   CREATE TABLE player_experience (
+     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+     user_id UUID REFERENCES auth.users(id),
+     total_xp INTEGER DEFAULT 0,
+     current_level INTEGER DEFAULT 1,
+     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+   );
+   ```
+
+9. **Player Skills**
+
+   ```sql
+   CREATE TABLE player_skills (
+     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+     user_id UUID REFERENCES auth.users(id),
+     forehand_level INTEGER DEFAULT 1,
+     backhand_level INTEGER DEFAULT 1,
+     serve_level INTEGER DEFAULT 1,
+     last_assessed_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
      created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
    );
    ```
