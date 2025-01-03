@@ -30,7 +30,6 @@
    - Set up Row Level Security (RLS) policies
    - Implement database triggers for automated tasks
 2. Configure Supabase Authentication:
-   - Set up email authentication
    - Implement password reset flow
    - Set up email templates
 3. Set up monitoring:
