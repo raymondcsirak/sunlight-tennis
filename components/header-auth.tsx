@@ -1,70 +1,42 @@
-import { signOutAction } from "@/app/actions";
-import { hasEnvVars } from "@/utils/supabase/check-env-vars";
-import Link from "next/link";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { createClient } from "@/utils/supabase/server";
+"use client"
 
-export default async function AuthButton() {
-  const supabase = await createClient();
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { createBrowserClient } from "@supabase/ssr"
+import { Button } from "@/components/ui/button"
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function HeaderAuth({
+  email,
+}: {
+  email: string | undefined
+}) {
+  const pathname = usePathname()
+  const isAuthPage = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")
 
-  if (!hasEnvVars) {
-    return (
-      <>
-        <div className="flex gap-4 items-center">
-          <div>
-            <Badge
-              variant={"default"}
-              className="font-normal pointer-events-none"
-            >
-              Please update .env.local file with anon key and url
-            </Badge>
-          </div>
-          <div className="flex gap-2">
-            <Button
-              asChild
-              size="sm"
-              variant={"outline"}
-              disabled
-              className="opacity-75 cursor-none pointer-events-none"
-            >
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-            <Button
-              asChild
-              size="sm"
-              variant={"default"}
-              disabled
-              className="opacity-75 cursor-none pointer-events-none"
-            >
-              <Link href="/sign-up">Sign up</Link>
-            </Button>
-          </div>
-        </div>
-      </>
-    );
+  if (isAuthPage) {
+    return null
   }
-  return user ? (
+
+  if (!email) {
+    return (
+      <Button variant="outline" asChild>
+        <Link href="/sign-in">Sign in</Link>
+      </Button>
+    )
+  }
+
+  return (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
+      <Button variant="ghost" asChild>
+        <Link href="/profile" className="text-sm text-muted-foreground hover:text-foreground">
+          {email}
+        </Link>
+      </Button>
+      <form action="/auth/sign-out" method="post">
+        <Button variant="outline" size="sm">
           Sign out
         </Button>
       </form>
     </div>
-  ) : (
-    <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
-        <Link href="/sign-in">Sign in</Link>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <Link href="/sign-up">Sign up</Link>
-      </Button>
-    </div>
-  );
+  )
 }

@@ -6,6 +6,7 @@ Project Management:
 - Update both PRD.md and MILESTONES.md with new features and requirements, or remove features and requirements that are no longer needed
 - Ensure new code aligns with defined milestones
 - Maintain consistency with existing components
+- project was installed with "npx create-next-app -e with-supabase" so corresponding authentication and sign it functionality is already implemented
 
 Request Analysis
 

@@ -5,8 +5,10 @@ import { ThemeProvider } from "next-themes";
 import Link from "next/link";
 import "./globals.css";
 import { Metadata } from 'next'
+import { createServerClient } from "@supabase/ssr"
+import { cookies } from "next/headers"
 
-const geistSans = Geist({
+const geist = Geist({
   subsets: ["latin"],
 });
 
@@ -46,13 +48,34 @@ export const metadata: Metadata = {
   },
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const cookieStore = await cookies()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return cookieStore.get(name)?.value
+        },
+        set(name: string, value: string, options: any) {
+          // This is a server component, so we don't need to set cookies
+        },
+        remove(name: string, options: any) {
+          // This is a server component, so we don't need to remove cookies
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
   return (
-    <html lang="en" className={geistSans.className} suppressHydrationWarning>
+    <html lang="en" className={geist.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
         <ThemeProvider
           attribute="class"
@@ -67,7 +90,7 @@ export default function RootLayout({
                   SunlightTennis
                 </Link>
                 <div className="flex items-center gap-4">
-                  <HeaderAuth />
+                  <HeaderAuth email={user?.email} />
                   <ThemeSwitcher />
                 </div>
               </div>
