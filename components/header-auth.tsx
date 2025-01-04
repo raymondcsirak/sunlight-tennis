@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { createBrowserClient } from "@supabase/ssr"
 import { Button } from "@/components/ui/button"
 
@@ -11,7 +11,19 @@ export default function HeaderAuth({
   email: string | undefined
 }) {
   const pathname = usePathname()
+  const router = useRouter()
   const isAuthPage = pathname.startsWith("/sign-in") || pathname.startsWith("/sign-up")
+
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push("/")
+    router.refresh()
+  }
 
   if (isAuthPage) {
     return null
@@ -32,11 +44,9 @@ export default function HeaderAuth({
           {email}
         </Link>
       </Button>
-      <form action="/auth/sign-out" method="post">
-        <Button variant="outline" size="sm">
-          Sign out
-        </Button>
-      </form>
+      <Button variant="outline" size="sm" onClick={handleSignOut}>
+        Sign out
+      </Button>
     </div>
   )
 }
