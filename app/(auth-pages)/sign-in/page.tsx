@@ -8,37 +8,62 @@ import Link from "next/link";
 export default async function Login(props: { searchParams: Promise<Message> }) {
   const searchParams = await props.searchParams;
   return (
-    <form className="flex-1 flex flex-col min-w-64">
-      <h1 className="text-2xl font-medium">Sign in</h1>
-      <p className="text-sm text-foreground">
-        Don't have an account?{" "}
-        <Link className="text-foreground font-medium underline" href="/sign-up">
-          Sign up
-        </Link>
-      </p>
-      <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
-        <Label htmlFor="email">Email</Label>
-        <Input name="email" placeholder="you@example.com" required />
-        <div className="flex justify-between items-center">
-          <Label htmlFor="password">Password</Label>
-          <Link
-            className="text-xs text-foreground underline"
-            href="/forgot-password"
-          >
-            Forgot Password?
-          </Link>
+    <div className="flex-1 flex flex-col items-center justify-center py-10">
+      <div className="w-[350px] space-y-6">
+        <div className="space-y-2 text-center">
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+          <p className="text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link className="font-medium text-primary underline underline-offset-4 hover:text-primary/90" href="/sign-up">
+              Sign up
+            </Link>
+          </p>
         </div>
-        <Input
-          type="password"
-          name="password"
-          placeholder="Your password"
-          required
-        />
-        <SubmitButton pendingText="Signing In..." formAction={signInAction}>
-          Sign in
-        </SubmitButton>
-        <FormMessage message={searchParams} />
+        <form className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input 
+              id="email"
+              name="email" 
+              placeholder="you@example.com" 
+              type="email"
+              autoCapitalize="none"
+              autoComplete="email"
+              autoCorrect="off"
+              required 
+            />
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                className="text-sm text-muted-foreground underline-offset-4 hover:text-primary"
+                href="/forgot-password"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              autoCapitalize="none"
+              autoComplete="current-password"
+              autoCorrect="off"
+              placeholder="Your password"
+              required
+            />
+          </div>
+          <SubmitButton 
+            className="w-full"
+            pendingText="Signing in..." 
+            formAction={signInAction}
+          >
+            Sign in
+          </SubmitButton>
+          <FormMessage message={searchParams} />
+        </form>
       </div>
-    </form>
+    </div>
   );
 }
