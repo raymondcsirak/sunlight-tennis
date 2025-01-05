@@ -3,6 +3,15 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "postgis";
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
 
+-- Create functions for triggers
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = TIMEZONE('utc'::text, NOW());
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
 -- Create enum types
 CREATE TYPE user_status AS ENUM ('online', 'playing', 'away');
 CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled');
@@ -123,6 +132,7 @@ ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE player_experience ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS Policies
 
@@ -181,14 +191,18 @@ CREATE POLICY "System can update experience"
     USING (true)
     WITH CHECK (true);
 
--- Create functions and triggers
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = TIMEZONE('utc'::text, NOW());
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- User Settings: users can view and update their own settings
+CREATE POLICY "Users can view own settings"
+    ON user_settings FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own settings"
+    ON user_settings FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own settings"
+    ON user_settings FOR UPDATE
+    USING (auth.uid() = user_id);
 
 -- Create storage bucket for avatars
 INSERT INTO storage.buckets (id, name, public) 

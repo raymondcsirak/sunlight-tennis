@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
+import { useRouter } from "next/navigation"
 
 interface EditProfileDialogProps {
   user: User
@@ -29,6 +30,7 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
   const [fullName, setFullName] = useState(profile?.full_name || "")
   const [phone, setPhone] = useState(profile?.phone || "")
   const { toast } = useToast()
+  const router = useRouter()
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,6 +42,13 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
     setLoading(true)
 
     try {
+      console.log("Updating profile with:", {
+        id: user.id,
+        full_name: fullName,
+        phone,
+        updated_at: new Date().toISOString(),
+      })
+
       const { error } = await supabase
         .from("profiles")
         .upsert({
@@ -56,7 +65,12 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
         description: "Your profile has been updated successfully.",
       })
       setOpen(false)
+      
+      // Force a cache revalidation and client refresh
+      router.refresh()
+      router.push('/profile')
     } catch (error) {
+      console.error("Error updating profile:", error)
       toast({
         title: "Error",
         description: "There was an error updating your profile.",

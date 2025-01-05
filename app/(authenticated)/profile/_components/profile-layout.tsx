@@ -108,8 +108,11 @@ export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
               onUpload={updateAvatar}
             />
             <div className="text-center">
-              <p className="font-medium">{profile?.full_name || user.email}</p>
+              <h2 className="text-lg font-semibold">{profile?.full_name || "Add your name"}</h2>
               <p className="text-sm text-muted-foreground">{user.email}</p>
+              {profile?.phone && (
+                <p className="text-sm text-muted-foreground">{profile.phone}</p>
+              )}
             </div>
             <EditProfileDialog user={user} profile={profile}>
               <Button variant="outline" size="sm" className="w-full">
