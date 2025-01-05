@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -51,24 +51,69 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Load initial settings if not provided
+  useEffect(() => {
+    async function loadSettings() {
+      const { data, error } = await supabase
+        .from("user_settings")
+        .select("*")
+        .eq("user_id", userId)
+        .single()
+
+      if (error) {
+        console.error("Error loading settings:", error)
+        return
+      }
+
+      if (data) {
+        console.log("Loaded settings:", data)
+        setSettings(data)
+      }
+    }
+
+    if (!initialSettings) {
+      loadSettings()
+    }
+  }, [userId, initialSettings, supabase])
+
   const handleSaveSettings = async () => {
     setSaving(true)
     try {
-      const { error } = await supabase
+      console.log("Saving settings:", {
+        user_id: userId,
+        ...settings,
+      })
+
+      const { data, error } = await supabase
         .from("user_settings")
-        .upsert({
-          user_id: userId,
-          ...settings,
-          updated_at: new Date().toISOString(),
-        })
+        .upsert(
+          {
+            user_id: userId,
+            ...settings,
+            updated_at: new Date().toISOString(),
+          },
+          {
+            onConflict: 'user_id',
+            ignoreDuplicates: false
+          }
+        )
+        .select()
 
       if (error) throw error
+
+      console.log("Save response:", data)
+      
+      // Update local state with the saved data
+      if (data && data[0]) {
+        setSettings(data[0])
+      }
 
       toast({
         title: "Settings saved",
         description: "Your preferences have been updated successfully.",
       })
     } catch (error) {
+      console.error("Error saving settings:", error)
       toast({
         title: "Error",
         description: "There was an error saving your settings.",
