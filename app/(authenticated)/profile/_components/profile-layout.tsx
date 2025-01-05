@@ -9,7 +9,7 @@ import { useCallback } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { CalendarIcon, MessageSquare, Trophy, Users } from "lucide-react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 interface ProfileLayoutProps {
@@ -44,6 +44,7 @@ const menuItems = [
 export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
   const { toast } = useToast()
   const pathname = usePathname()
+  const router = useRouter()
   
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -52,34 +53,58 @@ export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
 
   const updateAvatar = useCallback(async (url: string) => {
     try {
+      console.log("Received URL:", url)
+      // Extract the path from the signed URL if it exists
+      let avatar_url = url
+      if (url) {
+        const urlObj = new URL(url)
+        const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/)
+        if (pathMatch) {
+          avatar_url = pathMatch[1]
+        }
+      }
+      console.log("Storing avatar_url:", avatar_url)
+
       const { error } = await supabase
         .from("profiles")
         .upsert({
           id: user.id,
-          avatar_url: url,
+          avatar_url: avatar_url,
           updated_at: new Date().toISOString(),
         })
 
       if (error) throw error
+
+      // Refresh the page to show updated avatar
+      router.refresh()
     } catch (error) {
+      console.error("Error updating avatar:", error)
       toast({
         title: "Error",
         description: "There was an error updating your avatar.",
         variant: "destructive",
       })
     }
-  }, [user.id, supabase, toast])
+  }, [user.id, supabase, toast, router])
+
+  // Get the full avatar URL if we have a path
+  const avatarUrl = profile?.avatar_url
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar_url}`
+    : undefined
+
+  console.log("Profile:", profile)
+  console.log("Avatar URL:", avatarUrl)
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)]">
+    <div className="flex min-h-[calc(100vh-4rem)] pt-16">
       {/* Sidebar */}
-      <div className="w-64 border-r bg-muted/40 p-6">
+      <div className="sticky top-16 h-[calc(100vh-4rem)] w-64 overflow-y-auto border-r bg-muted/40 p-6">
         <div className="flex flex-col gap-6">
           {/* Profile Section */}
           <div className="flex flex-col items-center space-y-4">
             <AvatarUpload
               user={user}
-              url={profile?.avatar_url}
+              url={avatarUrl}
               onUpload={updateAvatar}
             />
             <div className="text-center">
@@ -116,7 +141,7 @@ export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 overflow-y-auto p-6">
         {children}
       </div>
     </div>

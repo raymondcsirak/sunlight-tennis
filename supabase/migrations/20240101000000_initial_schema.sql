@@ -22,6 +22,29 @@ CREATE TABLE profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
+-- Create user_settings table
+CREATE TABLE user_settings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) NOT NULL UNIQUE,
+    email_notifications BOOLEAN DEFAULT true,
+    push_notifications BOOLEAN DEFAULT true,
+    match_reminders BOOLEAN DEFAULT true,
+    court_updates BOOLEAN DEFAULT true,
+    privacy_profile_visible BOOLEAN DEFAULT true,
+    privacy_skill_visible BOOLEAN DEFAULT true,
+    privacy_history_visible BOOLEAN DEFAULT true,
+    theme TEXT DEFAULT 'system',
+    language TEXT DEFAULT 'en',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Add trigger for user_settings updated_at
+CREATE TRIGGER update_user_settings_updated_at
+    BEFORE UPDATE ON user_settings
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- Create courts table
 CREATE TABLE courts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
@@ -77,12 +100,29 @@ CREATE TABLE achievements (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
+-- Create player_experience table
+CREATE TABLE player_experience (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) NOT NULL UNIQUE,
+    total_xp INTEGER DEFAULT 0,
+    current_level INTEGER DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
+);
+
+-- Add trigger for player_experience updated_at
+CREATE TRIGGER update_player_experience_updated_at
+    BEFORE UPDATE ON player_experience
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
 -- Set up Row Level Security (RLS)
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE courts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE player_experience ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS Policies
 
@@ -90,6 +130,10 @@ ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Profiles are viewable by everyone"
     ON profiles FOR SELECT
     USING (true);
+
+CREATE POLICY "Users can insert own profile"
+    ON profiles FOR INSERT
+    WITH CHECK (auth.uid() = id);
 
 CREATE POLICY "Users can update own profile"
     ON profiles FOR UPDATE
@@ -127,6 +171,16 @@ CREATE POLICY "Achievements are viewable by everyone"
     ON achievements FOR SELECT
     USING (true);
 
+-- Player Experience: users can view their own experience, system can update
+CREATE POLICY "Users can view own experience"
+    ON player_experience FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "System can update experience"
+    ON player_experience FOR UPDATE
+    USING (true)
+    WITH CHECK (true);
+
 -- Create functions and triggers
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -135,6 +189,36 @@ BEGIN
     RETURN NEW;
 END;
 $$ language 'plpgsql';
+
+-- Create storage bucket for avatars
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('avatars', 'avatars', true);
+
+-- Create storage policies for avatars bucket
+CREATE POLICY "Avatar images are publicly accessible"
+    ON storage.objects FOR SELECT
+    USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can upload their own avatar"
+    ON storage.objects FOR INSERT
+    WITH CHECK (
+        bucket_id = 'avatars' AND
+        auth.uid()::text = (storage.foldername(name))[1]
+    );
+
+CREATE POLICY "Users can update their own avatar"
+    ON storage.objects FOR UPDATE
+    USING (
+        bucket_id = 'avatars' AND
+        auth.uid()::text = (storage.foldername(name))[1]
+    );
+
+CREATE POLICY "Users can delete their own avatar"
+    ON storage.objects FOR DELETE
+    USING (
+        bucket_id = 'avatars' AND
+        auth.uid()::text = (storage.foldername(name))[1]
+    );
 
 -- Add updated_at triggers to all tables
 CREATE TRIGGER update_profiles_updated_at
