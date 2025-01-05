@@ -1,54 +1,51 @@
 "use client"
 
-import { User } from "@supabase/supabase-js"
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { createBrowserClient } from "@supabase/ssr"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input"
+import { User } from "@supabase/supabase-js"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 
 interface EditProfileDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
   user: User
-  profile: {
-    full_name?: string
-    avatar_url?: string
-  } | null
+  profile: any
+  children: React.ReactNode
 }
 
-export function EditProfileDialog({ 
-  open, 
-  onOpenChange,
-  user,
-  profile 
-}: EditProfileDialogProps) {
-  const [isLoading, setIsLoading] = useState(false)
+export function EditProfileDialog({ user, profile, children }: EditProfileDialogProps) {
+  const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [fullName, setFullName] = useState(profile?.full_name || "")
+  const [phone, setPhone] = useState(profile?.phone || "")
+  const { toast } = useToast()
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-  const router = useRouter()
-  const { toast } = useToast()
 
-  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsLoading(true)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
 
     try {
-      const formData = new FormData(event.currentTarget)
-      const full_name = formData.get("full_name") as string
-      const avatar_url = formData.get("avatar_url") as string
-
       const { error } = await supabase
         .from("profiles")
         .upsert({
           id: user.id,
-          full_name,
-          avatar_url,
+          full_name: fullName,
+          phone,
           updated_at: new Date().toISOString(),
         })
 
@@ -58,57 +55,56 @@ export function EditProfileDialog({
         title: "Profile updated",
         description: "Your profile has been updated successfully.",
       })
-
-      router.refresh()
-      onOpenChange(false)
+      setOpen(false)
     } catch (error) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: "There was an error updating your profile.",
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setLoading(false)
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Profile</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={onSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name</Label>
-            <Input
-              id="full_name"
-              name="full_name"
-              defaultValue={profile?.full_name || ""}
-              placeholder="Enter your full name"
-            />
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Edit profile</DialogTitle>
+            <DialogDescription>
+              Make changes to your profile here. Click save when you're done.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="full-name">Full name</Label>
+              <Input
+                id="full-name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                placeholder="Enter your full name"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="phone">Phone number</Label>
+              <Input
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="Enter your phone number"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="avatar_url">Avatar URL</Label>
-            <Input
-              id="avatar_url"
-              name="avatar_url"
-              defaultValue={profile?.avatar_url || ""}
-              placeholder="Enter avatar URL"
-            />
-          </div>
-          <div className="flex justify-end gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
+          <DialogFooter>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save changes"}
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save"}
-            </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

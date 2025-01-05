@@ -92,30 +92,18 @@
    - Add notification settings
    - Build account management
 
-5. Social integration:
-   - Friend connections
-   - Profile visibility settings
-   - Social preferences
-   - Activity feed
-
 6. Statistics dashboard:
    - Match history
    - Win/loss ratio
    - Skill progression
    - Achievement showcase
 
-7. Privacy controls:
-   - Visibility settings
-   - Data sharing preferences
-   - Profile access levels
-   - Activity privacy
-
 ## Milestone 5: Comprehensive Skill Assessment
 
 ### Tasks
 
 1. Assessment interface:
-   - Create detailed assessment UI
+   - Create detailed assessment UI for the skills menu in the profile page
    - Build category selectors
    - Implement 5-level rating system
    - Add skill descriptions

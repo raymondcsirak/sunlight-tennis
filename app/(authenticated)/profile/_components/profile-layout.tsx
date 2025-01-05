@@ -1,86 +1,123 @@
 "use client"
 
 import { User } from "@supabase/supabase-js"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
+import { EditProfileDialog } from "./edit-profile-dialog"
+import { AvatarUpload } from "./avatar-upload"
+import { createBrowserClient } from "@supabase/ssr"
+import { useCallback } from "react"
+import { useToast } from "@/components/ui/use-toast"
+import { CalendarIcon, MessageSquare, Trophy, Users } from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
-import { UserIcon, CalendarIcon, TrophyIcon, SettingsIcon, BellIcon } from "lucide-react"
 
 interface ProfileLayoutProps {
   user: User
-  profile: {
-    full_name?: string
-    avatar_url?: string
-  } | null
+  profile: any
   children: React.ReactNode
 }
 
-const sidebarItems = [
-  { label: "Find Partner", icon: UserIcon },
-  { label: "Rent Court", icon: CalendarIcon },
-  { label: "Training Session", icon: TrophyIcon },
-  { label: "Skills", icon: UserIcon },
-  { label: "Settings", icon: SettingsIcon },
-  { label: "Notifications", icon: BellIcon },
+const menuItems = [
+  {
+    label: "Find Partner",
+    icon: Users,
+    href: "/find-partner",
+  },
+  {
+    label: "Rent Court",
+    icon: CalendarIcon,
+    href: "/rent-court",
+  },
+  {
+    label: "Training Session",
+    icon: Trophy,
+    href: "/training",
+  },
+  {
+    label: "Messages",
+    icon: MessageSquare,
+    href: "/messages",
+  },
 ]
 
 export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
-  const currentXP = 7500
-  const nextLevel = 10000
-  const level = 8
-  const progress = (currentXP / nextLevel) * 100
+  const { toast } = useToast()
+  const pathname = usePathname()
+  
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  const updateAvatar = useCallback(async (url: string) => {
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({
+          id: user.id,
+          avatar_url: url,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (error) throw error
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "There was an error updating your avatar.",
+        variant: "destructive",
+      })
+    }
+  }, [user.id, supabase, toast])
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] pt-16 bg-background">
+    <div className="flex min-h-[calc(100vh-4rem)]">
       {/* Sidebar */}
-      <div className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-16 border-r">
-        <div className="flex flex-col gap-4 p-6">
-          {/* User Info */}
-          <div className="flex flex-col items-center text-center pb-6 border-b">
-            <Avatar className="w-24 h-24 mb-4">
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback>
-                {profile?.full_name?.[0] || user.email?.[0]?.toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <h2 className="text-2xl font-bold">{profile?.full_name || "Add your name"}</h2>
-            <p className="text-sm text-muted-foreground">Tennis Enthusiast</p>
-            
-            <div className="w-full mt-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>XP: {currentXP}</span>
-                <span>Next Level: {nextLevel}</span>
-              </div>
-              <Progress value={progress} className="h-2" />
-              <div className="flex items-center gap-2 justify-center">
-                <TrophyIcon className="w-4 h-4" />
-                <span className="text-sm font-medium">Level {level}</span>
-              </div>
+      <div className="w-64 border-r bg-muted/40 p-6">
+        <div className="flex flex-col gap-6">
+          {/* Profile Section */}
+          <div className="flex flex-col items-center space-y-4">
+            <AvatarUpload
+              user={user}
+              url={profile?.avatar_url}
+              onUpload={updateAvatar}
+            />
+            <div className="text-center">
+              <p className="font-medium">{profile?.full_name || user.email}</p>
+              <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
+            <EditProfileDialog user={user} profile={profile}>
+              <Button variant="outline" size="sm" className="w-full">
+                Edit Profile
+              </Button>
+            </EditProfileDialog>
           </div>
 
-          {/* Navigation */}
+          {/* Navigation Menu */}
           <nav className="space-y-2">
-            {sidebarItems.map((item) => (
+            {menuItems.map((item) => (
               <Button
                 key={item.label}
                 variant="ghost"
-                className="w-full justify-start gap-2"
+                className={cn(
+                  "w-full justify-start gap-2",
+                  pathname === item.href && "bg-muted"
+                )}
+                asChild
               >
-                <item.icon className="w-4 h-4" />
-                {item.label}
+                <Link href={item.href}>
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
               </Button>
             ))}
           </nav>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="lg:pl-72 flex-1">
-        <main className="py-6 px-4 sm:px-6 lg:px-8">
-          {children}
-        </main>
+      {/* Main content */}
+      <div className="flex-1 p-6">
+        {children}
       </div>
     </div>
   )

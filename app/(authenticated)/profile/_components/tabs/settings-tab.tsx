@@ -1,108 +1,115 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { createBrowserClient } from "@supabase/ssr"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 
 interface SettingsTabProps {
   userId: string
+  initialSettings?: {
+    email_notifications: boolean
+    push_notifications: boolean
+    match_reminders: boolean
+    court_updates: boolean
+  }
 }
 
-export function SettingsTab({ userId }: SettingsTabProps) {
-  const [isLoading, setIsLoading] = useState(false)
+export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
+  const [settings, setSettings] = useState(initialSettings || {
+    email_notifications: true,
+    push_notifications: true,
+    match_reminders: true,
+    court_updates: true,
+  })
+  const [saving, setSaving] = useState(false)
+  const { toast } = useToast()
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-  const router = useRouter()
-  const { toast } = useToast()
 
-  const handleSignOut = async () => {
+  const handleSaveSettings = async () => {
+    setSaving(true)
     try {
-      setIsLoading(true)
-      await supabase.auth.signOut()
-      router.push("/")
+      const { error } = await supabase
+        .from("user_settings")
+        .upsert({
+          user_id: userId,
+          settings,
+          updated_at: new Date().toISOString(),
+        })
+
+      if (error) throw error
+
+      toast({
+        title: "Settings saved",
+        description: "Your preferences have been updated successfully.",
+      })
     } catch (error) {
       toast({
         title: "Error",
-        description: "Something went wrong. Please try again.",
+        description: "There was an error saving your settings.",
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      setSaving(false)
     }
   }
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Notifications</CardTitle>
-          <CardDescription>
-            Configure how you want to receive notifications.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="match-requests">Match Requests</Label>
-            <Switch id="match-requests" defaultChecked />
+      <div className="space-y-4">
+        <h2 className="text-lg font-medium">Notification Preferences</h2>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="email-notifications">Email Notifications</Label>
+            <Switch
+              id="email-notifications"
+              checked={settings.email_notifications}
+              onCheckedChange={(checked) =>
+                setSettings((prev) => ({ ...prev, email_notifications: checked }))
+              }
+            />
           </div>
-          <div className="flex items-center justify-between space-x-2">
+          <div className="flex items-center justify-between">
+            <Label htmlFor="push-notifications">Push Notifications</Label>
+            <Switch
+              id="push-notifications"
+              checked={settings.push_notifications}
+              onCheckedChange={(checked) =>
+                setSettings((prev) => ({ ...prev, push_notifications: checked }))
+              }
+            />
+          </div>
+          <div className="flex items-center justify-between">
             <Label htmlFor="match-reminders">Match Reminders</Label>
-            <Switch id="match-reminders" defaultChecked />
+            <Switch
+              id="match-reminders"
+              checked={settings.match_reminders}
+              onCheckedChange={(checked) =>
+                setSettings((prev) => ({ ...prev, match_reminders: checked }))
+              }
+            />
           </div>
-          <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="achievements">Achievement Notifications</Label>
-            <Switch id="achievements" defaultChecked />
+          <div className="flex items-center justify-between">
+            <Label htmlFor="court-updates">Court Updates</Label>
+            <Switch
+              id="court-updates"
+              checked={settings.court_updates}
+              onCheckedChange={(checked) =>
+                setSettings((prev) => ({ ...prev, court_updates: checked }))
+              }
+            />
           </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Privacy</CardTitle>
-          <CardDescription>
-            Manage your privacy settings.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="profile-visibility">Public Profile</Label>
-            <Switch id="profile-visibility" defaultChecked />
-          </div>
-          <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="match-history">Show Match History</Label>
-            <Switch id="match-history" defaultChecked />
-          </div>
-          <div className="flex items-center justify-between space-x-2">
-            <Label htmlFor="skill-level">Show Skill Level</Label>
-            <Switch id="skill-level" defaultChecked />
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Account</CardTitle>
-          <CardDescription>
-            Manage your account settings.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Button
-            variant="destructive"
-            disabled={isLoading}
-            onClick={handleSignOut}
-          >
-            {isLoading ? "Signing out..." : "Sign out"}
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+      <Button onClick={handleSaveSettings} disabled={saving}>
+        {saving ? "Saving..." : "Save Settings"}
+      </Button>
     </div>
   )
 } 

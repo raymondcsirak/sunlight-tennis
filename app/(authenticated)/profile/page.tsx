@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { PerformanceTab } from "./_components/tabs/performance-tab"
 import { ActivityTab } from "./_components/tabs/activity-tab"
 import { SkillsTab } from "./_components/tabs/skills-tab"
+import { SettingsTab } from "./_components/tabs/settings-tab"
 
 export default async function ProfilePage() {
   const cookieStore = await cookies()
@@ -16,12 +17,6 @@ export default async function ProfilePage() {
       cookies: {
         get(name: string) {
           return cookieStore.get(name)?.value
-        },
-        set(name: string, value: string, options: any) {
-          // This is a server component, so we don't need to set cookies
-        },
-        remove(name: string, options: any) {
-          // This is a server component, so we don't need to remove cookies
         },
       },
     }
@@ -38,6 +33,12 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single()
 
+  const { data: settings } = await supabase
+    .from("user_settings")
+    .select()
+    .eq("user_id", user.id)
+    .single()
+
   return (
     <ProfileLayout user={user} profile={profile}>
       <div className="space-y-6">
@@ -48,6 +49,7 @@ export default async function ProfilePage() {
             <TabsTrigger value="performance">Performance</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="performance" className="space-y-4">
             <PerformanceTab userId={user.id} />
@@ -57,6 +59,9 @@ export default async function ProfilePage() {
           </TabsContent>
           <TabsContent value="skills" className="space-y-4">
             <SkillsTab userId={user.id} />
+          </TabsContent>
+          <TabsContent value="settings" className="space-y-4">
+            <SettingsTab userId={user.id} initialSettings={settings?.settings} />
           </TabsContent>
         </Tabs>
       </div>

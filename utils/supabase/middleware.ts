@@ -13,23 +13,18 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value;
+        getAll() {
+          return [...request.cookies.getAll()].map(cookie => ({
+            name: cookie.name,
+            value: cookie.value,
+          }));
         },
-        set(name: string, value: string, options: any) {
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-            secure: process.env.NODE_ENV === "production",
-          });
-        },
-        remove(name: string, options: any) {
-          response.cookies.set({
-            name,
-            value: "",
-            ...options,
-            secure: process.env.NODE_ENV === "production",
+        setAll(cookieEntries) {
+          cookieEntries.forEach((cookie) => {
+            response.cookies.set({
+              ...cookie,
+              secure: process.env.NODE_ENV === "production",
+            });
           });
         },
       },
