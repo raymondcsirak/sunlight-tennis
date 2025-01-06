@@ -111,56 +111,83 @@ export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
   console.log("Avatar URL:", avatarUrl)
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] pt-16">
-      {/* Sidebar */}
-      <div className="sticky top-16 h-[calc(100vh-4rem)] w-64 overflow-y-auto border-r bg-muted/40 p-6">
-        <div className="flex flex-col gap-6">
-          {/* Profile Section */}
-          <div className="flex flex-col items-center space-y-4">
-            <AvatarUpload
-              user={user}
-              url={avatarUrl}
-              onUpload={updateAvatar}
-            />
-            <div className="text-center">
-              <h2 className="text-lg font-semibold">{profile?.full_name || "Add your name"}</h2>
-              <p className="text-sm text-muted-foreground">{user.email}</p>
-              {profile?.phone && (
-                <p className="text-sm text-muted-foreground">{profile.phone}</p>
-              )}
-            </div>
-            <EditProfileDialog user={user} profile={profile}>
-              <Button variant="outline" size="sm" className="w-full">
-                Edit Profile
-              </Button>
-            </EditProfileDialog>
-          </div>
-
-          {/* Navigation Menu */}
-          <nav className="space-y-2">
-            {menuItems.map((item) => (
-              <Button
-                key={item.label}
-                variant="ghost"
-                className={cn(
-                  "w-full justify-start gap-2",
-                  pathname === item.href && "bg-muted"
+    <div className="min-h-screen bg-background relative pt-16">
+      {/* Subtle gradient glow effect */}
+      <div className="fixed top-16 inset-x-0 bottom-0 pointer-events-none">
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent h-24" />
+        <div className="absolute inset-0 bg-[radial-gradient(70%_35%_at_50%_0%,rgba(var(--primary)_/_0.03)_0%,transparent_100%)]" />
+      </div>
+      
+      <div className="relative flex">
+        {/* Left Sidebar */}
+        <div className="w-64 min-h-[calc(100vh-4rem)] border-r border-border/40 backdrop-blur-sm bg-card/50">
+          <div className="sticky top-16 p-6 space-y-6">
+            {/* Profile Section */}
+            <div className="flex flex-col items-center space-y-4">
+              <AvatarUpload
+                url={avatarUrl}
+                onUpload={updateAvatar}
+                size={150}
+              />
+              <div className="text-center space-y-1.5">
+                <h2 className="font-semibold">{profile?.full_name || 'Anonymous Player'}</h2>
+                <p className="text-sm text-muted-foreground">{profile?.username || 'No username set'}</p>
+                {profile?.phone && (
+                  <p className="text-sm text-muted-foreground">{profile.phone}</p>
                 )}
-                asChild
-              >
-                <Link href={item.href}>
+                <EditProfileDialog user={user} profile={profile}>
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Edit Profile
+                  </Button>
+                </EditProfileDialog>
+              </div>
+              
+              {/* Stats Cards */}
+              <div className="w-full grid grid-cols-3 gap-2">
+                <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                  <div className="text-sm text-muted-foreground">Level</div>
+                  <div className="text-2xl font-bold">{profile?.level || 1}</div>
+                </div>
+                <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                  <div className="text-sm text-muted-foreground">XP</div>
+                  <div className="text-2xl font-bold">{profile?.xp || 0}</div>
+                </div>
+                <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
+                  <div className="text-sm text-muted-foreground">Matches</div>
+                  <div className="text-2xl font-bold">{profile?.matches_played || 0}</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Navigation Menu */}
+            <nav className="space-y-1">
+              {menuItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                    pathname === item.href 
+                      ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary)_/_0.25)]" 
+                      : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  )}
+                >
                   <item.icon className="h-4 w-4" />
                   {item.label}
                 </Link>
-              </Button>
-            ))}
-          </nav>
+              ))}
+            </nav>
+          </div>
         </div>
-      </div>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-y-auto p-6">
-        {children}
+        {/* Main Content */}
+        <div className="flex-1 min-h-[calc(100vh-4rem)]">
+          <div className="container py-6 px-8">
+            <div className="bg-card/50 backdrop-blur-sm shadow-lg rounded-lg p-6">
+              {children}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

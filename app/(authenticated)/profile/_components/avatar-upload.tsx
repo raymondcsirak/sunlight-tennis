@@ -2,24 +2,25 @@
 
 import { useCallback, useState } from "react"
 import { createBrowserClient } from "@supabase/ssr"
-import { User } from "@supabase/supabase-js"
+import { User, Loader2, Upload } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
+import { cn } from "@/lib/utils"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 
 const AVATAR_MAX_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
-interface AvatarUploadProps {
-  user: User
-  url?: string
-  onUpload: (url: string) => void
+export interface AvatarUploadProps {
+  url?: string | null
+  onUpload: (url: string) => Promise<void>
+  size?: number
 }
 
-export function AvatarUpload({ user, url, onUpload }: AvatarUploadProps) {
+export function AvatarUpload({ url, onUpload, size = 150 }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false)
   const { toast } = useToast()
-
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -51,142 +52,104 @@ export function AvatarUpload({ user, url, onUpload }: AvatarUploadProps) {
     }
   }
 
-  const uploadAvatar = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      try {
-        setUploading(true)
-
-        if (!event.target.files || event.target.files.length === 0) {
-          throw new Error("You must select an image to upload.")
-        }
-
-        const file = event.target.files[0]
-        validateFile(file)
-
-        // Create a folder structure: avatars/user_id/filename
-        const fileExt = file.name.split(".").pop()
-        const fileName = `${Math.random()}.${fileExt}`
-        const filePath = `${user.id}/${fileName}`
-
-        console.log("Uploading to path:", filePath)
-
-        // Delete old avatar if exists
-        if (url) {
-          await deleteOldAvatar(url)
-        }
-
-        // Upload new avatar
-        const { error: uploadError, data } = await supabase.storage
-          .from("avatars")
-          .upload(filePath, file, {
-            cacheControl: "3600",
-            upsert: false,
-          })
-
-        if (uploadError) {
-          throw uploadError
-        }
-
-        if (!data) {
-          throw new Error("Upload failed - no data returned")
-        }
-
-        console.log("Upload successful:", data)
-
-        // Get the public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from("avatars")
-          .getPublicUrl(filePath)
-
-        console.log("Generated public URL:", publicUrl)
-
-        onUpload(publicUrl)
-
-        toast({
-          title: "Avatar updated",
-          description: "Your avatar has been updated successfully.",
-        })
-      } catch (error) {
-        console.error("Upload error:", error)
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "There was an error uploading your avatar.",
-          variant: "destructive",
-        })
-      } finally {
-        setUploading(false)
-        // Reset the file input
-        if (event.target) {
-          event.target.value = ""
-        }
-      }
-    },
-    [user.id, supabase, onUpload, toast, url]
-  )
-
-  console.log("Avatar component URL:", url)
-
-  const handleRemoveAvatar = async () => {
+  const handleFileSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
+      if (!event.target.files || event.target.files.length === 0) {
+        throw new Error("You must select an image to upload.")
+      }
+
       setUploading(true)
+
+      // Get current user
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
+        throw new Error("Authentication required")
+      }
+
+      const file = event.target.files[0]
+      validateFile(file)
+
+      // Create a unique filename with user ID
+      const fileExt = file.name.split(".").pop()
+      const fileName = `${user.id}/${Math.random()}.${fileExt}`
+
+      // Delete old avatar if exists
       if (url) {
         await deleteOldAvatar(url)
       }
-      onUpload("")
+
+      // Upload new avatar
+      const { error: uploadError, data } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        })
+
+      if (uploadError) {
+        throw uploadError
+      }
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(fileName)
+
+      await onUpload(publicUrl)
+
       toast({
-        title: "Avatar removed",
-        description: "Your avatar has been removed successfully.",
+        title: "Avatar updated",
+        description: "Your avatar has been updated successfully.",
       })
     } catch (error) {
+      console.error("Upload error:", error)
       toast({
         title: "Error",
-        description: "There was an error removing your avatar.",
+        description: error instanceof Error ? error.message : "Failed to update avatar",
         variant: "destructive",
       })
     } finally {
       setUploading(false)
+      if (event.target) {
+        event.target.value = ""
+      }
     }
-  }
+  }, [url, supabase, onUpload, toast])
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <Avatar className="h-24 w-24">
-        <AvatarImage 
-          src={url} 
-          alt={user.email || ""} 
-          className="object-cover"
-        />
-        <AvatarFallback>
-          {user.email?.charAt(0).toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={uploading}
-          onClick={() => document.getElementById("avatar")?.click()}
-        >
-          {uploading ? "Uploading..." : "Upload"}
-        </Button>
-        {url && (
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={uploading}
-            onClick={handleRemoveAvatar}
-          >
-            Remove
-          </Button>
-        )}
+    <div className="relative group">
+      <div 
+        style={{ width: size, height: size }}
+        className="relative overflow-hidden rounded-full transition-opacity group-hover:opacity-50"
+      >
+        <Avatar className="h-full w-full">
+          <AvatarImage 
+            src={url || undefined} 
+            alt="Avatar" 
+            className="object-cover"
+          />
+          <AvatarFallback>
+            <User className="h-12 w-12" />
+          </AvatarFallback>
+        </Avatar>
       </div>
-      <input
-        id="avatar"
-        type="file"
-        accept={ALLOWED_FILE_TYPES.join(",")}
-        onChange={uploadAvatar}
-        className="hidden"
-      />
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100">
+        <Label htmlFor="avatar" className="cursor-pointer">
+          {uploading ? (
+            <Loader2 className="h-12 w-12 animate-spin" />
+          ) : (
+            <Upload className="h-12 w-12" />
+          )}
+        </Label>
+        <Input
+          id="avatar"
+          type="file"
+          accept={ALLOWED_FILE_TYPES.join(",")}
+          className="hidden"
+          onChange={handleFileSelected}
+          disabled={uploading}
+        />
+      </div>
     </div>
   )
-} 
+}
