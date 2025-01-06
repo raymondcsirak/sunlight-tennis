@@ -7,7 +7,7 @@ import { AvatarUpload } from "./avatar-upload"
 import { createBrowserClient } from "@supabase/ssr"
 import { useCallback } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { CalendarIcon, MessageSquare, Trophy, Users, Settings } from "lucide-react"
+import { CalendarIcon, MessageSquare, Trophy, Users, Settings, Home } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,11 @@ interface ProfileLayoutProps {
 }
 
 const menuItems = [
+  {
+    label: "My Profile",
+    icon: Home,
+    href: "/profile",
+  },
   {
     label: "Find Partner",
     icon: Users,
