@@ -7,7 +7,7 @@ import { AvatarUpload } from "./avatar-upload"
 import { createBrowserClient } from "@supabase/ssr"
 import { useCallback } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { CalendarIcon, MessageSquare, Trophy, Users } from "lucide-react"
+import { CalendarIcon, MessageSquare, Trophy, Users, Settings } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -38,6 +38,16 @@ const menuItems = [
     label: "Messages",
     icon: MessageSquare,
     href: "/messages",
+  },
+  {
+    label: "Skills",
+    icon: Trophy,
+    href: "/skills",
+  },
+  {
+    label: "Settings",
+    icon: Settings,
+    href: "/settings",
   },
 ]
 
