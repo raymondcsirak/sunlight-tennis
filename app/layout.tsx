@@ -7,6 +7,7 @@ import "./globals.css";
 import { Metadata } from 'next'
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
+import { Providers } from "./providers"
 
 const geist = Geist({
   subsets: ["latin"],
@@ -77,72 +78,74 @@ export default async function RootLayout({
   return (
     <html lang="en" className={geist.className} suppressHydrationWarning>
       <body className="bg-background text-foreground">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-sm border-b">
-            <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
-              <div className="flex justify-between items-center h-full">
-                <Link href="/" className="text-xl font-bold">
-                  SunlightTennis
-                </Link>
-                <div className="flex items-center gap-4">
-                  <HeaderAuth email={user?.email} />
-                  <ThemeSwitcher />
+        <Providers>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-sm border-b">
+              <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
+                <div className="flex justify-between items-center h-full">
+                  <Link href="/" className="text-xl font-bold">
+                    SunlightTennis
+                  </Link>
+                  <div className="flex items-center gap-4">
+                    <HeaderAuth email={user?.email} />
+                    <ThemeSwitcher />
+                  </div>
                 </div>
-              </div>
-            </nav>
-          </header>
+              </nav>
+            </header>
 
-          {children}
+            {children}
 
-          <footer className="bg-muted py-12">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
-                  <ul className="space-y-2">
-                    <li>
-                      <Link href="/courts" className="text-muted-foreground hover:text-foreground">
-                        Courts
-                      </Link>
-                    </li>
-                    <li>
-                      <Link href="/partners" className="text-muted-foreground hover:text-foreground">
-                        Find Partners
-                      </Link>
-                    </li>
-                    <li>
-                      <Link href="/profile" className="text-muted-foreground hover:text-foreground">
-                        Profile
-                      </Link>
-                    </li>
-                  </ul>
+            <footer className="bg-muted py-12">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
+                    <ul className="space-y-2">
+                      <li>
+                        <Link href="/courts" className="text-muted-foreground hover:text-foreground">
+                          Courts
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/partners" className="text-muted-foreground hover:text-foreground">
+                          Find Partners
+                        </Link>
+                      </li>
+                      <li>
+                        <Link href="/profile" className="text-muted-foreground hover:text-foreground">
+                          Profile
+                        </Link>
+                      </li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">Contact</h3>
+                    <address className="text-muted-foreground not-italic">
+                      123 Tennis Court Street<br />
+                      Bucharest, Romania<br />
+                      <a href="tel:+40123456789" className="hover:text-foreground">
+                        +40 123 456 789
+                      </a>
+                      <br />
+                      <a href="mailto:contact@sunlighttennis.ro" className="hover:text-foreground">
+                        contact@sunlighttennis.ro
+                      </a>
+                    </address>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold mb-4">Contact</h3>
-                  <address className="text-muted-foreground not-italic">
-                    123 Tennis Court Street<br />
-                    Bucharest, Romania<br />
-                    <a href="tel:+40123456789" className="hover:text-foreground">
-                      +40 123 456 789
-                    </a>
-                    <br />
-                    <a href="mailto:contact@sunlighttennis.ro" className="hover:text-foreground">
-                      contact@sunlighttennis.ro
-                    </a>
-                  </address>
+                <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
+                  <p>© {new Date().getFullYear()} SunlightTennis. All rights reserved.</p>
                 </div>
               </div>
-              <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
-                <p>© {new Date().getFullYear()} SunlightTennis. All rights reserved.</p>
-              </div>
-            </div>
-          </footer>
-        </ThemeProvider>
+            </footer>
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   )

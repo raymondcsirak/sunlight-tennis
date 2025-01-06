@@ -126,21 +126,23 @@
 
 2. Level progression:
    - Define level thresholds
-   - Create level-up animations
+   - Create level-up and xp gained animations
    - Implement rewards
    - Track progression
 
-3. Achievement tracking:
+4. Achievement tracking:
    - Welcome achievements
    - Dedication achievements
    - Match achievements
    - Activity achievements
 
 4. XP multipliers:
-   - Daily streaks
-   - Special events
-   - Premium bonuses
-   - Challenge rewards
+   - Login streaks: first login, 10th login, 20th etc.. Each 50 xp
+   - Court booking streaks: 50 xp per booking
+   - Training session booking streaks: 100 xp per booking
+   - Partner match streaks: 200 xp per match won
+   - Partner requests streaks in partner finder: first request, 10th request, 20th request etc.. Each 50 xp
+   - Total matches played: 50 xp per 10 matches played
 
 5. Progress visualization:
    - XP progress bars
@@ -157,6 +159,7 @@
    - Implement real-time updates
    - Add notification types
    - Build notification management
+   - Setup system notifications: xp gained, leveled up, trophy unlocked, court booked, training session booked, partner finder request added
 
 ## Milestone 10: Court Rental System
 
@@ -428,9 +431,7 @@ Each milestone requires:
 7. Analytics documentation
 8. Payment integration guides
 
-## Future Enhancements (Post-launch)
-
-### Tasks
+## Future Enhancements (Post-launch) out of scope for this project
 
 1. Develop a native mobile application with Supabase SDK.
 2. Implement AI-powered match predictions using Edge Functions.

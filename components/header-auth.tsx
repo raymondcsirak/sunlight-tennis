@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import { NotificationDropdown } from "@/app/_components/notifications/notification-dropdown"
 
 export default function HeaderAuth({
   email,
@@ -26,6 +27,7 @@ export default function HeaderAuth({
 
   return (
     <div className="flex items-center gap-4">
+      <NotificationDropdown />
       <Button variant="ghost" asChild>
         <Link href="/profile" className="text-sm text-muted-foreground hover:text-foreground">
           {email}
