@@ -16,8 +16,6 @@ interface ProfileHeaderProps {
 }
 
 export function ProfileHeader({ user, profile }: ProfileHeaderProps) {
-  const [isEditing, setIsEditing] = useState(false)
-
   return (
     <Card className="p-6">
       <div className="flex items-start gap-6">
@@ -36,22 +34,12 @@ export function ProfileHeader({ user, profile }: ProfileHeaderProps) {
               </h1>
               <p className="text-sm text-muted-foreground">{user.email}</p>
             </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setIsEditing(true)}
-            >
-              Edit Profile
-            </Button>
+            <EditProfileDialog user={user} profile={profile}>
+              <Button variant="outline">Edit Profile</Button>
+            </EditProfileDialog>
           </div>
         </div>
       </div>
-
-      <EditProfileDialog 
-        open={isEditing} 
-        onOpenChange={setIsEditing}
-        user={user}
-        profile={profile}
-      />
     </Card>
   )
 } 
