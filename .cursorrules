@@ -6,9 +6,12 @@ Project Management:
 - Update both PRD.md and MILESTONES.md with new features and requirements, or remove features and requirements that are no longer needed
 - Ensure new code aligns with defined milestones
 - Maintain consistency with existing components
+
+Nextjs and supabase:
 - project was installed with "npx create-next-app -e with-supabase" so corresponding authentication and sign it functionality is already implemented
 - project is using supabase/ssr instead of supabase/auth-helpers-nextjs
 - supabase is a hosted service, not self hosted
+- use "npx supabase migration new" to create new migrations
 
 Request Analysis
 

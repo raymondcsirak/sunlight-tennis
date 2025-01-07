@@ -166,14 +166,13 @@
 ### Tasks
 
 1. Implement real-time court management:
-   - Live court status updates
    - Instant booking notifications
    - Concurrent booking prevention
    - Maintenance status updates
+   - Implement weather condition report on chosen court and date
 
 2. Add multi-court management:
    - Real-time court availability map
-   - Live capacity indicators
    - Court condition updates
    - Weather impact notifications
 
@@ -182,12 +181,6 @@
    - Concurrent booking handling
    - Waiting list management
    - Instant confirmation system
-
-4. Implement court activity monitoring:
-   - Live usage tracking
-   - Player presence detection
-   - Session timing updates
-   - Court changeover management
 
 ## Milestone 11: Partner Finder and Match System
 

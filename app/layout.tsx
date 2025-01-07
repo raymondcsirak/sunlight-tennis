@@ -8,6 +8,7 @@ import { Metadata } from 'next'
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { Providers } from "./providers"
+import { updateStreak } from "./_actions/update-streak"
 
 const geist = Geist({
   subsets: ["latin"],
@@ -74,6 +75,11 @@ export default async function RootLayout({
   )
 
   const { data: { user } } = await supabase.auth.getUser()
+  
+  // Update streak if user is logged in
+  if (user) {
+    await updateStreak()
+  }
 
   return (
     <html lang="en" className={geist.className} suppressHydrationWarning>
