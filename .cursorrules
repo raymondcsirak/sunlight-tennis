@@ -8,6 +8,7 @@ Project Management:
 - Maintain consistency with existing components
 - project was installed with "npx create-next-app -e with-supabase" so corresponding authentication and sign it functionality is already implemented
 - project is using supabase/ssr instead of supabase/auth-helpers-nextjs
+- supabase is a hosted service, not self hosted
 
 Request Analysis
 

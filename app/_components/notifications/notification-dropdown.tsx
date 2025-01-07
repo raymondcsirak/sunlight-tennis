@@ -133,21 +133,30 @@ export function NotificationDropdown() {
 
     const setupChannel = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        const userId = user?.id
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession()
+        if (sessionError || !session?.user) {
+          throw new Error("Authentication required")
+        }
+
+        const userId = session.user.id
 
         if (!userId || !mounted) {
           return () => {}
         }
 
-        const channelId = `notifications-${userId}-${Math.random().toString(36).slice(2, 7)}`
+        // Use a stable channel name based on user ID
+        const channelId = `notifications-${userId}`
+
+        // Remove any existing channel with the same name
+        const existingChannel = supabase.getChannels().find(
+          channel => channel.topic === channelId
+        )
+        if (existingChannel) {
+          await supabase.removeChannel(existingChannel)
+        }
 
         const channel = supabase
-          .channel(channelId, {
-            config: {
-              broadcast: { ack: true }
-            }
-          })
+          .channel(channelId)
           .on(
             "postgres_changes",
             {
@@ -185,9 +194,11 @@ export function NotificationDropdown() {
         })
 
         return () => {
-          supabase.removeChannel(channel).catch((err: Error) => {
-            console.error(`Error removing channel:`, err)
-          })
+          if (mounted) {
+            supabase.removeChannel(channel).catch((err: Error) => {
+              console.error(`Error removing channel:`, err)
+            })
+          }
         }
       } catch (error) {
         console.error("Error setting up realtime subscription:", error)
@@ -207,11 +218,21 @@ export function NotificationDropdown() {
       }
     })
 
+    // Listen for auth state changes
+    const {
+      data: { subscription: authSubscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      if (mounted) {
+        setupChannel()
+      }
+    })
+
     return () => {
       mounted = false
       if (cleanupFunction) {
         cleanupFunction()
       }
+      authSubscription?.unsubscribe()
     }
   }, [supabase, queryClient])
 
