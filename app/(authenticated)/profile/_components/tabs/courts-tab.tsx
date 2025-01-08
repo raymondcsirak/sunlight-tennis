@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { Card } from '@/components/ui/card'
-import { Cloud, CloudSun, Sun, Thermometer, Clock, Users, CalendarIcon, ArrowLeft } from 'lucide-react'
+import { Cloud, CloudSun, Sun, Thermometer, Clock, Users, CalendarIcon, ArrowLeft, CloudRain, CloudSnow, CloudLightning, Wind } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { Court } from '@/lib/schemas/court'
 import type { CourtWithAvailability } from '../../courts/actions'
 import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
 
 const AVAILABLE_TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
@@ -37,10 +38,8 @@ export function CourtsTab() {
   const [courts, setCourts] = useState<CourtWithAvailability[]>([])
   const [isFetchingCourts, setIsFetchingCourts] = useState(false)
   const { toast } = useToast()
-  const [weatherData] = useState({
-    temperature: 22,
-    condition: 'Partly Cloudy',
-  })
+  const [weatherData, setWeatherData] = useState<WeatherForecast | null>(null)
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false)
   const [isTimeConfigConfirmed, setIsTimeConfigConfirmed] = useState(false)
   const [showBookingConfirmation, setShowBookingConfirmation] = useState(false)
 
@@ -101,6 +100,71 @@ export function CourtsTab() {
 
     fetchAvailableCourts()
   }, [date, time, duration, toast])
+
+  // Fetch weather when date or time changes
+  useEffect(() => {
+    async function fetchWeather() {
+      if (!date || !time) {
+        return
+      }
+      
+      setIsLoadingWeather(true)
+      try {
+        const forecast = await fetchWeatherForecast(
+          format(date, 'yyyy-MM-dd'),
+          time
+        )
+
+        if (forecast) {
+          setWeatherData(forecast)
+        } else {
+          toast({
+            title: "Weather Data Unavailable",
+            description: "Could not fetch weather data for the selected time.",
+            variant: "destructive",
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching weather:', error)
+        toast({
+          title: "Weather Update Failed",
+          description: "Unable to fetch weather data. Please try again.",
+          variant: "destructive",
+        })
+      } finally {
+        setIsLoadingWeather(false)
+      }
+    }
+
+    // Only fetch if both date and time are selected
+    if (date && time) {
+      fetchWeather()
+    }
+  }, [date, time, toast])
+
+  // Helper function to get weather icon
+  const getWeatherIcon = (condition: string) => {
+    console.log('Getting icon for condition:', condition)
+    switch (condition.toLowerCase()) {
+      case 'clear':
+        return <Sun className="h-8 w-8" />
+      case 'clouds':
+        return <Cloud className="h-8 w-8" />
+      case 'rain':
+      case 'drizzle':
+        return <CloudRain className="h-8 w-8" />
+      case 'snow':
+        return <CloudSnow className="h-8 w-8" />
+      case 'thunderstorm':
+        return <CloudLightning className="h-8 w-8" />
+      case 'mist':
+      case 'fog':
+        return <Wind className="h-8 w-8" />
+      default:
+        console.log('Using default icon for condition:', condition)
+        return <CloudSun className="h-8 w-8" />
+    }
+  }
 
   const resetForm = () => {
     setDate(new Date())
@@ -242,14 +306,44 @@ export function CourtsTab() {
               {/* Weather Information */}
               <div className="flex items-center space-x-4 p-4 rounded-lg bg-background/50 border border-border/50 backdrop-blur-sm">
                 <div className="p-3 rounded-full bg-primary/10 text-primary">
-                  <CloudSun className="h-8 w-8" />
+                  {isLoadingWeather ? (
+                    <Spinner className="h-8 w-8" />
+                  ) : weatherData ? (
+                    weatherData.message ? (
+                      <CloudSun className="h-8 w-8 text-muted-foreground" />
+                    ) : (
+                      getWeatherIcon(weatherData.condition)
+                    )
+                  ) : (
+                    <CloudSun className="h-8 w-8" />
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center space-x-2">
                     <Thermometer className="h-5 w-5 text-primary" />
-                    <span className="text-xl font-semibold">{weatherData.temperature}°C</span>
+                    <span className="text-xl font-semibold">
+                      {isLoadingWeather ? (
+                        <span className="animate-pulse">--</span>
+                      ) : weatherData ? (
+                        weatherData.message ? (
+                          '--°C'
+                        ) : (
+                          `${weatherData.temperature}°C`
+                        )
+                      ) : (
+                        '--°C'
+                      )}
+                    </span>
                   </div>
-                  <p className="text-muted-foreground">{weatherData.condition}</p>
+                  <p className="text-muted-foreground">
+                    {isLoadingWeather ? (
+                      <span className="animate-pulse">Loading...</span>
+                    ) : weatherData ? (
+                      weatherData.message || weatherData.condition
+                    ) : (
+                      'Weather data unavailable'
+                    )}
+                  </p>
                 </div>
               </div>
 
