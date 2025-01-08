@@ -20,8 +20,6 @@ alter table "public"."bookings" add column "payment_status" payment_status defau
 
 alter table "public"."bookings" add column "status" booking_status default 'pending'::booking_status;
 
-alter table "public"."courts" add column "surface" surface_type not null;
-
 alter table "public"."courts" alter column "hourly_rate" set data type integer using "hourly_rate"::integer;
 
 alter sequence "public"."courts_id_seq" owned by "public"."courts"."id";
