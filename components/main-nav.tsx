@@ -25,15 +25,15 @@ export function MainNav({ className }: MainNavProps) {
         Find Partner
       </Link>
       <Link
-        href="/rent-court"
+        href="/courts"
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
-          pathname === "/rent-court"
+          pathname === "/courts"
             ? "text-primary"
             : "text-muted-foreground"
         )}
       >
-        Rent Court
+        Book Court
       </Link>
       <Link
         href="/training"

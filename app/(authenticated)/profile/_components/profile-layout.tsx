@@ -30,9 +30,9 @@ const menuItems = [
     href: "/find-partner",
   },
   {
-    label: "Rent Court",
+    label: "Book Court",
     icon: CalendarIcon,
-    href: "/rent-court",
+    href: "/profile/courts",
   },
   {
     label: "Training Session",

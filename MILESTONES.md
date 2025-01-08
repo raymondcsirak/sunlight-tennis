@@ -150,7 +150,7 @@
    - Achievement progress
    - Historical charts
 
-## Milestone 9: Dashboard Shell
+## Milestone 7: Dashboard Shell
 
 ### Tasks
 
@@ -161,7 +161,7 @@
    - Build notification management
    - Setup system notifications: xp gained, leveled up, trophy unlocked, court booked, training session booked, partner finder request added
 
-## Milestone 10: Court Rental System
+## Milestone 8: Court Rental System
 
 ### Tasks
 
@@ -182,7 +182,15 @@
    - Waiting list management
    - Instant confirmation system
 
-## Milestone 11: Partner Finder and Match System
+4. Mechanism and design:
+   - Top of page we have a calendar where you can select the day you want to rent a court.
+   - When the day is selected calendar slides to the left and a panel opens with realtime weather data for that day, below that start time, duration and players. Below confirm
+   - Below the calendar and the time config panel is 4 courts represented by 4 pictures that will be uploaded to the images bucket. Same picture to all 4 courts. 
+   - When the time configuration is confirmed the unaivalable courts will be greyed out, the available courts will remeain color with a select button. 
+   - When court is selected the confirm booking button becomes active
+   - When confirmed the system send a notification about the booking.
+
+## Milestone 9: Partner Finder and Match System
 
 ### Tasks
 
@@ -216,7 +224,7 @@
    - Create streak tracking
    - Build trophy unlocks
 
-## Milestone 12: Match Results and Rankings
+## Milestone 10: Match Results and Rankings
 
 ### Tasks
 
@@ -238,7 +246,7 @@
    - Ranking updates
    - History tracking
 
-## Milestone 13: Trophy and Achievement System
+## Milestone 11: Trophy and Achievement System
 
 ### Tasks
 
@@ -266,7 +274,7 @@
    - Implement progress tracking
    - Build achievement notifications
 
-## Milestone 14: Training Sessions
+## Milestone 12: Training Sessions
 
 ### Tasks
 
@@ -294,7 +302,7 @@
    - XP rewards
    - Performance metrics
 
-## Milestone 15: Real-time Communication
+## Milestone 13: Real-time Communication
 
 ### Tasks
 
@@ -322,7 +330,7 @@
    - Email fallbacks
    - Notification preferences
 
-## Milestone 16: Analytics and Performance
+## Milestone 14: Analytics and Performance
 
 ### Tasks
 
@@ -338,7 +346,7 @@
    - Revenue tracking
    - System performance monitoring
 
-## Milestone 17: Content Management
+## Milestone 15: Content Management
 
 ### Tasks
 
@@ -349,7 +357,7 @@
 2. Implement approval workflow using PostgreSQL enums and triggers.
 3. Create content templates with JSONB storage.
 
-## Milestone 18: Accessibility Implementation
+## Milestone 16: Accessibility Implementation
 
 ### Tasks
 
