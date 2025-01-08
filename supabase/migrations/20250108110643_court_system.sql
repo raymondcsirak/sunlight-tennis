@@ -37,8 +37,8 @@ CREATE TABLE court_bookings (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
-    -- Add constraint to prevent overlapping bookings
-    CONSTRAINT no_overlapping_bookings EXCLUDE USING gist (
+    -- Changed constraint name to be more unique
+    CONSTRAINT court_bookings_no_overlap EXCLUDE USING gist (
         court_id WITH =,
         tstzrange(start_time, end_time, '[)') WITH &&
     )
@@ -47,8 +47,12 @@ CREATE TABLE court_bookings (
 -- Enable RLS
 ALTER TABLE courts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE court_bookings ENABLE ROW LEVEL SECURITY;
-
--- Add RLS policies
+-- First drop existing policies
+DROP POLICY IF EXISTS "Courts are viewable by everyone" ON courts;
+DROP POLICY IF EXISTS "Users can view their own bookings" ON court_bookings;
+DROP POLICY IF EXISTS "Users can create their own bookings" ON court_bookings;
+DROP POLICY IF EXISTS "Users can update their own bookings" ON court_bookings;
+-- Then create the policies
 CREATE POLICY "Courts are viewable by everyone"
     ON courts FOR SELECT
     USING (true);
@@ -67,11 +71,13 @@ CREATE POLICY "Users can update their own bookings"
     WITH CHECK (auth.uid() = user_id);
 
 -- Add updated_at triggers
+DROP TRIGGER IF EXISTS update_courts_updated_at ON courts;
 CREATE TRIGGER update_courts_updated_at
     BEFORE UPDATE ON courts
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_court_bookings_updated_at ON court_bookings;
 CREATE TRIGGER update_court_bookings_updated_at
     BEFORE UPDATE ON court_bookings
     FOR EACH ROW
@@ -193,11 +199,3 @@ BEGIN
     END;
 END;
 $$;
-
--- Insert sample courts
-INSERT INTO courts (name, surface, hourly_rate, is_indoor) VALUES
-    ('Court 1', 'clay', 50, false),
-    ('Court 2', 'clay', 50, false),
-    ('Court 3', 'clay', 50, false),
-    ('Court 4', 'clay', 50, false)
-ON CONFLICT DO NOTHING;

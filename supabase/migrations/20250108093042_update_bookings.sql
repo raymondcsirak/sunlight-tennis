@@ -80,7 +80,7 @@ EXCEPTION
         -- Table doesn't exist, create it
         CREATE TABLE court_bookings (
             id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-            court_id UUID REFERENCES courts(id) ON DELETE CASCADE,
+            court_id BIGINT REFERENCES courts(id) ON DELETE CASCADE,
             user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
             start_time TIMESTAMPTZ NOT NULL,
             end_time TIMESTAMPTZ NOT NULL,

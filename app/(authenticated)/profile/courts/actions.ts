@@ -15,7 +15,7 @@ export type CourtWithAvailability = {
 }
 
 const createBookingSchema = z.object({
-  courtId: z.string().uuid(),
+  courtId: z.number(),
   startTime: z.string(),
   endTime: z.string(),
   players: z.number().min(1).max(4),
@@ -66,7 +66,7 @@ export async function getAvailableCourts(
     // Mark courts as available or not
     const courtsWithAvailability: CourtWithAvailability[] = courts.map(court => ({
       ...court,
-      available: !bookedCourtIds.has(court.id)
+      available: !bookedCourtIds.has(parseInt(court.id))
     }))
 
     return {
