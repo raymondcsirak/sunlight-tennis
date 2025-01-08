@@ -1,4 +1,4 @@
-'use server'
+"use server"
 
 import { createClient } from '@/utils/supabase/server'
 import { revalidatePath } from 'next/cache'
@@ -15,7 +15,7 @@ export type CourtWithAvailability = {
 }
 
 const createBookingSchema = z.object({
-  courtId: z.number(),
+  courtId: z.string(),
   startTime: z.string(),
   endTime: z.string(),
   players: z.number().min(1).max(4),
@@ -55,10 +55,19 @@ export async function getAvailableCourts(
       .from('court_bookings')
       .select('court_id')
       .eq('booking_status', 'confirmed')
-      .or(`start_time.lte.${endTime},end_time.gte.${startTime}`)
-      .neq('booking_status', 'cancelled') // Exclude cancelled bookings
+      .neq('booking_status', 'cancelled')
+      .gte('start_time', `${date}T00:00:00Z`)
+      .lt('start_time', `${date}T23:59:59Z`)
+      .or(
+        `and(start_time.lte.${endTime},end_time.gt.${startTime})`
+      )
 
-    if (bookingsError) throw bookingsError
+    if (bookingsError) {
+      console.error('Bookings error:', bookingsError)
+      throw bookingsError
+    }
+
+    console.log('Bookings found:', bookings)
 
     // Create a Set of booked court IDs for quick lookup
     const bookedCourtIds = new Set(bookings.map(b => b.court_id))
@@ -66,7 +75,7 @@ export async function getAvailableCourts(
     // Mark courts as available or not
     const courtsWithAvailability: CourtWithAvailability[] = courts.map(court => ({
       ...court,
-      available: !bookedCourtIds.has(parseInt(court.id))
+      available: !bookedCourtIds.has(court.id)
     }))
 
     return {

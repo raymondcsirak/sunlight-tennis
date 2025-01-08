@@ -1,9 +1,9 @@
-'use client'
+"use client"
 
 import { useState, useEffect } from 'react'
 import { Calendar } from '@/components/ui/calendar'
 import { Card } from '@/components/ui/card'
-import { Cloud, CloudSun, Sun, Thermometer, Clock, Users, CalendarIcon } from 'lucide-react'
+import { Cloud, CloudSun, Sun, Thermometer, Clock, Users, CalendarIcon, ArrowLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
@@ -22,18 +22,17 @@ const AVAILABLE_TIMES = [
 
 const DURATIONS = [
   { value: '60', label: '1 hour' },
-  { value: '90', label: '1.5 hours' },
   { value: '120', label: '2 hours' }
 ]
 
-const PLAYERS = ['1', '2', '3', '4']
+const PLAYERS = ['1', '2', '4']
 
 export function CourtsTab() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string>()
   const [duration, setDuration] = useState<string>()
   const [players, setPlayers] = useState<string>()
-  const [selectedCourt, setSelectedCourt] = useState<number>()
+  const [selectedCourt, setSelectedCourt] = useState<string>()
   const [isLoading, setIsLoading] = useState(false)
   const [courts, setCourts] = useState<CourtWithAvailability[]>([])
   const [isFetchingCourts, setIsFetchingCourts] = useState(false)
@@ -167,14 +166,18 @@ export function CourtsTab() {
     await handleBooking()
   }
 
+  const handleCourtSelect = (courtId: string) => {
+    setSelectedCourt(courtId)
+    setShowBookingConfirmation(true)
+  }
+
   return (
     <div className="animate-in">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Calendar Section */}
-        <Card className={cn(
-          "p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm",
-          isTimeConfigConfirmed && "opacity-50"
-        )}>
+        <Card 
+          className="p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm"
+        >
           <Calendar
             mode="single"
             selected={date}
@@ -220,10 +223,9 @@ export function CourtsTab() {
         </Card>
 
         {/* Weather and Booking Panel */}
-        <Card className={cn(
-          "p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm",
-          isTimeConfigConfirmed && "opacity-50"
-        )}>
+        <Card 
+          className="p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm"
+        >
           {date && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -306,7 +308,7 @@ export function CourtsTab() {
                 </Select>
               </div>
 
-              {/* Confirm Button */}
+              {/* Confirm Button - Only show when not confirmed */}
               {!isTimeConfigConfirmed && (
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
@@ -323,9 +325,11 @@ export function CourtsTab() {
 
       {/* Court Selection Grid - Only show after time config is confirmed */}
       {isTimeConfigConfirmed && (
-        <div className="mt-8">
-          <h2 className="text-2xl font-semibold mb-6">Tennis Courts</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mt-4">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Tennis Courts</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {courts.length > 0 ? (
               courts.map((court) => (
                 <Card
@@ -334,7 +338,7 @@ export function CourtsTab() {
                     "relative overflow-hidden cursor-pointer transition-all duration-300 group",
                     "hover:shadow-xl hover:shadow-primary/20 hover:scale-[1.02]",
                     !court.available && date && time && duration && players && "opacity-50 cursor-not-allowed",
-                    selectedCourt === parseInt(court.id) && "ring-2 ring-primary shadow-lg shadow-primary/20"
+                    selectedCourt === court.id && "ring-2 ring-primary shadow-lg shadow-primary/20"
                   )}
                   onClick={() => {
                     if (!date || !time || !duration || !players) {
@@ -346,11 +350,11 @@ export function CourtsTab() {
                       return
                     }
                     if (court.available) {
-                      setSelectedCourt(parseInt(court.id))
+                      handleCourtSelect(court.id)
                     }
                   }}
                 >
-                  <div className="aspect-[4/3] bg-gradient-to-br from-primary/5 to-primary/10 relative group-hover:from-primary/10 group-hover:to-primary/20 transition-all duration-300">
+                  <div className="aspect-[16/9] bg-gradient-to-br from-primary/5 to-primary/10 relative group-hover:from-primary/10 group-hover:to-primary/20 transition-all duration-300">
                     {court.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img 
@@ -369,7 +373,7 @@ export function CourtsTab() {
                       <p className="text-sm">{court.hourly_rate} Lei/hour</p>
                     </div>
                   </div>
-                  <div className="p-4">
+                  <div className="p-3">
                     <h3 className="text-lg font-semibold">{court.name}</h3>
                     {date && time && duration && players && (
                       <div className="flex justify-between items-center mt-2">
@@ -411,7 +415,7 @@ export function CourtsTab() {
 
       {/* Booking Button - Only show when a court is selected */}
       {selectedCourt && (
-        <div className="mt-8 flex justify-end">
+        <div className="mt-4 flex justify-end">
           <Button 
             size="lg"
             disabled={isLoading}
@@ -427,39 +431,51 @@ export function CourtsTab() {
       <Dialog open={showBookingConfirmation} onOpenChange={setShowBookingConfirmation}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Your Booking</DialogTitle>
+            <DialogTitle>Confirm Booking</DialogTitle>
             <DialogDescription>
-              You are about to book {courts.find(c => parseInt(c.id) === selectedCourt)?.name}
+              Please review your booking details before confirming.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <ul className="space-y-1 text-sm">
-              <li>Date: {date?.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</li>
-              <li>Time: {time}</li>
-              <li>Duration: {DURATIONS.find(d => d.value === duration)?.label}</li>
-              <li>Players: {players}</li>
-              <li className="font-medium mt-2 text-primary">
-                Total Price: {(courts.find(c => parseInt(c.id) === selectedCourt)?.hourly_rate || 0) * (parseInt(duration || '0') / 60)} Lei
-              </li>
-            </ul>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm font-medium">Date</p>
+                <p className="text-sm text-muted-foreground">
+                  {date?.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Time</p>
+                <p className="text-sm text-muted-foreground">
+                  {time} ({duration === '60' ? '1 hour' : '2 hours'})
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Court</p>
+                <p className="text-sm text-muted-foreground">
+                  {courts.find(c => c.id === selectedCourt)?.name}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium">Players</p>
+                <p className="text-sm text-muted-foreground">{players}</p>
+              </div>
+            </div>
           </div>
-          <DialogFooter className="gap-2 sm:gap-0">
+
+          <DialogFooter>
             <Button variant="outline" onClick={() => setShowBookingConfirmation(false)}>
               Cancel
             </Button>
-            <Button 
-              disabled={isLoading}
-              onClick={handleBookingConfirm}
-              className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
-            >
-              {isLoading ? (
-                <>
-                  <Spinner className="mr-2 h-4 w-4" />
-                  Confirming...
-                </>
-              ) : (
-                'Confirm Booking'
-              )}
+            <Button onClick={handleBookingConfirm} disabled={isLoading}>
+              {isLoading ? <Spinner className="mr-2" /> : null}
+              Confirm Booking
             </Button>
           </DialogFooter>
         </DialogContent>
