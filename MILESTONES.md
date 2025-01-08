@@ -190,7 +190,19 @@
    - When court is selected the confirm booking button becomes active
    - When confirmed the system send a notification about the booking.
 
-## Milestone 9: Partner Finder and Match System
+## Milestone 9: Training Sessions
+
+### Tasks
+
+1. Implement real-time coach availability:
+   - Live schedule updates
+   - Instant booking confirmation
+   - Session status tracking
+   - Just like the court booking system
+   - Uses the coaches from the landing page, images too
+
+
+## Milestone 10: Partner Finder and Match System
 
 ### Tasks
 
@@ -224,7 +236,7 @@
    - Create streak tracking
    - Build trophy unlocks
 
-## Milestone 10: Match Results and Rankings
+## Milestone 11: Match Results and Rankings
 
 ### Tasks
 
@@ -246,7 +258,7 @@
    - Ranking updates
    - History tracking
 
-## Milestone 11: Trophy and Achievement System
+## Milestone 12: Trophy and Achievement System
 
 ### Tasks
 
@@ -273,34 +285,6 @@
    - Add trophy details view
    - Implement progress tracking
    - Build achievement notifications
-
-## Milestone 12: Training Sessions
-
-### Tasks
-
-1. Implement real-time coach availability:
-   - Live schedule updates
-   - Instant booking confirmation
-   - Session status tracking
-   - Last-minute availability alerts
-
-2. Create dynamic session management:
-   - Real-time participant lists
-   - Live session modifications
-   - Instant notifications
-   - Attendance tracking
-
-3. Add real-time training features:
-   - Live feedback system
-   - Session progress tracking
-   - Dynamic skill assessments
-   - Instant coach communications
-
-4. Skill integration
-   - Progress tracking
-   - Skill impact
-   - XP rewards
-   - Performance metrics
 
 ## Milestone 13: Real-time Communication
 

@@ -37,7 +37,7 @@ const menuItems = [
   {
     label: "Training Session",
     icon: Trophy,
-    href: "/training",
+    href: "/profile/training",
   },
   {
     label: "Messages",
