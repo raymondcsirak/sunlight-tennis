@@ -11,6 +11,7 @@ export type CoachWithAvailability = {
   image_url: string | null
   hourly_rate: number
   specialization: string
+  role: string
   available: boolean
 }
 
@@ -37,7 +38,8 @@ export async function getAvailableCoaches(
         name,
         image_url,
         hourly_rate,
-        specialization
+        specialization,
+        role
       `)
       .eq('is_active', true)
 
