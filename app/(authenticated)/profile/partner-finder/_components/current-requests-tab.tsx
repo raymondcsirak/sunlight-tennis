@@ -127,17 +127,17 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold">Available Match Requests</h2>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-[90rem] mx-auto">
         {requests.map((request) => (
           <Card 
             key={request.id}
-            className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50"
+            className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50 max-w-[280px] mx-auto w-full"
           >
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
               <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
             </div>
             
-            <CardHeader className="text-center pb-2">
+            <CardHeader className="text-center p-4 pb-2">
               <div className="flex flex-col items-center">
                 <Avatar className="h-20 w-20 mb-2">
                   <AvatarImage src={request.creator.avatar_url || undefined} alt={request.creator.full_name} />
@@ -158,7 +158,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
               </div>
             </CardHeader>
 
-            <CardContent className="pt-2">
+            <CardContent className="p-4 pt-2">
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-1.5">
@@ -176,7 +176,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
                 </div>
 
                 <Button 
-                  className="w-full mt-4"
+                  className="w-full mt-2"
                   onClick={() => handleAcceptRequest(request.id)}
                 >
                   Accept Request
