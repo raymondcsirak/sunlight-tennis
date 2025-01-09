@@ -11,10 +11,14 @@ import { CalendarIcon, MessageSquare, Trophy, Users, Settings, Home } from "luci
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
+import { calculateLevelProgress } from "@/utils/xp"
 
 interface ProfileLayoutProps {
   user: User
   profile: any
+  playerXp?: {
+    current_xp: number
+  }
   children: React.ReactNode
 }
 
@@ -56,7 +60,7 @@ const menuItems = [
   },
 ]
 
-export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
+export function ProfileLayout({ user, profile, playerXp, children }: ProfileLayoutProps) {
   const { toast } = useToast()
   const pathname = usePathname()
   const router = useRouter()
@@ -65,6 +69,9 @@ export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
+  // Calculate level progress
+  const progress = calculateLevelProgress(playerXp?.current_xp || 0)
 
   const updateAvatar = useCallback(async (url: string) => {
     try {
@@ -141,20 +148,16 @@ export function ProfileLayout({ user, profile, children }: ProfileLayoutProps) {
                   </Button>
                 </EditProfileDialog>
               </div>
-              
+
               {/* Stats Cards */}
-              <div className="w-full grid grid-cols-3 gap-2">
+              <div className="w-full grid grid-cols-2 gap-2">
                 <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
                   <div className="text-sm text-muted-foreground">Level</div>
-                  <div className="text-2xl font-bold">{profile?.level || 1}</div>
+                  <div className="text-2xl font-bold">{progress.currentLevel}</div>
                 </div>
                 <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                  <div className="text-sm text-muted-foreground">XP</div>
-                  <div className="text-2xl font-bold">{profile?.xp || 0}</div>
-                </div>
-                <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                  <div className="text-sm text-muted-foreground">Matches</div>
-                  <div className="text-2xl font-bold">{profile?.matches_played || 0}</div>
+                  <div className="text-sm text-muted-foreground">Wins</div>
+                  <div className="text-2xl font-bold">{profile?.matches_won || 0}</div>
                 </div>
               </div>
             </div>

@@ -63,7 +63,7 @@ export default async function ProfilePage() {
     .limit(4)
 
   return (
-    <ProfileLayout user={user} profile={profile}>
+    <ProfileLayout user={user} profile={profile} playerXp={playerXp}>
       <div className="space-y-6">
         <XPProgress
           level={progress.currentLevel}
