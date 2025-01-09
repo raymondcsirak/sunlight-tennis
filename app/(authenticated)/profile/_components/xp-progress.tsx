@@ -38,7 +38,8 @@ export function XPProgress({ level, currentXp, xpForNextLevel, streak }: XPProgr
     setPrevStreak(streak)
   }, [streak, prevStreak])
 
-  const progress = (currentXp / xpForNextLevel) * 100
+  // Calculate progress percentage
+  const progress = Math.min(Math.floor((currentXp / xpForNextLevel) * 100), 100)
 
   return (
     <div className="space-y-6">

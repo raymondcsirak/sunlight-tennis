@@ -5,6 +5,7 @@ import { ProfileLayout } from "./_components/profile-layout"
 import { XPProgress } from "./_components/xp-progress"
 import { StatsCards } from "./_components/stats-cards"
 import { TrophyRoom } from "./_components/trophy-room"
+import { calculateLevelProgress } from '@/utils/xp'
 
 export default async function ProfilePage() {
   const cookieStore = await cookies()
@@ -37,9 +38,8 @@ export default async function ProfilePage() {
     .eq("user_id", user.id)
     .single()
 
-  // Calculate next level XP requirement
-  const { data: nextLevelXp } = await supabase
-    .rpc('calculate_xp_for_level', { level_number: (playerXp?.current_level || 1) + 1 })
+  // Calculate level progress using our utility
+  const progress = calculateLevelProgress(playerXp?.current_xp || 0)
 
   // Get total matches and win rate
   const { data: matches } = await supabase
@@ -66,9 +66,9 @@ export default async function ProfilePage() {
     <ProfileLayout user={user} profile={profile}>
       <div className="space-y-6">
         <XPProgress
-          level={playerXp?.current_level || 1}
-          currentXp={playerXp?.current_xp || 0}
-          xpForNextLevel={nextLevelXp || 1000}
+          level={progress.currentLevel}
+          currentXp={progress.levelProgress}
+          xpForNextLevel={progress.xpNeededForNextLevel}
           streak={playerXp?.current_streak_days || 0}
         />
 
