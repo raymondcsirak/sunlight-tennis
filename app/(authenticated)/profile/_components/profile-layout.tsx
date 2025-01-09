@@ -31,7 +31,7 @@ const menuItems = [
   {
     label: "Find Partner",
     icon: Users,
-    href: "/find-partner",
+    href: "/profile/partner-finder",
   },
   {
     label: "Book Court",
