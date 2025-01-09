@@ -1,28 +1,24 @@
 'use server'
 
-import { z } from 'zod'
 import { createClient } from '@/utils/supabase/server'
+import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
+import { z } from 'zod'
 
 export type CoachWithAvailability = {
   id: string
   name: string
-  role: string
-  image_url: string
+  image_url: string | null
+  hourly_rate: number
   specialization: string
   available: boolean
-}
-
-type Booking = {
-  coach_id: string
-  start_time: string
-  end_time: string
 }
 
 const createTrainingSessionSchema = z.object({
   coachId: z.string(),
   startTime: z.string(),
   endTime: z.string(),
+  notes: z.string().optional()
 })
 
 export async function getAvailableCoaches(
@@ -31,110 +27,113 @@ export async function getAvailableCoaches(
   endTime: string
 ) {
   try {
-    const cookieStore = cookies()
     const supabase = await createClient()
 
-    // First get all coaches
+    // First, get all active coaches
     const { data: coaches, error: coachesError } = await supabase
       .from('coaches')
-      .select('*')
+      .select(`
+        id,
+        name,
+        image_url,
+        hourly_rate,
+        specialization
+      `)
+      .eq('is_active', true)
 
-    if (coachesError) {
-      console.error('Error fetching coaches:', coachesError)
-      return { success: false, error: 'Failed to fetch coaches' }
+    if (coachesError) throw coachesError
+
+    // If startTime equals endTime, it's an initial fetch - return all coaches as available
+    if (startTime === endTime) {
+      const coachesWithAvailability: CoachWithAvailability[] = coaches.map(coach => ({
+        ...coach,
+        available: true
+      }))
+      return {
+        success: true,
+        coaches: coachesWithAvailability
+      }
     }
 
-    // Then get all confirmed bookings for the given date
-    const { data: bookings, error: bookingsError } = await supabase
+    // Then, get all training sessions for the given time period
+    const { data: sessions, error: sessionsError } = await supabase
       .from('training_sessions')
-      .select('coach_id, start_time, end_time')
+      .select('coach_id')
       .eq('status', 'confirmed')
+      .neq('status', 'cancelled')
       .gte('start_time', `${date}T00:00:00Z`)
       .lt('start_time', `${date}T23:59:59Z`)
+      .or(
+        `and(start_time.lte.${endTime},end_time.gt.${startTime})`
+      )
 
-    if (bookingsError) {
-      console.error('Error fetching bookings:', bookingsError)
-      return { success: false, error: 'Failed to fetch bookings' }
+    if (sessionsError) {
+      console.error('Sessions error:', sessionsError)
+      throw sessionsError
     }
 
-    // Create a Set of coach IDs that are booked during the requested time
-    const bookedCoachIds = new Set(
-      bookings
-        ?.filter((booking: Booking) => {
-          const bookingStart = new Date(booking.start_time)
-          const bookingEnd = new Date(booking.end_time)
-          const requestStart = new Date(startTime)
-          const requestEnd = new Date(endTime)
+    // Create a Set of busy coach IDs for quick lookup
+    const busyCoachIds = new Set(sessions.map(s => s.coach_id))
 
-          return (
-            (requestStart >= bookingStart && requestStart < bookingEnd) ||
-            (requestEnd > bookingStart && requestEnd <= bookingEnd) ||
-            (requestStart <= bookingStart && requestEnd >= bookingEnd)
-          )
-        })
-        .map((booking: Booking) => booking.coach_id)
-    )
-
-    // Map coaches to include availability
-    const coachesWithAvailability: CoachWithAvailability[] = coaches!.map((coach: any) => ({
+    // Mark coaches as available or not
+    const coachesWithAvailability: CoachWithAvailability[] = coaches.map(coach => ({
       ...coach,
-      available: !bookedCoachIds.has(coach.id)
+      available: !busyCoachIds.has(coach.id)
     }))
 
-    return { success: true, coaches: coachesWithAvailability }
+    return {
+      success: true,
+      coaches: coachesWithAvailability
+    }
   } catch (error) {
-    console.error('Error in getAvailableCoaches:', error)
-    return { success: false, error: 'Failed to get available coaches' }
+    console.error('Error getting available coaches:', error)
+    return {
+      success: false,
+      error: 'Failed to fetch available coaches'
+    }
   }
 }
 
 export async function createTrainingSession(data: z.infer<typeof createTrainingSessionSchema>) {
   try {
-    const cookieStore = cookies()
     const supabase = await createClient()
 
-    // Get the current user
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError || !user) {
-      throw new Error('Not authenticated')
+    // Get the user
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error('User not found')
     }
 
-    // Validate the input
-    const validatedData = createTrainingSessionSchema.parse(data)
-
-    // Create the training session
-    const { data: session, error: sessionError } = await supabase
-      .from('training_sessions')
-      .insert([
-        {
-          coach_id: validatedData.coachId,
-          user_id: user.id,
-          start_time: validatedData.startTime,
-          end_time: validatedData.endTime,
-        }
-      ])
-      .select()
-      .single()
-
-    if (sessionError) {
-      console.error('Error creating training session:', sessionError)
-      return { success: false, error: 'Failed to create training session' }
-    }
-
-    // Add XP for booking a training session
-    const { error: xpError } = await supabase.rpc('add_xp', {
-      user_id_input: user.id,
-      xp_amount: 100,
-      activity_type: 'training_session_booked'
+    // Call the stored function
+    const { data: result, error } = await supabase.rpc('create_training_session', {
+      p_student_id: user.id,
+      p_coach_id: data.coachId,
+      p_start_time: data.startTime,
+      p_end_time: data.endTime,
+      p_notes: data.notes
     })
 
-    if (xpError) {
-      console.error('Error adding XP:', xpError)
+    if (error) throw error
+
+    if (!result?.success) {
+      throw new Error('Training session creation failed')
     }
 
-    return { success: true, session }
+    revalidatePath('/profile/training')
+    revalidatePath('/profile') // Revalidate profile to update XP display
+
+    return {
+      success: true,
+      sessionId: result.session_id
+    }
   } catch (error) {
-    console.error('Error in createTrainingSession:', error)
-    return { success: false, error: 'Failed to create training session' }
+    console.error('Error creating training session:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create training session'
+    }
   }
 } 

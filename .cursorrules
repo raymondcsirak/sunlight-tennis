@@ -12,6 +12,7 @@ Nextjs and supabase:
 - project is using supabase/ssr instead of supabase/auth-helpers-nextjs
 - supabase is a hosted service, not self hosted
 - use "npx supabase migration new" to create new migrations
+- migration in supabase are immutable, so if you need to change a migration, you need to create a new one
 
 Request Analysis
 

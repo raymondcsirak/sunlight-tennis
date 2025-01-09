@@ -209,8 +209,6 @@
 1. Create match request system:
    - Build request creation interface
    - Implement date/time selection
-   - Add court preference selection
-   - Create notes/requirements field
 
 2. Develop match browsing system:
    - Create request listing interface
@@ -448,6 +446,12 @@ Each milestone requires:
    - Peer reviews
    - Validation system
    - Assessment moderation
+
+#### Training Session System
+
+   - Link coaches to auth users
+   - Enable coach notifications
+   - Add coach-specific features
 
 #### Payment and subscription system
 
