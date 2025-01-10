@@ -14,6 +14,7 @@ import { Cloud, CloudSun, Sun, Thermometer, Clock, Users, CalendarIcon } from 'l
 import { cn } from '@/lib/utils'
 import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { MatchResponses } from "./match-responses"
 
 interface MyMatchesTabProps {
   userId: string
@@ -39,6 +40,17 @@ interface MatchRequest {
   status: 'open' | 'pending' | 'confirmed' | 'cancelled'
   created_at: string
   court?: Court
+  responses?: Array<{
+    id: string
+    status: 'pending' | 'accepted' | 'rejected'
+    responder: {
+      id: string
+      full_name: string
+      avatar_url: string | null
+      level: number
+      matches_won: number
+    }
+  }>
 }
 
 interface Court {
@@ -99,6 +111,17 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             name,
             surface,
             is_indoor
+          ),
+          responses:match_request_responses(
+            id,
+            status,
+            responder:profiles(
+              id,
+              full_name,
+              avatar_url,
+              level,
+              matches_won
+            )
           )
         `)
         .eq('creator_id', userId)
@@ -236,8 +259,114 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
+  const handleAcceptResponse = async (responseId: string) => {
+    try {
+      // Get the response details first
+      const { data: responseData, error: responseError } = await supabase
+        .from('match_request_responses')
+        .select('*, request:match_requests(*)')
+        .eq('id', responseId)
+        .single()
+
+      if (responseError) throw responseError
+
+      // Update the response status
+      const { error: updateError } = await supabase
+        .from('match_request_responses')
+        .update({ status: 'accepted' })
+        .eq('id', responseId)
+
+      if (updateError) throw updateError
+
+      // Create a notification for the responder
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: responseData.responder_id,
+          type: 'match_request_accepted',
+          title: 'Match Request Accepted',
+          message: 'Your match request has been accepted! Get ready to play!',
+          data: {
+            request_id: responseData.request_id,
+            response_id: responseId
+          }
+        })
+
+      if (notificationError) throw notificationError
+
+      toast({
+        title: "Response Accepted",
+        description: "The player will be notified. Get ready to play!",
+        className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
+      })
+
+      // Refresh the requests list
+      fetchMatchRequests()
+    } catch (error) {
+      console.error('Error accepting response:', error)
+      toast({
+        title: "Error",
+        description: "Failed to accept response. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleRejectResponse = async (responseId: string) => {
+    try {
+      // Get the response details first
+      const { data: responseData, error: responseError } = await supabase
+        .from('match_request_responses')
+        .select('*, request:match_requests(*)')
+        .eq('id', responseId)
+        .single()
+
+      if (responseError) throw responseError
+
+      // Update the response status
+      const { error: updateError } = await supabase
+        .from('match_request_responses')
+        .update({ status: 'rejected' })
+        .eq('id', responseId)
+
+      if (updateError) throw updateError
+
+      // Create a notification for the responder
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: responseData.responder_id,
+          type: 'match_request_rejected',
+          title: 'Match Request Response',
+          message: 'Unfortunately, your match request was not accepted.',
+          data: {
+            request_id: responseData.request_id,
+            response_id: responseId
+          }
+        })
+
+      if (notificationError) throw notificationError
+
+      toast({
+        title: "Response Rejected",
+        description: "The player has been notified.",
+        className: "bg-gradient-to-br from-blue-500/90 to-blue-600/90 text-white border-none",
+      })
+
+      // Refresh the requests list
+      fetchMatchRequests()
+    } catch (error) {
+      console.error('Error rejecting response:', error)
+      toast({
+        title: "Error",
+        description: "Failed to reject response. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">My Match Requests</h2>
         <Dialog open={showNewRequest} onOpenChange={setShowNewRequest}>
@@ -373,83 +502,93 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {matchRequests.map((request) => (
-          <Card 
-            key={request.id}
-            className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50"
-          >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-            </div>
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex flex-col">
-                  <CardTitle className="text-base">
-                    {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
-                    {request.court?.name}
-                  </CardDescription>
-                </div>
-                <Badge 
-                  variant={request.status === "confirmed" ? "default" : "secondary"}
-                  className="text-xs"
-                >
-                  {request.status}
-                </Badge>
+          <div key={request.id} className="space-y-4">
+            <Card 
+              className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50"
+            >
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
               </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <div className="space-y-1 text-sm">
-                <div className="flex items-center justify-between text-muted-foreground">
-                  <div className="flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>{request.duration}</span>
+              <CardHeader className="p-4 pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <CardTitle className="text-base">
+                      {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
+                    </CardTitle>
+                    <CardDescription className="text-xs mt-0.5">
+                      {request.court?.name}
+                    </CardDescription>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    {request.court?.is_indoor ? (
-                      <Cloud className="h-3.5 w-3.5" />
-                    ) : (
-                      <Sun className="h-3.5 w-3.5" />
-                    )}
-                    <span>{request.court?.surface}</span>
-                  </div>
+                  <Badge 
+                    variant={request.status === "confirmed" ? "default" : "secondary"}
+                    className="text-xs"
+                  >
+                    {request.status}
+                  </Badge>
                 </div>
-                <div className="flex items-center justify-between pt-2">
-                  <span className="text-xs text-muted-foreground">
-                    {format(new Date(request.created_at), 'MMM d, yyyy')}
-                  </span>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
-                      >
-                        Cancel
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Match Request</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to cancel this match request? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Keep Request</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleCancelRequest(request.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              </CardHeader>
+              <CardContent className="p-4 pt-2">
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center justify-between text-muted-foreground">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="h-3.5 w-3.5" />
+                      <span>{request.duration}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      {request.court?.is_indoor ? (
+                        <Cloud className="h-3.5 w-3.5" />
+                      ) : (
+                        <Sun className="h-3.5 w-3.5" />
+                      )}
+                      <span>{request.court?.surface}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(request.created_at), 'MMM d, yyyy')}
+                    </span>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
                         >
-                          Yes, Cancel Request
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          Cancel
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Cancel Match Request</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to cancel this match request? This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Keep Request</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleCancelRequest(request.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Yes, Cancel Request
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            {/* Show responses if there are any */}
+            {request.responses && request.responses.length > 0 && (
+              <MatchResponses
+                responses={request.responses}
+                onAccept={handleAcceptResponse}
+                onReject={handleRejectResponse}
+              />
+            )}
+          </div>
         ))}
       </div>
     </div>

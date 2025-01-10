@@ -36,6 +36,14 @@ interface MatchRequest {
     surface: string
     is_indoor: boolean
   }
+  responses?: Array<{
+    id: string
+    responder_id: string
+    status: 'pending' | 'accepted' | 'rejected'
+    responder: {
+      full_name: string
+    }
+  }>
 }
 
 export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
@@ -68,6 +76,14 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
             name,
             surface,
             is_indoor
+          ),
+          responses:match_request_responses(
+            id,
+            responder_id,
+            status,
+            responder:profiles(
+              full_name
+            )
           )
         `)
         .neq('creator_id', userId) // Don't show own requests
@@ -91,19 +107,50 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
   const handleAcceptRequest = async (requestId: string) => {
     try {
-      // First update the request status
-      const { error: updateError } = await supabase
-        .from('match_requests')
-        .update({ status: 'pending' })
-        .eq('id', requestId)
+      // Get current user's profile first
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', userId)
+        .single()
+
+      if (profileError) throw profileError
+
+      // Create a response for this request
+      const { data: responseData, error: responseError } = await supabase
+        .from('match_request_responses')
+        .insert({
+          request_id: requestId,
+          responder_id: userId,
+          status: 'pending'
+        })
         .select()
         .single()
 
-      if (updateError) throw updateError
+      if (responseError) throw responseError
+
+      // Create a notification for the request creator
+      const request = requests.find(r => r.id === requestId)
+      if (!request) throw new Error('Request not found')
+
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: request.creator_id,
+          type: 'match_request_response',
+          title: 'New Match Request Response',
+          message: `${profileData.full_name} wants to join your match request.`,
+          data: {
+            request_id: requestId,
+            response_id: responseData.id
+          }
+        })
+
+      if (notificationError) throw notificationError
 
       toast({
-        title: "Request Accepted!",
-        description: "You've accepted the match request. The creator will be notified.",
+        title: "Request Sent!",
+        description: "The match creator will be notified of your interest.",
         className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
       })
 
@@ -113,7 +160,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
       console.error('Error accepting request:', error)
       toast({
         title: "Error",
-        description: "Failed to accept request. Please try again.",
+        description: "Failed to send request. Please try again.",
         variant: "destructive",
       })
     }
@@ -176,8 +223,12 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
                 <Button 
                   className="w-full mt-2"
                   onClick={() => handleAcceptRequest(request.id)}
+                  disabled={request.responses?.some(r => r.responder_id === userId)}
                 >
-                  Let's Play
+                  {request.responses?.some(r => r.responder_id === userId) 
+                    ? 'Request Sent'
+                    : "Let's Play"
+                  }
                 </Button>
               </div>
             </CardContent>
