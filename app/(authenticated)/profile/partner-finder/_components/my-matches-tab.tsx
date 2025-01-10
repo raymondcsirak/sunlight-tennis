@@ -938,7 +938,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                 </div>
               </CardHeader>
               <CardContent className="p-4 pt-2">
-                <div className="space-y-1 text-sm">
+                <div className="space-y-3 text-sm">
                   <div className="flex items-center justify-between text-muted-foreground">
                     <div className="flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5" />
@@ -953,51 +953,97 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       <span>{request.court?.surface}</span>
                     </div>
                   </div>
+
+                  {/* Show responses if there are any */}
+                  {request.responses && request.responses.length > 0 && (
+                    <div className="space-y-3 pt-2 border-t">
+                      {request.responses.map((response) => (
+                        <div key={response.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={getAvatarUrl(response.responder.avatar_url) || undefined} />
+                              <AvatarFallback>
+                                {response.responder.full_name.split(' ').map(n => n[0]).join('')}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-medium">{response.responder.full_name}</span>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <Trophy className="h-3 w-3" />
+                                <span>Level {response.responder.level}</span>
+                                <span>•</span>
+                                <span>{response.responder.matches_won} wins</span>
+                              </div>
+                            </div>
+                          </div>
+                          {response.status === 'pending' ? (
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
+                                onClick={() => handleRejectResponse(response.id)}
+                              >
+                                <X className="h-3.5 w-3.5 mr-1" />
+                                Reject
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => handleAcceptResponse(response.id)}
+                              >
+                                <Check className="h-3.5 w-3.5 mr-1" />
+                                Accept
+                              </Button>
+                            </div>
+                          ) : (
+                            <Badge variant={response.status === 'accepted' ? 'default' : 'secondary'}>
+                              {response.status}
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-2">
                     <span className="text-xs text-muted-foreground">
                       {format(new Date(request.created_at), 'MMM d, yyyy')}
                     </span>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
-                        >
-                          Cancel
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Cancel Match Request</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Are you sure you want to cancel this match request? This action cannot be undone.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Keep Request</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleCancelRequest(request.id)}
-                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    {!request.responses?.some(r => r.status === 'accepted') && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
                           >
-                            Yes, Cancel Request
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                            Cancel
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Cancel Match Request</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to cancel this match request? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Keep Request</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleCancelRequest(request.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Yes, Cancel Request
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
-
-            {/* Show responses if there are any */}
-            {request.responses && request.responses.length > 0 && (
-              <MatchResponses
-                responses={request.responses}
-                onAccept={handleAcceptResponse}
-                onReject={handleRejectResponse}
-              />
-            )}
           </div>
         ))}
 
