@@ -129,18 +129,43 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (profileError) throw profileError
 
-      // Create a response for this request
-      const { data: responseData, error: responseError } = await supabase
+      // Check if a response already exists
+      const { data: existingResponse, error: existingResponseError } = await supabase
         .from('match_request_responses')
-        .insert({
-          request_id: requestId,
-          responder_id: userId,
-          status: 'pending'
-        })
-        .select()
+        .select('id')
+        .eq('request_id', requestId)
+        .eq('responder_id', userId)
         .single()
 
-      if (responseError) throw responseError
+      if (existingResponseError && existingResponseError.code !== 'PGRST116') throw existingResponseError
+
+      let responseData
+      if (existingResponse) {
+        // Update existing response
+        const { data, error: updateError } = await supabase
+          .from('match_request_responses')
+          .update({ status: 'pending' })
+          .eq('id', existingResponse.id)
+          .select()
+          .single()
+
+        if (updateError) throw updateError
+        responseData = data
+      } else {
+        // Create new response
+        const { data, error: responseError } = await supabase
+          .from('match_request_responses')
+          .insert({
+            request_id: requestId,
+            responder_id: userId,
+            status: 'pending'
+          })
+          .select()
+          .single()
+
+        if (responseError) throw responseError
+        responseData = data
+      }
 
       // Create a notification for the request creator
       const request = requests.find(r => r.id === requestId)
@@ -236,9 +261,9 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
                 <Button 
                   className="w-full mt-2"
                   onClick={() => handleAcceptRequest(request.id)}
-                  disabled={request.responses?.some(r => r.responder_id === userId)}
+                  disabled={request.responses?.some(r => r.responder_id === userId && r.status === 'pending')}
                 >
-                  {request.responses?.some(r => r.responder_id === userId) 
+                  {request.responses?.some(r => r.responder_id === userId && r.status === 'pending')
                     ? 'Request Sent'
                     : "Let's Play"
                   }
