@@ -125,8 +125,6 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">Available Match Requests</h2>
-      
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-[90rem] mx-auto">
         {requests.map((request) => (
           <Card 
@@ -179,7 +177,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
                   className="w-full mt-2"
                   onClick={() => handleAcceptRequest(request.id)}
                 >
-                  Accept Request
+                  Let's Play
                 </Button>
               </div>
             </CardContent>
@@ -188,7 +186,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
         {requests.length === 0 && (
           <div className="col-span-full text-center py-8 text-muted-foreground">
-            No match requests available at the moment.
+            No open requests available at the moment.
           </div>
         )}
       </div>

@@ -12,9 +12,9 @@ interface PartnerFinderTabsProps {
 export function PartnerFinderTabs({ userId }: PartnerFinderTabsProps) {
   return (
     <Tabs defaultValue="my-matches" className="space-y-4">
-      <TabsList>
+      <TabsList className="grid w-full max-w-[400px] grid-cols-3">
         <TabsTrigger value="my-matches">My Matches</TabsTrigger>
-        <TabsTrigger value="current-requests">Current Requests</TabsTrigger>
+        <TabsTrigger value="current-requests">Open Requests</TabsTrigger>
         <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
       </TabsList>
       <TabsContent value="my-matches" className="space-y-4">
