@@ -5,16 +5,24 @@ import { createBrowserClient } from "@supabase/ssr"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar } from '@/components/ui/calendar'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { useToast } from "@/components/ui/use-toast"
-import { addHours, format } from 'date-fns'
-import { Cloud, CloudSun, Sun, Thermometer, Clock, Users, CalendarIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { format, addHours } from 'date-fns'
+import { Clock, Cloud, Sun, Trophy, Check, X, ChevronRight, Thermometer } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { MatchResponses } from "./match-responses"
+import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
+
+// Helper function to get the full avatar URL
+function getAvatarUrl(path: string | null) {
+  if (!path) return null
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
+}
 
 interface MyMatchesTabProps {
   userId: string
@@ -69,6 +77,127 @@ interface Court {
   is_indoor: boolean
 }
 
+interface WinnerSelectionDialogProps {
+  match: {
+    id: string
+    player1: {
+      id: string
+      full_name: string
+      avatar_url: string | null
+    }
+    player2: {
+      id: string
+      full_name: string
+      avatar_url: string | null
+    }
+    match_request: {
+      preferred_date: string
+      preferred_time: string
+      duration: string
+    }
+  }
+  onSelect: (winnerId: string) => Promise<void>
+}
+
+function WinnerSelectionDialog({ match, onSelect }: WinnerSelectionDialogProps) {
+  return (
+    <AlertDialogContent className="max-w-2xl">
+      <AlertDialogHeader>
+        <AlertDialogTitle className="text-xl">Select Match Winner</AlertDialogTitle>
+        <AlertDialogDescription className="text-base">
+          Please select who won this match. The result will only be confirmed when both players agree.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+
+      {/* Match Details */}
+      <div className="bg-muted/50 rounded-lg p-4 mb-4">
+        <div className="flex items-center gap-4 text-sm">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-primary" />
+            <span>{format(new Date(match.match_request.preferred_date), 'MMM d')} at {match.match_request.preferred_time}</span>
+          </div>
+          <div className="text-muted-foreground">•</div>
+          <div className="text-muted-foreground">
+            {match.match_request.duration}
+          </div>
+        </div>
+      </div>
+
+      {/* Player Selection */}
+      <div className="grid grid-cols-2 gap-6">
+        {[match.player1, match.player2].map((player) => (
+          <Button
+            key={player.id}
+            variant="outline"
+            className="flex flex-col items-center gap-3 p-6 h-auto hover:border-primary hover:bg-accent group relative overflow-hidden"
+            onClick={() => onSelect(player.id)}
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Avatar className="h-20 w-20 border-2 border-muted-foreground/20">
+              <AvatarImage src={getAvatarUrl(player.avatar_url) || undefined} className="object-cover" />
+              <AvatarFallback className="text-lg">
+                {player.full_name.split(' ').map(n => n[0]).join('')}
+              </AvatarFallback>
+            </Avatar>
+            <div className="space-y-1 text-center">
+              <div className="font-medium">{player.full_name}</div>
+              <Badge variant="secondary" className="group-hover:bg-primary/10">
+                Select as Winner
+              </Badge>
+            </div>
+          </Button>
+        ))}
+      </div>
+
+      <AlertDialogFooter className="mt-6">
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  )
+}
+
+interface MatchWithPlayers {
+  id: string
+  player1: {
+    id: string
+    full_name: string
+    avatar_url: string | null
+  }
+  player2: {
+    id: string
+    full_name: string
+    avatar_url: string | null
+  }
+  match_request: {
+    preferred_date: string
+    preferred_time: string
+    duration: string
+  }
+}
+
+interface Database {
+  public: {
+    Tables: {
+      matches: {
+        Row: {
+          id: string
+          player1_id: string
+          player2_id: string
+          status: string
+          winner_id: string | null
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          full_name: string
+          avatar_url: string | null
+        }
+      }
+    }
+  }
+}
+
 export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [courts, setCourts] = useState<Court[]>([])
@@ -86,6 +215,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   const [filter, setFilter] = useState<RequestFilter>('all')
+  const [matchesNeedingWinner, setMatchesNeedingWinner] = useState<MatchWithPlayers[]>([])
 
   useEffect(() => {
     fetchMatchRequests()
@@ -284,7 +414,11 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       // Get the response details first
       const { data: responseData, error: responseError } = await supabase
         .from('match_request_responses')
-        .select('*, request:match_requests(*)')
+        .select(`
+          *,
+          request:match_requests!inner(*),
+          responder:profiles!inner(*)
+        `)
         .eq('id', responseId)
         .single()
 
@@ -297,6 +431,18 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         .eq('id', responseId)
 
       if (updateError) throw updateError
+
+      // Create a match record
+      const { error: matchError } = await supabase
+        .from('matches')
+        .insert({
+          player1_id: responseData.request.creator_id,
+          player2_id: responseData.responder_id,
+          request_id: responseData.request_id,
+          winner_id: null
+        })
+
+      if (matchError) throw matchError
 
       // Create a notification for the responder
       const { error: notificationError } = await supabase
@@ -322,6 +468,8 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       // Refresh the requests list
       fetchMatchRequests()
+      // Also refresh matches needing winner selection
+      fetchMatchesNeedingWinner()
     } catch (error) {
       console.error('Error accepting response:', error)
       toast({
@@ -429,8 +577,185 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     })
   }, [matchRequests, filter])
 
+  // Function to fetch matches that need winner selection
+  const fetchMatchesNeedingWinner = async () => {
+    try {
+      type MatchResponse = {
+        id: string;
+        player1: Database['public']['Tables']['profiles']['Row'];
+        player2: Database['public']['Tables']['profiles']['Row'];
+        match_request: {
+          preferred_date: string;
+          preferred_time: string;
+          duration: string;
+        };
+      };
+
+      console.log('Fetching matches needing winner...');
+      const { data: matchesData, error } = await supabase
+        .from('matches')
+        .select(`
+          id,
+          request_id,
+          player1:profiles!matches_player1_id_fkey(id, full_name, avatar_url),
+          player2:profiles!matches_player2_id_fkey(id, full_name, avatar_url),
+          match_request:match_requests(preferred_date, preferred_time, duration)
+        `)
+        .is('winner_id', null)
+        .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+        .returns<MatchResponse[]>();
+
+      if (error) throw error
+      console.log('Raw matches data:', JSON.stringify(matchesData, null, 2));
+
+      // Check if any matches have null match_request
+      const matchesWithoutRequest = matchesData?.filter(m => !m.match_request);
+      if (matchesWithoutRequest?.length) {
+        console.log('Matches without request data:', matchesWithoutRequest);
+      }
+
+      // Filter out matches where the user has already made a selection
+      const { data: selections, error: selectionsError } = await supabase
+        .from('match_winner_selections')
+        .select('match_id')
+        .eq('selector_id', userId)
+
+      if (selectionsError) throw selectionsError
+      console.log('User selections:', selections);
+
+      const selectedMatchIds = new Set(selections?.map(s => s.match_id))
+      
+      // Filter matches that have ended (current time is past match end time)
+      const currentTime = new Date();
+      console.log('Current time:', currentTime.toISOString());
+      const needSelection = matchesData?.filter(match => {
+        if (!match.match_request) {
+          console.log('Skipping match due to missing request data:', match.id);
+          return false;
+        }
+
+        console.log('\nProcessing match:', match.id);
+        console.log('Match request:', match.match_request);
+        
+        // Parse the match time
+        const matchDateTime = new Date(`${match.match_request.preferred_date}T${match.match_request.preferred_time}`);
+        console.log('Match start time:', matchDateTime.toISOString());
+        
+        // Parse duration (format: "01:00:00" -> 60 minutes)
+        const [hours, minutes] = match.match_request.duration.split(':').map(Number);
+        const durationInMinutes = (hours * 60) + minutes;
+        console.log('Duration in minutes:', durationInMinutes);
+        
+        const matchEndTime = new Date(matchDateTime.getTime() + durationInMinutes * 60000);
+        console.log('Match end time:', matchEndTime.toISOString());
+        const hasEnded = currentTime > matchEndTime;
+        console.log('Has match ended?', hasEnded);
+        return hasEnded;
+      }).map(match => ({
+        id: match.id,
+        player1: match.player1,
+        player2: match.player2,
+        match_request: match.match_request
+      })) || []
+
+      console.log('Matches needing winner selection:', needSelection);
+      setMatchesNeedingWinner(needSelection.filter(match => !selectedMatchIds.has(match.id)))
+    } catch (error) {
+      console.error('Error fetching matches needing winner:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load matches needing winner selection.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  useEffect(() => {
+    fetchMatchesNeedingWinner()
+  }, [userId])
+
+  const handleWinnerSelection = async (matchId: string, winnerId: string) => {
+    try {
+      const { error } = await supabase
+        .from('match_winner_selections')
+        .insert({
+          match_id: matchId,
+          selector_id: userId,
+          selected_winner_id: winnerId
+        })
+
+      if (error) throw error
+
+      toast({
+        title: "Winner Selected",
+        description: "Your selection has been recorded. Waiting for the other player to confirm.",
+        className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
+      })
+
+      // Refresh the list of matches needing winner selection
+      fetchMatchesNeedingWinner()
+    } catch (error) {
+      console.error('Error selecting winner:', error)
+      toast({
+        title: "Error",
+        description: "Failed to record your winner selection. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {/* Winner Selection Dialogs */}
+      {matchesNeedingWinner.length > 0 && (
+        <div className="bg-card border rounded-lg p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-primary" />
+                Pending Match Results
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Please select the winners for your completed matches
+              </p>
+            </div>
+            <Badge variant="secondary" className="h-7 px-3">
+              {matchesNeedingWinner.length} {matchesNeedingWinner.length === 1 ? 'match' : 'matches'} pending
+            </Badge>
+          </div>
+          <ScrollArea className="h-[200px]">
+            <div className="space-y-2">
+              {matchesNeedingWinner.map((match) => (
+                <AlertDialog key={match.id}>
+                  <AlertDialogTrigger asChild>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      className="w-full p-4 rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground group flex items-center justify-between cursor-pointer"
+                    >
+                      <div className="flex flex-col items-start gap-1">
+                        <div className="font-medium">
+                          {match.player1.full_name} vs {match.player2.full_name}
+                        </div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Clock className="h-3.5 w-3.5" />
+                          {format(new Date(match.match_request.preferred_date), 'MMM d')} at {match.match_request.preferred_time}
+                        </div>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-current" />
+                    </div>
+                  </AlertDialogTrigger>
+                  <WinnerSelectionDialog
+                    match={match}
+                    onSelect={(winnerId) => handleWinnerSelection(match.id, winnerId)}
+                  />
+                </AlertDialog>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
+
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-semibold">My Match Requests</h2>
         <Dialog open={showNewRequest} onOpenChange={setShowNewRequest}>
