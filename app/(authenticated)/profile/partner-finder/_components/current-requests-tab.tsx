@@ -46,6 +46,12 @@ interface MatchRequest {
   }>
 }
 
+// Helper function to get the full avatar URL
+function getAvatarUrl(path: string | null) {
+  if (!path) return null
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
+}
+
 export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
   const [requests, setRequests] = useState<MatchRequest[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -185,7 +191,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
             <CardHeader className="text-center p-4 pb-2">
               <div className="flex flex-col items-center">
                 <Avatar className="h-20 w-20 mb-2">
-                  <AvatarImage src={request.creator.avatar_url || undefined} alt={request.creator.full_name} />
+                  <AvatarImage src={getAvatarUrl(request.creator.avatar_url) || undefined} className="object-cover aspect-square" />
                   <AvatarFallback>{request.creator.full_name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                 </Avatar>
                 <CardTitle className="text-lg font-semibold">

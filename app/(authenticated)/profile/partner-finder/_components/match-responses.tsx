@@ -7,6 +7,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, Cloud, Sun, Trophy, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// Helper function to get the full avatar URL
+function getAvatarUrl(path: string | null) {
+  if (!path) return null
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
+}
+
 interface Response {
   id: string
   status: 'pending' | 'accepted' | 'rejected'
@@ -147,7 +153,7 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar>
-              <AvatarImage src={response.responder.avatar_url || undefined} />
+              <AvatarImage src={getAvatarUrl(response.responder.avatar_url) || undefined} className="object-cover aspect-square" />
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
             <div>
