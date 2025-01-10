@@ -20,33 +20,49 @@ CREATE TABLE IF NOT EXISTS match_request_responses (
 ALTER TABLE match_request_responses ENABLE ROW LEVEL SECURITY;
 
 -- Policies for match request responses
-CREATE POLICY "Users can view responses for their requests"
-    ON match_request_responses FOR SELECT
-    USING (
-        request_id IN (
-            SELECT id FROM match_requests WHERE creator_id = auth.uid()
-        ) OR
-        responder_id = auth.uid()
-    );
+DO $$ BEGIN
+    CREATE POLICY "Users can view responses for their requests"
+        ON match_request_responses FOR SELECT
+        USING (
+            request_id IN (
+                SELECT id FROM match_requests WHERE creator_id = auth.uid()
+            ) OR
+            responder_id = auth.uid()
+        );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can create responses"
-    ON match_request_responses FOR INSERT
-    WITH CHECK (
-        responder_id = auth.uid() AND
-        request_id IN (
-            SELECT id FROM match_requests 
-            WHERE status = 'open' 
-            AND creator_id != auth.uid()
-        )
-    );
+DO $$ BEGIN
+    CREATE POLICY "Users can create responses"
+        ON match_request_responses FOR INSERT
+        WITH CHECK (
+            responder_id = auth.uid() AND
+            request_id IN (
+                SELECT id FROM match_requests 
+                WHERE status = 'open' 
+                AND creator_id != auth.uid()
+            )
+        );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE POLICY "Users can update their own responses"
-    ON match_request_responses FOR UPDATE
-    USING (responder_id = auth.uid())
-    WITH CHECK (responder_id = auth.uid());
+DO $$ BEGIN
+    CREATE POLICY "Users can update their own responses"
+        ON match_request_responses FOR UPDATE
+        USING (responder_id = auth.uid())
+        WITH CHECK (responder_id = auth.uid());
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
 -- Add updated_at trigger
-CREATE TRIGGER update_match_request_responses_updated_at
-    BEFORE UPDATE ON match_request_responses
-    FOR EACH ROW
-    EXECUTE FUNCTION update_updated_at_column(); 
+DO $$ BEGIN
+    CREATE TRIGGER update_match_request_responses_updated_at
+        BEFORE UPDATE ON match_request_responses
+        FOR EACH ROW
+        EXECUTE FUNCTION update_updated_at_column();
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$; 

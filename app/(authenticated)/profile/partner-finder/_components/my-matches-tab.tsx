@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,15 @@ import { MatchResponses } from "./match-responses"
 interface MyMatchesTabProps {
   userId: string
 }
+
+type RequestFilter = 'all' | 'open' | 'accepted' | 'rejected'
+
+const FILTER_OPTIONS = [
+  { value: 'all', label: 'All Requests' },
+  { value: 'open', label: 'Open Requests' },
+  { value: 'accepted', label: 'Accepted' },
+  { value: 'rejected', label: 'Rejected' }
+] as const
 
 const AVAILABLE_TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
@@ -76,6 +85,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+  const [filter, setFilter] = useState<RequestFilter>('all')
 
   useEffect(() => {
     fetchMatchRequests()
@@ -365,6 +375,50 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
+  // Sort and filter match requests
+  const sortedAndFilteredRequests = useMemo(() => {
+    let filtered = [...matchRequests]
+
+    // Apply filter
+    if (filter !== 'all') {
+      filtered = filtered.filter(request => {
+        if (filter === 'open') {
+          return request.status === 'open' && (!request.responses || request.responses.every(r => r.status === 'rejected'))
+        }
+        if (filter === 'accepted') {
+          return request.responses?.some(r => r.status === 'accepted')
+        }
+        if (filter === 'rejected') {
+          return request.responses?.every(r => r.status === 'rejected')
+        }
+        return true
+      })
+    }
+
+    // Sort by response status and date
+    return filtered.sort((a, b) => {
+      // Helper function to get request priority
+      const getPriority = (request: MatchRequest) => {
+        if (request.responses?.some(r => r.status === 'accepted')) return 0 // Highest priority
+        if (request.responses?.some(r => r.status === 'pending')) return 1
+        if (!request.responses || request.responses.length === 0) return 2 // Open requests with no responses
+        if (request.responses?.every(r => r.status === 'rejected')) return 3
+        return 2 // Default case
+      }
+
+      const priorityA = getPriority(a)
+      const priorityB = getPriority(b)
+
+      // First sort by priority
+      if (priorityA !== priorityB) return priorityA - priorityB
+
+      // For same priority, sort by date (newest first)
+      const aDateTime = new Date(a.preferred_date + ' ' + a.preferred_time).getTime()
+      const bDateTime = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
+      return bDateTime - aDateTime
+    })
+  }, [matchRequests, filter])
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -500,8 +554,29 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         </Dialog>
       </div>
 
+      {/* Filter Bar */}
+      <div className="flex items-center gap-4">
+        <div className="w-[200px]">
+          <Select value={filter} onValueChange={(value) => setFilter(value as RequestFilter)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Filter requests" />
+            </SelectTrigger>
+            <SelectContent>
+              {FILTER_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {sortedAndFilteredRequests.length} {sortedAndFilteredRequests.length === 1 ? 'request' : 'requests'}
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {matchRequests.map((request) => (
+        {sortedAndFilteredRequests.map((request) => (
           <div key={request.id} className="space-y-4">
             <Card 
               className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50"
@@ -590,6 +665,12 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             )}
           </div>
         ))}
+
+        {sortedAndFilteredRequests.length === 0 && (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+            No match requests found for the selected filter.
+          </div>
+        )}
       </div>
     </div>
   )
