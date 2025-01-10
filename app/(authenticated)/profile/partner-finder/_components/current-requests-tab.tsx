@@ -15,6 +15,15 @@ interface CurrentRequestsTabProps {
   userId: string
 }
 
+interface MatchRequestResponse {
+  id: string
+  responder_id: string
+  status: 'pending' | 'accepted' | 'rejected'
+  responder: {
+    full_name: string
+  }
+}
+
 interface MatchRequest {
   id: string
   creator_id: string
@@ -36,14 +45,7 @@ interface MatchRequest {
     surface: string
     is_indoor: boolean
   }
-  responses?: Array<{
-    id: string
-    responder_id: string
-    status: 'pending' | 'accepted' | 'rejected'
-    responder: {
-      full_name: string
-    }
-  }>
+  responses?: MatchRequestResponse[]
 }
 
 // Helper function to get the full avatar URL
@@ -98,7 +100,12 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (error) throw error
 
-      setRequests(requestsData)
+      // Filter out requests that have any accepted responses
+      const filteredRequests = requestsData?.filter(request => 
+        !request.responses?.some((response: MatchRequestResponse) => response.status === 'accepted')
+      ) || []
+
+      setRequests(filteredRequests)
     } catch (error) {
       console.error('Error fetching requests:', error)
       toast({
