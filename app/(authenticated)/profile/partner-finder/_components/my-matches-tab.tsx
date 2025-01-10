@@ -131,6 +131,16 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
               avatar_url,
               level,
               matches_won
+            ),
+            request:match_requests(
+              preferred_date,
+              preferred_time,
+              duration,
+              court:courts(
+                name,
+                surface,
+                is_indoor
+              )
             )
           )
         `)
