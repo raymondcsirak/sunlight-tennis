@@ -295,7 +295,8 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
   const fetchMatchRequests = async () => {
     try {
-      const { data: requestsData, error } = await supabase
+      // First get requests where user is creator
+      const { data: creatorRequests, error: creatorError } = await supabase
         .from('match_requests')
         .select(`
           *,
@@ -309,7 +310,8 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             winner_id,
             player1_id,
             player2_id,
-            request_id
+            request_id,
+            status
           ),
           responses:match_request_responses(
             id,
@@ -320,37 +322,89 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
               avatar_url,
               level,
               matches_won
-            ),
-            request:match_requests(
-              preferred_date,
-              preferred_time,
-              duration,
-              court:courts(
-                name,
-                surface,
-                is_indoor
-              )
             )
           )
         `)
         .eq('creator_id', userId)
-        .order('created_at', { ascending: false })
+        .order('created_at', { ascending: false });
 
-      if (error) throw error
+      if (creatorError) throw creatorError;
 
-      console.log('Match requests data:', requestsData)
-      setMatchRequests(requestsData)
+      // Then get matches where user is a player
+      const { data: playerMatches, error: playerError } = await supabase
+        .from('matches')
+        .select(`
+          id,
+          winner_id,
+          player1_id,
+          player2_id,
+          request_id,
+          status,
+          match_request:match_requests!inner(
+            id,
+            creator_id,
+            preferred_date,
+            preferred_time,
+            duration,
+            court_preference,
+            status,
+            created_at,
+            court:courts(
+              name,
+              surface,
+              is_indoor
+            ),
+            responses:match_request_responses(
+              id,
+              status,
+              responder:profiles(
+                id,
+                full_name,
+                avatar_url,
+                level,
+                matches_won
+              )
+            )
+          )
+        `)
+        .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
+        .not('request_id', 'is', null)
+        .order('created_at', { ascending: false });
+
+      if (playerError) throw playerError;
+
+      // Transform player matches into requests format
+      const transformedPlayerRequests = playerMatches.map(match => ({
+        ...match.match_request,
+        matches: [
+          {
+            id: match.id,
+            winner_id: match.winner_id,
+            player1_id: match.player1_id,
+            player2_id: match.player2_id,
+            request_id: match.request_id,
+            status: match.status
+          }
+        ]
+      }));
+
+      // Combine and deduplicate requests
+      const allRequests = [...creatorRequests, ...transformedPlayerRequests];
+      const uniqueRequests = Array.from(new Map(allRequests.map(r => [r.id, r])).values());
+
+      console.log('Match requests data:', uniqueRequests);
+      setMatchRequests(uniqueRequests);
     } catch (error) {
-      console.error('Error fetching match requests:', error)
+      console.error('Error fetching match requests:', error);
       toast({
         title: "Error",
         description: "Failed to load match requests. Please try again.",
         variant: "destructive",
-      })
+      });
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Fetch weather when date or time changes
   useEffect(() => {
@@ -601,15 +655,18 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     return filtered.sort((a, b) => {
       // Helper function to get request priority
       const getPriority = (request: MatchRequest) => {
-        if (request.responses?.some(r => r.status === 'pending')) return 0 // Highest priority - waiting for accept
-        if (request.responses?.some(r => r.status === 'accepted') || 
-            request.matches?.some(match => 
-              match.winner_id !== null && 
-              (match.player1_id === userId || match.player2_id === userId)
-            )) return 1 // Include matches where user was a player
-        if (!request.responses || request.responses.length === 0) return 2 // Open requests with no responses
-        if (request.responses?.every(r => r.status === 'rejected')) return 3
-        return 2 // Default case
+        // Check for matches first
+        if (request.matches?.some(match => 
+          match.winner_id !== null && 
+          (match.player1_id === userId || match.player2_id === userId)
+        )) return 0 // Highest priority - completed matches (won or lost)
+        
+        // Then check responses
+        if (request.responses?.some(r => r.status === 'pending')) return 1 // Waiting for accept
+        if (request.responses?.some(r => r.status === 'accepted')) return 2 // Accepted but not played
+        if (!request.responses || request.responses.length === 0) return 3 // Open requests with no responses
+        if (request.responses?.every(r => r.status === 'rejected')) return 4 // Rejected requests
+        return 3 // Default case
       }
 
       const priorityA = getPriority(a)
