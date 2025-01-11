@@ -57,6 +57,13 @@ interface MatchRequest {
   status: 'open' | 'pending' | 'confirmed' | 'cancelled'
   created_at: string
   court?: Court
+  matches?: Array<{
+    id: string
+    winner_id: string | null
+    player1_id: string
+    player2_id: string
+    request_id: string
+  }>
   responses?: Array<{
     id: string
     status: 'pending' | 'accepted' | 'rejected'
@@ -307,6 +314,13 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             surface,
             is_indoor
           ),
+          matches!inner(
+            id,
+            winner_id,
+            player1_id,
+            player2_id,
+            request_id
+          ),
           responses:match_request_responses(
             id,
             status,
@@ -334,6 +348,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (error) throw error
 
+      console.log('Match requests data:', requestsData)
       setMatchRequests(requestsData)
     } catch (error) {
       console.error('Error fetching match requests:', error)
@@ -1067,9 +1082,14 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
               <CardHeader className="p-4 pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
-                    <CardTitle className="text-base">
-                      {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
-                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-base">
+                        {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
+                      </CardTitle>
+                      {request.matches?.some(match => match.winner_id === userId) && (
+                        <Trophy className="h-4 w-4 text-yellow-500" />
+                      )}
+                    </div>
                     <CardDescription className="text-xs mt-0.5">
                       {request.court?.name}
                     </CardDescription>
