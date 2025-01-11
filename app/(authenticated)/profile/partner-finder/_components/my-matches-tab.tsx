@@ -612,8 +612,8 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     return filtered.sort((a, b) => {
       // Helper function to get request priority
       const getPriority = (request: MatchRequest) => {
-        if (request.responses?.some(r => r.status === 'accepted')) return 0 // Highest priority
-        if (request.responses?.some(r => r.status === 'pending')) return 1
+        if (request.responses?.some(r => r.status === 'pending')) return 0 // Highest priority - waiting for accept
+        if (request.responses?.some(r => r.status === 'accepted')) return 1
         if (!request.responses || request.responses.length === 0) return 2 // Open requests with no responses
         if (request.responses?.every(r => r.status === 'rejected')) return 3
         return 2 // Default case
@@ -1058,11 +1058,12 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         {sortedAndFilteredRequests.map((request) => (
           <div key={request.id} className="space-y-4">
             <Card 
-              className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50"
+              className={cn(
+                "relative overflow-hidden",
+                request.responses?.some(r => r.status === 'accepted') && "bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20",
+                request.responses && request.responses.length > 0 && request.responses.every(r => r.status === 'rejected') && "bg-gradient-to-br from-destructive/20 to-destructive/10 border-destructive/30"
+              )}
             >
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-              </div>
               <CardHeader className="p-4 pb-2">
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col">
@@ -1133,7 +1134,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                               </Button>
                               <Button
                                 size="sm"
-                                className="h-7 px-2 text-xs"
+                                className="h-7 px-2 text-xs bg-green-500 hover:bg-green-600 text-white"
                                 onClick={() => handleAcceptResponse(response.id)}
                               >
                                 <Check className="h-3.5 w-3.5 mr-1" />

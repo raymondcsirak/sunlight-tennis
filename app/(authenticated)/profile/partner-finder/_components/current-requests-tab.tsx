@@ -214,12 +214,8 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
         {requests.map((request) => (
           <Card 
             key={request.id}
-            className="group relative overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-1 hover:bg-gradient-to-br from-background to-muted/50 max-w-[280px] mx-auto w-full"
+            className="relative overflow-hidden max-w-[280px] mx-auto w-full"
           >
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-primary/10" />
-            </div>
-            
             <CardHeader className="text-center p-4 pb-2">
               <div className="flex flex-col items-center">
                 <Avatar className="h-20 w-20 mb-2">
@@ -259,7 +255,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
                 </div>
 
                 <Button 
-                  className="w-full mt-2"
+                  className="w-full mt-2 bg-green-500 hover:bg-green-600 text-white"
                   onClick={() => handleAcceptRequest(request.id)}
                   disabled={request.responses?.some(r => r.responder_id === userId && r.status === 'pending')}
                 >
