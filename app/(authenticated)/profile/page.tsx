@@ -3,9 +3,10 @@ import { createServerClient } from "@supabase/ssr"
 import { redirect } from "next/navigation"
 import { ProfileLayout } from "./_components/profile-layout"
 import { XPProgress } from "./_components/xp-progress"
-import { StatsCards } from "./_components/stats-cards"
 import { TrophyRoom } from "./_components/trophy-room"
 import { calculateLevelProgress } from '@/utils/xp'
+import { getPlayerStats } from "@/app/_components/player-stats/actions"
+import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
 
 export default async function ProfilePage() {
   const cookieStore = await cookies()
@@ -41,19 +42,6 @@ export default async function ProfilePage() {
   // Calculate level progress using our utility
   const progress = calculateLevelProgress(playerXp?.current_xp || 0)
 
-  // Get total matches and win rate
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("winner_id, created_at")
-    .or(`player1_id.eq.${user.id},player2_id.eq.${user.id}`)
-
-  const totalMatches = matches?.length || 0
-  const wonMatches = matches?.filter(match => match.winner_id === user.id).length || 0
-  const winRate = totalMatches > 0 ? Math.round((wonMatches / totalMatches) * 100) : 0
-
-  // Calculate total hours (placeholder - you'll need to implement actual tracking)
-  const totalHours = matches?.length ? matches.length * 2 : 0 // Assuming 2 hours per match
-
   // Get achievements
   const { data: achievements } = await supabase
     .from("achievements")
@@ -62,8 +50,16 @@ export default async function ProfilePage() {
     .order("earned_at", { ascending: false })
     .limit(4)
 
+  // Get player stats
+  const stats = await getPlayerStats(user.id)
+
   return (
-    <ProfileLayout user={user} profile={profile} playerXp={playerXp}>
+    <ProfileLayout 
+      user={user} 
+      profile={profile} 
+      playerXp={playerXp}
+      playerStats={stats}
+    >
       <div className="space-y-6">
         <XPProgress
           level={progress.currentLevel}
@@ -72,11 +68,7 @@ export default async function ProfilePage() {
           streak={playerXp?.current_streak_days || 0}
         />
 
-        <StatsCards
-          totalMatches={totalMatches}
-          winRate={winRate}
-          totalHours={totalHours}
-        />
+        <PlayerStatsCard stats={stats} variant="full" />
 
         <TrophyRoom
           achievements={achievements?.map(a => ({

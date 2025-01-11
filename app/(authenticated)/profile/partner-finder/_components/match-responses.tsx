@@ -6,11 +6,20 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Clock, Cloud, Sun, Trophy, Check, X } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
+import { createBrowserClient } from "@supabase/ssr"
 
 // Helper function to get the full avatar URL
 function getAvatarUrl(path: string | null) {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
+}
+
+interface PlayerStats {
+  totalMatches: number
+  wonMatches: number
+  winRate: number
+  level: number
 }
 
 interface Response {
@@ -21,7 +30,7 @@ interface Response {
     full_name: string
     avatar_url: string | null
     level: number
-    matches_won: number
+    stats?: PlayerStats
   }
   request?: {
     preferred_date: string
@@ -107,6 +116,14 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
     .join('')
     .toUpperCase()
 
+  // Create default stats if none are provided
+  const stats = response.responder.stats || {
+    totalMatches: 0,
+    wonMatches: 0,
+    winRate: 0,
+    level: response.responder.level
+  }
+
   return (
     <Card className={cn(
       "p-4 mb-2",
@@ -159,11 +176,7 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
             <div>
               <div className="font-medium">{response.responder.full_name}</div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span>Level {response.responder.level}</span>
-                <span className="flex items-center gap-1">
-                  <Trophy className="h-3.5 w-3.5" />
-                  {response.responder.matches_won} wins
-                </span>
+                <PlayerStatsCard stats={stats} variant="compact" />
               </div>
             </div>
           </div>
@@ -191,4 +204,32 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
       </div>
     </Card>
   )
+}
+
+async function fetchMatchResponses(requestId: string) {
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  const { data: responseData, error: responseError } = await supabase
+    .from('match_request_responses')
+    .select(`
+      *,
+      responder:profiles(
+        id,
+        full_name,
+        avatar_url,
+        level
+      )
+    `)
+    .eq('request_id', requestId)
+    .order('created_at', { ascending: false });
+
+  if (responseError) {
+    console.error('Error fetching match responses:', responseError);
+    return [];
+  }
+
+  return responseData;
 } 

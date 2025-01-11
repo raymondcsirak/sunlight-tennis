@@ -17,6 +17,7 @@ import { Clock, Cloud, Sun, Trophy, Check, X, ChevronRight, Thermometer, Loader2
 import { cn } from '@/lib/utils'
 import { MatchResponses } from "./match-responses"
 import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
+import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
 
 // Helper function to get the full avatar URL
 function getAvatarUrl(path: string | null) {
@@ -38,6 +39,23 @@ const DURATIONS = [
   { value: '120', label: '2 hours' }
 ]
 
+interface Response {
+  id: string
+  status: 'pending' | 'accepted' | 'rejected'
+  responder: {
+    id: string
+    full_name: string
+    avatar_url: string | null
+    level: number
+    stats?: {
+      totalMatches: number
+      wonMatches: number
+      winRate: number
+      level: number
+    }
+  }
+}
+
 interface MatchRequest {
   id: string
   creator_id: string
@@ -55,17 +73,7 @@ interface MatchRequest {
     player2_id: string
     request_id: string
   }>
-  responses?: Array<{
-    id: string
-    status: 'pending' | 'accepted' | 'rejected'
-    responder: {
-      id: string
-      full_name: string
-      avatar_url: string | null
-      level: number
-      matches_won: number
-    }
-  }>
+  responses?: Response[]
 }
 
 interface Court {
@@ -250,6 +258,16 @@ interface Database {
   }
 }
 
+interface PlayerMatch {
+  id: string
+  winner_id: string | null
+  player1_id: string
+  player2_id: string
+  request_id: string
+  status: string
+  match_request: MatchRequest
+}
+
 export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [courts, setCourts] = useState<Court[]>([])
@@ -320,15 +338,61 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
               id,
               full_name,
               avatar_url,
-              level,
-              matches_won
+              level
             )
           )
         `)
         .eq('creator_id', userId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<MatchRequest[]>();
 
       if (creatorError) throw creatorError;
+
+      // Fetch stats for each responder
+      const responsesWithStats = await Promise.all(
+        (creatorRequests || []).map(async (request: MatchRequest) => {
+          if (!request.responses) return request;
+          
+          const responsesWithStats = await Promise.all(
+            request.responses.map(async (response: Response) => {
+              // Fetch matches for this responder
+              const { data: matches } = await supabase
+                .from("matches")
+                .select("winner_id, player1_id, player2_id")
+                .or(`player1_id.eq.${response.responder.id},player2_id.eq.${response.responder.id}`);
+
+              const totalMatches = matches?.length || 0;
+              const wonMatches = matches?.filter(match => match.winner_id === response.responder.id).length || 0;
+              const winRate = totalMatches > 0 ? Math.round((wonMatches / totalMatches) * 100) : 0;
+
+              // Fetch XP for this responder
+              const { data: playerXp } = await supabase
+                .from("player_xp")
+                .select("current_xp, current_level")
+                .eq("user_id", response.responder.id)
+                .single();
+
+              return {
+                ...response,
+                responder: {
+                  ...response.responder,
+                  stats: {
+                    totalMatches,
+                    wonMatches,
+                    winRate,
+                    level: playerXp?.current_level || 1,
+                  }
+                }
+              };
+            })
+          );
+
+          return {
+            ...request,
+            responses: responsesWithStats
+          };
+        })
+      );
 
       // Then get matches where user is a player
       const { data: playerMatches, error: playerError } = await supabase
@@ -361,20 +425,20 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                 id,
                 full_name,
                 avatar_url,
-                level,
-                matches_won
+                level
               )
             )
           )
         `)
         .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
         .not('request_id', 'is', null)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .returns<PlayerMatch[]>();
 
       if (playerError) throw playerError;
 
       // Transform player matches into requests format
-      const transformedPlayerRequests = playerMatches.map(match => ({
+      const transformedPlayerRequests: MatchRequest[] = (playerMatches || []).map(match => ({
         ...match.match_request,
         matches: [
           {
@@ -389,7 +453,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       }));
 
       // Combine and deduplicate requests
-      const allRequests = [...creatorRequests, ...transformedPlayerRequests];
+      const allRequests = [...responsesWithStats, ...transformedPlayerRequests];
       const uniqueRequests = Array.from(new Map(allRequests.map(r => [r.id, r])).values());
 
       console.log('Match requests data:', uniqueRequests);
@@ -1185,10 +1249,12 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                             <div className="flex flex-col">
                               <span className="text-sm font-medium">{response.responder.full_name}</span>
                               <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <Trophy className="h-3 w-3" />
-                                <span>Level {response.responder.level}</span>
-                                <span>•</span>
-                                <span>{response.responder.matches_won} wins</span>
+                                <PlayerStatsCard stats={{
+                                  totalMatches: response.responder.stats?.totalMatches || 0,
+                                  wonMatches: response.responder.stats?.wonMatches || 0,
+                                  winRate: response.responder.stats?.winRate || 0,
+                                  level: response.responder.level
+                                }} variant="compact" />
                               </div>
                             </div>
                           </div>

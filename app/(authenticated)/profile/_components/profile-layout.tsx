@@ -12,6 +12,14 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { calculateLevelProgress } from "@/utils/xp"
+import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
+
+interface PlayerStats {
+  totalMatches: number
+  wonMatches: number
+  winRate: number
+  level: number
+}
 
 interface ProfileLayoutProps {
   user: User
@@ -19,6 +27,7 @@ interface ProfileLayoutProps {
   playerXp?: {
     current_xp: number
   }
+  playerStats: PlayerStats
   children: React.ReactNode
 }
 
@@ -60,7 +69,7 @@ const menuItems = [
   },
 ]
 
-export function ProfileLayout({ user, profile, playerXp, children }: ProfileLayoutProps) {
+export function ProfileLayout({ user, profile, playerXp, playerStats, children }: ProfileLayoutProps) {
   const { toast } = useToast()
   const pathname = usePathname()
   const router = useRouter()
@@ -150,16 +159,7 @@ export function ProfileLayout({ user, profile, playerXp, children }: ProfileLayo
               </div>
 
               {/* Stats Cards */}
-              <div className="w-full grid grid-cols-2 gap-2">
-                <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                  <div className="text-sm text-muted-foreground">Level</div>
-                  <div className="text-2xl font-bold">{progress.currentLevel}</div>
-                </div>
-                <div className="bg-card/50 backdrop-blur-sm rounded-lg p-3 shadow-lg">
-                  <div className="text-sm text-muted-foreground">Wins</div>
-                  <div className="text-2xl font-bold">{profile?.matches_won || 0}</div>
-                </div>
-              </div>
+              <PlayerStatsCard stats={playerStats} variant="compact" />
             </div>
 
             {/* Navigation Menu */}
