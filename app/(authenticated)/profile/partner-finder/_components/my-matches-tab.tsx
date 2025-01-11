@@ -28,15 +28,6 @@ interface MyMatchesTabProps {
   userId: string
 }
 
-type RequestFilter = 'all' | 'open' | 'accepted' | 'rejected'
-
-const FILTER_OPTIONS = [
-  { value: 'all', label: 'All Requests' },
-  { value: 'open', label: 'Open Requests' },
-  { value: 'accepted', label: 'Accepted' },
-  { value: 'rejected', label: 'Rejected' }
-] as const
-
 const AVAILABLE_TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
@@ -275,7 +266,6 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
-  const [filter, setFilter] = useState<RequestFilter>('all')
   const [matchesNeedingWinner, setMatchesNeedingWinner] = useState<MatchWithPlayers[]>([])
   const [openDialogs, setOpenDialogs] = useState<Record<string, boolean>>({})
 
@@ -314,7 +304,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             surface,
             is_indoor
           ),
-          matches!inner(
+          matches(
             id,
             winner_id,
             player1_id,
@@ -603,32 +593,20 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
-  // Sort and filter match requests
+  // Sort match requests
   const sortedAndFilteredRequests = useMemo(() => {
     let filtered = [...matchRequests]
-
-    // Apply filter
-    if (filter !== 'all') {
-      filtered = filtered.filter(request => {
-        if (filter === 'open') {
-          return request.status === 'open' && (!request.responses || request.responses.every(r => r.status === 'rejected'))
-        }
-        if (filter === 'accepted') {
-          return request.responses?.some(r => r.status === 'accepted')
-        }
-        if (filter === 'rejected') {
-          return request.responses?.every(r => r.status === 'rejected')
-        }
-        return true
-      })
-    }
 
     // Sort by response status and date
     return filtered.sort((a, b) => {
       // Helper function to get request priority
       const getPriority = (request: MatchRequest) => {
         if (request.responses?.some(r => r.status === 'pending')) return 0 // Highest priority - waiting for accept
-        if (request.responses?.some(r => r.status === 'accepted')) return 1
+        if (request.responses?.some(r => r.status === 'accepted') || 
+            request.matches?.some(match => 
+              match.winner_id !== null && 
+              (match.player1_id === userId || match.player2_id === userId)
+            )) return 1 // Include matches where user was a player
         if (!request.responses || request.responses.length === 0) return 2 // Open requests with no responses
         if (request.responses?.every(r => r.status === 'rejected')) return 3
         return 2 // Default case
@@ -645,7 +623,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       const bDateTime = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
       return bDateTime - aDateTime
     })
-  }, [matchRequests, filter])
+  }, [matchRequests])
 
   // Function to fetch matches that need winner selection
   const fetchMatchesNeedingWinner = async () => {
@@ -1048,27 +1026,6 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         </Dialog>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-4">
-        <div className="w-[200px]">
-          <Select value={filter} onValueChange={(value) => setFilter(value as RequestFilter)}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filter requests" />
-            </SelectTrigger>
-            <SelectContent>
-              {FILTER_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {sortedAndFilteredRequests.length} {sortedAndFilteredRequests.length === 1 ? 'request' : 'requests'}
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {sortedAndFilteredRequests.map((request) => (
           <div key={request.id} className="space-y-4">
@@ -1086,7 +1043,11 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       <CardTitle className="text-base">
                         {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
                       </CardTitle>
-                      {request.matches?.some(match => match.winner_id === userId) && (
+                      {request.matches?.some(match => 
+                        match.winner_id === userId && 
+                        (match.player1_id === userId || match.player2_id === userId) &&
+                        match.request_id === request.id
+                      ) && (
                         <Trophy className="h-4 w-4 text-yellow-500" />
                       )}
                     </div>
@@ -1095,10 +1056,34 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                     </CardDescription>
                   </div>
                   <Badge 
-                    variant={request.status === "confirmed" ? "default" : "secondary"}
-                    className="text-xs"
+                    variant={request.matches?.some(match => 
+                      match.winner_id && 
+                      (match.player1_id === userId || match.player2_id === userId) &&
+                      match.request_id === request.id
+                    ) 
+                      ? "outline"
+                      : request.status === "confirmed" 
+                        ? "default" 
+                        : "secondary"}
+                    className={cn(
+                      "text-xs",
+                      request.matches?.some(match => match.winner_id === userId) && "text-yellow-500 border-yellow-500/20",
+                      request.matches?.some(match => 
+                        match.winner_id && match.winner_id !== userId &&
+                        (match.player1_id === userId || match.player2_id === userId)
+                      ) && "text-destructive border-destructive/20",
+                      !request.responses?.some(r => r.status === 'accepted') && request.status === "open" && "block",
+                      request.responses?.some(r => r.status === 'accepted') && !request.matches?.some(match => match.winner_id) && "hidden"
+                    )}
                   >
-                    {request.status}
+                    {request.matches?.some(match => match.winner_id === userId)
+                      ? "Match Won!"
+                      : request.matches?.some(match => 
+                          match.winner_id && match.winner_id !== userId &&
+                          (match.player1_id === userId || match.player2_id === userId)
+                        )
+                        ? "Match Lost!"
+                        : request.status}
                   </Badge>
                 </div>
               </CardHeader>
