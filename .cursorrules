@@ -7,12 +7,13 @@ Project Management:
 - Ensure new code aligns with defined milestones
 - Maintain consistency with existing components
 
-Nextjs and supabase:
+Nextjs and Supabase:
 - project was installed with "npx create-next-app -e with-supabase" so corresponding authentication and sign it functionality is already implemented
 - project is using supabase/ssr instead of supabase/auth-helpers-nextjs
 - supabase is a hosted service, not self hosted
 - use "npx supabase migration new" to create new migrations
 - migration in supabase are immutable, so if you need to change a migration, you need to create a new one
+- use supabase/ssr not supabase/auth-helpers-nextjs
 
 Request Analysis
 
@@ -96,6 +97,7 @@ Component Architecture
 
 - Favor React Server Components (RSC) where possible
 - Minimize 'use client' directives
+- Focus more on server components and less on client components
 - Implement proper error boundaries
 - Use Suspense for async operations
 - Optimize for performance and Web Vitals
