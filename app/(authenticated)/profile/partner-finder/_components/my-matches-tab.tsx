@@ -651,36 +651,45 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const sortedAndFilteredRequests = useMemo(() => {
     let filtered = [...matchRequests]
 
-    // Sort by response status and date
+    // Sort by match date and status
     return filtered.sort((a, b) => {
-      // Helper function to get request priority
+      // Helper function to get priority
       const getPriority = (request: MatchRequest) => {
-        // Check for matches first
+        // Requests waiting for acceptance first
+        if (request.responses?.some(r => r.status === 'pending')) return 0
+        
+        // Then completed matches
         if (request.matches?.some(match => 
           match.winner_id !== null && 
           (match.player1_id === userId || match.player2_id === userId)
-        )) return 0 // Highest priority - completed matches (won or lost)
+        )) return 1
         
-        // Then check responses
-        if (request.responses?.some(r => r.status === 'pending')) return 1 // Waiting for accept
-        if (request.responses?.some(r => r.status === 'accepted')) return 2 // Accepted but not played
-        if (!request.responses || request.responses.length === 0) return 3 // Open requests with no responses
-        if (request.responses?.every(r => r.status === 'rejected')) return 4 // Rejected requests
+        // Then matches that are accepted but not played
+        if (request.responses?.some(r => r.status === 'accepted')) return 2
+        
+        // Then open requests with no responses
+        if (!request.responses || request.responses.length === 0) return 3
+        
+        // Finally rejected requests
+        if (request.responses?.every(r => r.status === 'rejected')) return 4
+        
         return 3 // Default case
       }
 
       const priorityA = getPriority(a)
       const priorityB = getPriority(b)
 
-      // First sort by priority
-      if (priorityA !== priorityB) return priorityA - priorityB
+      // If priorities are different, sort by priority
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB
+      }
 
-      // For same priority, sort by date (newest first)
+      // If priorities are the same, sort by date (ascending)
       const aDateTime = new Date(a.preferred_date + ' ' + a.preferred_time).getTime()
       const bDateTime = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
-      return bDateTime - aDateTime
+      return aDateTime - bDateTime
     })
-  }, [matchRequests])
+  }, [matchRequests, userId])
 
   // Function to fetch matches that need winner selection
   const fetchMatchesNeedingWinner = async () => {
