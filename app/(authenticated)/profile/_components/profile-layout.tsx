@@ -60,12 +60,12 @@ const menuItems = [
   {
     label: "Skills",
     icon: Trophy,
-    href: "/skills",
+    href: "/profile/skills",
   },
   {
     label: "Settings",
     icon: Settings,
-    href: "/settings",
+    href: "/profile/settings",
   },
 ]
 
@@ -81,6 +81,8 @@ export function ProfileLayout({ user, profile, playerXp, playerStats, children }
 
   // Calculate level progress
   const progress = calculateLevelProgress(playerXp?.current_xp || 0)
+
+  console.log("Player Stats in Layout:", playerStats)
 
   const updateAvatar = useCallback(async (url: string) => {
     try {

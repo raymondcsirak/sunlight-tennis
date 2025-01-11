@@ -117,10 +117,10 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
     .toUpperCase()
 
   // Create default stats if none are provided
-  const stats = response.responder.stats || {
-    totalMatches: 0,
-    wonMatches: 0,
-    winRate: 0,
+  const stats = {
+    totalMatches: response.responder.stats?.totalMatches ?? 0,
+    wonMatches: response.responder.stats?.wonMatches ?? 0,
+    winRate: response.responder.stats?.winRate ?? 0,
     level: response.responder.level
   }
 
@@ -181,7 +181,7 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
             </div>
           </div>
 
-          {showActions && (
+          {showActions && response.status === 'pending' && (
             <div className="flex items-center gap-2">
               <Button
                 size="icon"
@@ -206,12 +206,19 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
   )
 }
 
+interface Match {
+  winner_id: string | null
+  player1_id: string
+  player2_id: string
+}
+
 async function fetchMatchResponses(requestId: string) {
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Get the responses with all necessary data in a single query
   const { data: responseData, error: responseError } = await supabase
     .from('match_request_responses')
     .select(`
@@ -220,7 +227,19 @@ async function fetchMatchResponses(requestId: string) {
         id,
         full_name,
         avatar_url,
-        level
+        level,
+        player_stats:player_xp(current_level),
+        matches:matches(winner_id, player1_id, player2_id)
+      ),
+      request:match_requests(
+        preferred_date,
+        preferred_time,
+        duration,
+        court:courts(
+          name,
+          surface,
+          is_indoor
+        )
       )
     `)
     .eq('request_id', requestId)
@@ -231,5 +250,40 @@ async function fetchMatchResponses(requestId: string) {
     return [];
   }
 
-  return responseData;
+  // Process the responses to calculate stats
+  const responsesWithStats = responseData.map((response) => {
+    // Get all matches where the responder was a player
+    const matches = (response.responder.matches || []) as Match[];
+    const playerMatches = matches.filter((match: Match) => 
+      match.player1_id === response.responder.id || 
+      match.player2_id === response.responder.id
+    );
+    
+    // Calculate stats
+    const totalMatches = playerMatches.length;
+    const wonMatches = playerMatches.filter((match: Match) => match.winner_id === response.responder.id).length;
+    const winRate = totalMatches > 0 ? Math.round((wonMatches / totalMatches) * 100) : 0;
+    
+    // Get the level from player_xp or fallback to profile level
+    const playerStats = response.responder.player_stats?.[0];
+    const level = playerStats?.current_level || response.responder.level || 1;
+
+    return {
+      ...response,
+      responder: {
+        id: response.responder.id,
+        full_name: response.responder.full_name,
+        avatar_url: response.responder.avatar_url,
+        level,
+        stats: {
+          totalMatches,
+          wonMatches,
+          winRate,
+          level
+        }
+      }
+    };
+  });
+
+  return responsesWithStats;
 } 
