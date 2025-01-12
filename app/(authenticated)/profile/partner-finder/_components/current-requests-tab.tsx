@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { format } from 'date-fns'
 import { Clock, MapPin, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getPlayerStats } from "@/app/_components/player-stats/actions"
 
 interface CurrentRequestsTabProps {
   userId: string
@@ -36,8 +37,14 @@ interface MatchRequest {
   creator: {
     full_name: string
     avatar_url: string | null
-    level: number
-    matches_won: number
+    player_xp: {
+      current_level: number
+    }
+    stats?: {
+      totalMatches: number
+      wonMatches: number
+      winRate: number
+    }
   }
   court?: {
     id: string
@@ -73,11 +80,9 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
         .from('match_requests')
         .select(`
           *,
-          creator:profiles(
+          creator:profiles!match_requests_creator_id_fkey(
             full_name,
-            avatar_url,
-            level,
-            matches_won
+            avatar_url
           ),
           court:courts(
             id,
@@ -94,16 +99,42 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
             )
           )
         `)
-        .neq('creator_id', userId) // Don't show own requests
-        .eq('status', 'open') // Only show open requests
+        .neq('creator_id', userId)
+        .eq('status', 'open')
         .order('created_at', { ascending: false })
 
       if (error) throw error
 
+      // Fetch player stats for creators
+      const creatorIds = requestsData?.map(request => request.creator_id) || []
+      const { data: statsData } = await supabase
+        .from('player_stats')
+        .select('user_id, current_level, won_matches')
+        .in('user_id', creatorIds)
+
+      // Create a map of stats by user_id
+      const statsMap = Object.fromEntries(
+        (statsData || []).map(stat => [stat.user_id, stat])
+      )
+
+      // Process requests
+      const processedRequests = (requestsData || []).map(request => ({
+        ...request,
+        creator: {
+          ...request.creator,
+          player_xp: {
+            current_level: statsMap[request.creator_id]?.current_level ?? 1
+          },
+          stats: {
+            wonMatches: statsMap[request.creator_id]?.won_matches ?? 0
+          }
+        }
+      }))
+
       // Filter out requests that have any accepted responses
-      const filteredRequests = requestsData?.filter(request => 
+      const filteredRequests = processedRequests.filter(request => 
         !request.responses?.some((response: MatchRequestResponse) => response.status === 'accepted')
-      ) || []
+      )
 
       setRequests(filteredRequests)
     } catch (error) {
@@ -227,11 +258,11 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
                 </CardTitle>
                 <div className="flex items-center gap-2 mt-1 text-sm text-muted-foreground">
                   <Badge variant="secondary" className="text-xs">
-                    Level {request.creator.level}
+                    Level {request.creator.player_xp.current_level}
                   </Badge>
                   <div className="flex items-center gap-1">
                     <Trophy className="h-3.5 w-3.5" />
-                    <span>{request.creator.matches_won} wins</span>
+                    <span>{request.creator.stats?.wonMatches ?? 0} wins</span>
                   </div>
                 </div>
               </div>
