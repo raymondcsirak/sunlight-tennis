@@ -55,7 +55,9 @@ interface Responder {
   player_xp: {
     current_level: number
   }
-  stats?: PlayerStats
+  stats?: {
+    wonMatches: number
+  }
 }
 
 interface Response {
@@ -438,6 +440,15 @@ const MatchCard = memo(function MatchCard({
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{response.responder.full_name}</span>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <Badge variant="secondary" className="text-xs">
+                          Level {response.responder.player_xp.current_level}
+                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Trophy className="h-3 w-3" />
+                          <span>{response.responder.stats?.wonMatches ?? 0} wins</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   {response.status === 'pending' ? (
@@ -716,62 +727,6 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (creatorError) throw creatorError
 
-      // Get all unique responder IDs
-      const responderIds = new Set<string>()
-      creatorRequests?.forEach(request => {
-        request.match_request_responses?.forEach(response => {
-          responderIds.add(response.responder.id)
-        })
-      })
-
-      // Batch fetch player stats and levels for all responders
-      const playerStatsPromises = Array.from(responderIds).map(async (id) => {
-        const [stats, { data: levelData }] = await Promise.all([
-          getPlayerStats(id),
-          supabase
-            .from('player_xp')
-            .select('current_level')
-            .eq('user_id', id)
-            .single()
-        ])
-        return {
-          id,
-          stats,
-          current_level: levelData?.current_level ?? 1
-        }
-      })
-      const playerData = await Promise.all(playerStatsPromises)
-      const playerDataMap = Object.fromEntries(
-        playerData.map(({ id, stats, current_level }) => [
-          id,
-          { stats, current_level }
-        ])
-      )
-
-      // Process creator requests with batched stats
-      const processedCreatorRequests: ExtendedMatchRequest[] = (creatorRequests || []).map(request => {
-        const processedResponses = request.match_request_responses?.map(response => ({
-          id: response.id,
-          status: response.status,
-          responder: {
-            id: response.responder.id,
-            full_name: response.responder.full_name,
-            avatar_url: response.responder.avatar_url,
-            player_xp: {
-              current_level: playerDataMap[response.responder.id]?.current_level ?? 1
-            },
-            stats: playerDataMap[response.responder.id]?.stats
-          }
-        })) || []
-
-        return {
-          ...request,
-          request_type: 'creator',
-          responses: processedResponses,
-          matches: request.matches
-        }
-      })
-
       // Then, get player matches with all related data in a single query
       const { data: playerMatches, error: matchError } = await supabase
         .from("matches")
@@ -824,29 +779,59 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (matchError) throw matchError
 
-      // Get player levels for player1 and player2
-      const playerIds = new Set<string>()
-      playerMatches?.forEach(match => {
-        playerIds.add(match.player1_id)
-        playerIds.add(match.player2_id)
+      // Get all unique responder IDs
+      const responderIds = new Set<string>()
+      creatorRequests?.forEach(request => {
+        request.match_request_responses?.forEach(response => {
+          responderIds.add(response.responder.id)
+        })
       })
 
-      const playerLevelsPromise = supabase
-        .from('player_xp')
-        .select('user_id, current_level')
-        .in('user_id', Array.from(playerIds))
+      // Add all unique player IDs from matches
+      playerMatches?.forEach(match => {
+        responderIds.add(match.player1_id)
+        responderIds.add(match.player2_id)
+      })
 
-      const [playerLevelsResult] = await Promise.all([playerLevelsPromise])
+      // Fetch player stats for all players
+      const { data: statsData } = await supabase
+        .from('player_stats')
+        .select('user_id, current_level, won_matches')
+        .in('user_id', Array.from(responderIds))
 
-      const playerLevels = Object.fromEntries(
-        (playerLevelsResult.data || []).map(({ user_id, current_level }) => [
-          user_id,
-          current_level
-        ])
+      // Create a map of stats by user_id
+      const statsMap = Object.fromEntries(
+        (statsData || []).map(stat => [stat.user_id, stat])
       )
 
       // Create a Set to track processed request IDs
       const processedRequestIds = new Set<string>()
+
+      // Process creator requests with stats
+      const processedCreatorRequests: ExtendedMatchRequest[] = (creatorRequests || []).map(request => {
+        const processedResponses = request.match_request_responses?.map(response => ({
+          id: response.id,
+          status: response.status,
+          responder: {
+            id: response.responder.id,
+            full_name: response.responder.full_name,
+            avatar_url: response.responder.avatar_url,
+            player_xp: {
+              current_level: statsMap[response.responder.id]?.current_level ?? 1
+            },
+            stats: {
+              wonMatches: statsMap[response.responder.id]?.won_matches ?? 0
+            }
+          }
+        })) || []
+
+        return {
+          ...request,
+          request_type: 'creator',
+          responses: processedResponses,
+          matches: request.matches
+        }
+      })
 
       // Process player matches into requests format
       const processedPlayerRequests: ExtendedMatchRequest[] = (playerMatches || [])
@@ -861,6 +846,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
           // Determine if the current user is player1 or player2
           const isPlayer1 = match.player1_id === userId
           const opponent = isPlayer1 ? match.player2 : match.player1
+          const opponentId = isPlayer1 ? match.player2_id : match.player1_id
 
           // Create a response that represents the accepted match
           const processedResponses = [{
@@ -871,9 +857,11 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
               full_name: opponent.full_name,
               avatar_url: opponent.avatar_url,
               player_xp: {
-                current_level: playerLevels[opponent.id] ?? 1
+                current_level: statsMap[opponentId]?.current_level ?? 1
               },
-              stats: playerDataMap[opponent.id]?.stats
+              stats: {
+                wonMatches: statsMap[opponentId]?.won_matches ?? 0
+              }
             }
           }]
 
@@ -881,7 +869,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             ...request,
             request_type: 'player',
             responses: processedResponses,
-            matches: [match] // Include the match to show win/loss status
+            matches: [match]
           } as ExtendedMatchRequest
         })
         .filter((request): request is ExtendedMatchRequest => request !== null)
