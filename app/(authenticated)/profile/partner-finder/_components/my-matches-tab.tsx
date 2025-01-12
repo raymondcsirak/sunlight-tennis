@@ -49,16 +49,16 @@ interface PlayerStats {
     }
 
 interface Responder {
-  id: string
-  full_name: string
-  avatar_url: string | null
+    id: string
+    full_name: string
+    avatar_url: string | null
   player_xp: {
-    current_level: number
+      current_level: number
+    }
+    stats?: {
+      wonMatches: number
+    }
   }
-  stats?: {
-    wonMatches: number
-  }
-}
 
 interface Response {
   id: string
@@ -836,15 +836,15 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       // Process player matches into requests format
       const processedPlayerRequests: ExtendedMatchRequest[] = (playerMatches || [])
         .map(match => {
-          if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
-            return null
-          }
+        if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
+          return null
+        }
 
-          processedRequestIds.add(match.match_request.id)
+        processedRequestIds.add(match.match_request.id)
           const request = match.match_request
 
           // Determine if the current user is player1 or player2
-          const isPlayer1 = match.player1_id === userId
+        const isPlayer1 = match.player1_id === userId
           const opponent = isPlayer1 ? match.player2 : match.player1
           const opponentId = isPlayer1 ? match.player2_id : match.player1_id
 
@@ -1594,19 +1594,19 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       onRejectResponse={handleRejectResponse}
                       onDeleteMatch={handleDeleteMatch}
                     />
-                  </div>
-                ))}
-              </div>
+                        </div>
+                      ))}
+                    </div>
             )
           })}
-        </div>
-      </div>
+                  </div>
+                </div>
 
-      {sortedAndFilteredRequests.length === 0 && (
-        <div className="col-span-full text-center py-8 text-muted-foreground">
-          No match requests found for the selected filter.
-        </div>
-      )}
+        {sortedAndFilteredRequests.length === 0 && (
+          <div className="col-span-full text-center py-8 text-muted-foreground">
+            No match requests found for the selected filter.
+          </div>
+        )}
     </div>
   )
 } 
