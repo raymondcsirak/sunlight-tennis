@@ -42,11 +42,11 @@ const DURATIONS = [
 ]
 
 interface PlayerStats {
-  totalMatches: number
-  wonMatches: number
-  winRate: number
-  level: number
-}
+      totalMatches: number
+      wonMatches: number
+      winRate: number
+      level: number
+    }
 
 interface Responder {
   id: string
@@ -439,14 +439,6 @@ const MatchCard = memo(function MatchCard({
                     </Avatar>
                     <div className="flex flex-col">
                       <span className="text-sm font-medium">{response.responder.full_name}</span>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <PlayerStatsCard stats={{
-                          totalMatches: response.responder.stats?.totalMatches ?? 0,
-                          wonMatches: response.responder.stats?.wonMatches ?? 0,
-                          winRate: response.responder.stats?.winRate ?? 0,
-                          level: response.responder.player_xp?.current_level ?? 1
-                        }} variant="compact" />
-                      </div>
                     </div>
                   </div>
                   {response.status === 'pending' ? (
@@ -860,11 +852,11 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       // Process player matches into requests format
       const processedPlayerRequests: ExtendedMatchRequest[] = (playerMatches || [])
         .map(match => {
-          if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
-            return null
-          }
+        if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
+          return null
+        }
 
-          processedRequestIds.add(match.match_request.id)
+        processedRequestIds.add(match.match_request.id)
           const request = match.match_request
 
           const processedResponses = request.match_request_responses?.map(response => ({
