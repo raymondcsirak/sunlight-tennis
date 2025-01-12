@@ -29,8 +29,15 @@ interface Response {
     id: string
     full_name: string
     avatar_url: string | null
-    level: number
-    stats?: PlayerStats
+    player_xp: {
+      current_level: number
+    }
+    stats?: {
+      totalMatches: number
+      wonMatches: number
+      winRate: number
+      level: number
+    }
   }
   request?: {
     preferred_date: string
@@ -121,7 +128,7 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
     totalMatches: response.responder.stats?.totalMatches ?? 0,
     wonMatches: response.responder.stats?.wonMatches ?? 0,
     winRate: response.responder.stats?.winRate ?? 0,
-    level: response.responder.level
+    level: response.responder.player_xp.current_level
   }
 
   return (
