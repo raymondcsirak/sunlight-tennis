@@ -512,7 +512,7 @@ const MatchCard = memo(function MatchCard({
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-            ) : request.matches?.some(match => match.winner_id) && (
+            ) : request.responses?.some(r => r.status === 'accepted') && (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
