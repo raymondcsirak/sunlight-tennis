@@ -379,8 +379,7 @@ const MatchCard = memo(function MatchCard({
           <Badge 
             variant={request.matches?.some(match => 
               match.winner_id && 
-              (match.player1_id === userId || match.player2_id === userId) &&
-              match.request_id === request.id
+              (match.player1_id === userId || match.player2_id === userId)
             ) 
               ? "outline"
               : request.status === "confirmed" 
@@ -852,32 +851,37 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       // Process player matches into requests format
       const processedPlayerRequests: ExtendedMatchRequest[] = (playerMatches || [])
         .map(match => {
-        if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
-          return null
-        }
+          if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
+            return null
+          }
 
-        processedRequestIds.add(match.match_request.id)
+          processedRequestIds.add(match.match_request.id)
           const request = match.match_request
 
-          const processedResponses = request.match_request_responses?.map(response => ({
-            id: response.id,
-            status: response.status,
+          // Determine if the current user is player1 or player2
+          const isPlayer1 = match.player1_id === userId
+          const opponent = isPlayer1 ? match.player2 : match.player1
+
+          // Create a response that represents the accepted match
+          const processedResponses = [{
+            id: `${match.id}-response`,
+            status: 'accepted' as const,
             responder: {
-              id: response.responder.id,
-              full_name: response.responder.full_name,
-              avatar_url: response.responder.avatar_url,
+              id: opponent.id,
+              full_name: opponent.full_name,
+              avatar_url: opponent.avatar_url,
               player_xp: {
-                current_level: playerLevels[response.responder.id] ?? 1
+                current_level: playerLevels[opponent.id] ?? 1
               },
-              stats: playerDataMap[response.responder.id]?.stats
+              stats: playerDataMap[opponent.id]?.stats
             }
-          })) || []
+          }]
 
           return {
             ...request,
             request_type: 'player',
             responses: processedResponses,
-            matches: request.matches
+            matches: [match] // Include the match to show win/loss status
           } as ExtendedMatchRequest
         })
         .filter((request): request is ExtendedMatchRequest => request !== null)
