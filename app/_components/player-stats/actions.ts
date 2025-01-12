@@ -17,27 +17,17 @@ export async function getPlayerStats(userId: string) {
     }
   )
 
-  // Get all matches where the user was a player
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("winner_id, player1_id, player2_id")
-    .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
-
-  const totalMatches = matches?.length || 0
-  const wonMatches = matches?.filter(match => match.winner_id === userId).length || 0
-  const winRate = totalMatches > 0 ? Math.round((wonMatches / totalMatches) * 100) : 0
-
-  // Get player XP
-  const { data: playerXp } = await supabase
-    .from("player_xp")
-    .select("current_xp, current_level")
-    .eq("user_id", userId)
+  // Get player stats from the new player_stats table
+  const { data: stats } = await supabase
+    .from('player_stats')
+    .select('current_level, total_matches, won_matches, win_rate')
+    .eq('user_id', userId)
     .single()
 
   return {
-    totalMatches,
-    wonMatches,
-    winRate,
-    level: playerXp?.current_level || 1,
+    totalMatches: stats?.total_matches ?? 0,
+    wonMatches: stats?.won_matches ?? 0,
+    winRate: stats?.win_rate ?? 0,
+    level: stats?.current_level ?? 1,
   }
 } 
