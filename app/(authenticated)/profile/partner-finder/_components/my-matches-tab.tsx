@@ -338,6 +338,7 @@ interface MatchCardProps {
   onCancelRequest: (requestId: string) => Promise<void>
   onAcceptResponse: (responseId: string) => Promise<void>
   onRejectResponse: (responseId: string) => Promise<void>
+  onDeleteMatch: (requestId: string) => Promise<void>
 }
 
 const MatchCard = memo(function MatchCard({ 
@@ -345,7 +346,8 @@ const MatchCard = memo(function MatchCard({
   userId, 
   onCancelRequest, 
   onAcceptResponse, 
-  onRejectResponse 
+  onRejectResponse,
+  onDeleteMatch
 }: MatchCardProps) {
   return (
     <Card 
@@ -481,7 +483,7 @@ const MatchCard = memo(function MatchCard({
             <span className="text-xs text-muted-foreground">
               {format(new Date(request.created_at), 'MMM d, yyyy')}
             </span>
-            {!request.responses?.some(r => r.status === 'accepted') && (
+            {!request.responses?.some(r => r.status === 'accepted') ? (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button 
@@ -506,6 +508,35 @@ const MatchCard = memo(function MatchCard({
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
                       Yes, Cancel Request
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            ) : request.matches?.some(match => match.winner_id) && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
+                  >
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete Match Record</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete this match record? This will hide the match from your history but will preserve all XP and win records. This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Match</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => onDeleteMatch(request.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Yes, Delete Match
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -689,6 +720,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
           )
         `)
         .eq("creator_id", userId)
+        .neq("status", "deleted")
         .returns<DatabaseMatchRequest[]>()
 
       if (creatorError) throw creatorError
@@ -796,6 +828,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         `)
         .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
         .not('request_id', 'is', null)
+        .not('match_request.status', 'eq', 'deleted')
         .returns<DatabaseMatch[]>()
 
       if (matchError) throw matchError
@@ -1319,6 +1352,34 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }, [userId])
 
+  const handleDeleteMatch = async (requestId: string) => {
+    try {
+      // First, mark the match request as deleted
+      const { error: updateError } = await supabase
+        .from('match_requests')
+        .update({ status: 'deleted' })
+        .eq('id', requestId)
+
+      if (updateError) throw updateError
+
+      toast({
+        title: "Match Deleted",
+        description: "The match has been removed from your history.",
+        className: "bg-gradient-to-br from-blue-500/90 to-blue-600/90 text-white border-none",
+      })
+
+      // Refresh the requests list
+      fetchMatchRequests()
+    } catch (error) {
+      console.error('Error deleting match:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete match. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <div className="space-y-6">
       {/* Winner Selection Dialogs */}
@@ -1547,6 +1608,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       onCancelRequest={handleCancelRequest}
                       onAcceptResponse={handleAcceptResponse}
                       onRejectResponse={handleRejectResponse}
+                      onDeleteMatch={handleDeleteMatch}
                     />
                   </div>
                 ))}
