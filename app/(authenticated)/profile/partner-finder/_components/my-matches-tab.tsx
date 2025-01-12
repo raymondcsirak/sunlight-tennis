@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useMemo } from "react"
+import { useEffect, useState, useMemo, useRef, memo } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -19,6 +19,7 @@ import { MatchResponses } from "./match-responses"
 import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
 import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
+import { useVirtualizer } from '@tanstack/react-virtual'
 
 // Helper function to get the full avatar URL
 function getAvatarUrl(path: string | null) {
@@ -325,6 +326,192 @@ interface DatabaseMatch {
   }
 }
 
+interface MatchCardProps {
+  request: MatchRequest
+  userId: string
+  onCancelRequest: (requestId: string) => Promise<void>
+  onAcceptResponse: (responseId: string) => Promise<void>
+  onRejectResponse: (responseId: string) => Promise<void>
+}
+
+const MatchCard = memo(function MatchCard({ 
+  request, 
+  userId, 
+  onCancelRequest, 
+  onAcceptResponse, 
+  onRejectResponse 
+}: MatchCardProps) {
+  return (
+    <Card 
+      className={cn(
+        "relative overflow-hidden",
+        request.responses?.some(r => r.status === 'accepted') && "bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20",
+        request.responses && request.responses.length > 0 && request.responses.every(r => r.status === 'rejected') && "bg-gradient-to-br from-destructive/20 to-destructive/10 border-destructive/30"
+      )}
+    >
+      <CardHeader className="p-4 pb-2">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base">
+                {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
+              </CardTitle>
+              {request.matches?.some(match => 
+                match.winner_id === userId && 
+                (match.player1_id === userId || match.player2_id === userId) &&
+                match.request_id === request.id
+              ) && (
+                <Trophy className="h-4 w-4 text-yellow-500" />
+              )}
+            </div>
+            <CardDescription className="text-xs mt-0.5">
+              {request.court?.name}
+            </CardDescription>
+          </div>
+          <Badge 
+            variant={request.matches?.some(match => 
+              match.winner_id && 
+              (match.player1_id === userId || match.player2_id === userId) &&
+              match.request_id === request.id
+            ) 
+              ? "outline"
+              : request.status === "confirmed" 
+                ? "default" 
+                : "secondary"}
+            className={cn(
+              "text-xs",
+              request.matches?.some(match => match.winner_id === userId) && "text-yellow-500 border-yellow-500/20",
+              request.matches?.some(match => 
+                match.winner_id && match.winner_id !== userId &&
+                (match.player1_id === userId || match.player2_id === userId)
+              ) && "text-destructive border-destructive/20",
+              !request.responses?.some(r => r.status === 'accepted') && request.status === "open" && "block",
+              request.responses?.some(r => r.status === 'accepted') && !request.matches?.some(match => match.winner_id) && "hidden"
+            )}
+          >
+            {request.matches?.some(match => match.winner_id === userId)
+              ? "Match Won!"
+              : request.matches?.some(match => 
+                  match.winner_id && match.winner_id !== userId &&
+                  (match.player1_id === userId || match.player2_id === userId)
+                )
+                ? "Match Lost!"
+                : request.status}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="p-4 pt-2">
+        <div className="space-y-3 text-sm">
+          <div className="flex items-center justify-between text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" />
+              <span>{request.duration}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {request.court?.is_indoor ? (
+                <Cloud className="h-3.5 w-3.5" />
+              ) : (
+                <Sun className="h-3.5 w-3.5" />
+              )}
+              <span>{request.court?.surface}</span>
+            </div>
+          </div>
+
+          {/* Show responses if there are any */}
+          {request.responses && request.responses.length > 0 && (
+            <div className="space-y-3 pt-2 border-t">
+              {request.responses.map((response) => (
+                <div key={response.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={getAvatarUrl(response.responder.avatar_url) || undefined} />
+                      <AvatarFallback>
+                        {response.responder.full_name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{response.responder.full_name}</span>
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <PlayerStatsCard stats={{
+                          totalMatches: response.responder.stats?.totalMatches ?? 0,
+                          wonMatches: response.responder.stats?.wonMatches ?? 0,
+                          winRate: response.responder.stats?.winRate ?? 0,
+                          level: response.responder.level
+                        }} variant="compact" />
+                      </div>
+                    </div>
+                  </div>
+                  {response.status === 'pending' ? (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
+                        onClick={() => onRejectResponse(response.id)}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        Reject
+                      </Button>
+                      <Button
+                        size="sm"
+                        className="h-7 px-2 text-xs bg-green-500 hover:bg-green-600 text-white"
+                        onClick={() => onAcceptResponse(response.id)}
+                      >
+                        <Check className="h-3.5 w-3.5 mr-1" />
+                        Accept
+                      </Button>
+                    </div>
+                  ) : (
+                    <Badge variant={response.status === 'accepted' ? 'default' : 'secondary'}>
+                      {response.status}
+                    </Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2">
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(request.created_at), 'MMM d, yyyy')}
+            </span>
+            {!request.responses?.some(r => r.status === 'accepted') && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
+                  >
+                    Cancel
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Cancel Match Request</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to cancel this match request? This action cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Keep Request</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => onCancelRequest(request.id)}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Yes, Cancel Request
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+})
+
 export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [courts, setCourts] = useState<Court[]>([])
@@ -343,6 +530,91 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   )
   const [matchesNeedingWinner, setMatchesNeedingWinner] = useState<MatchWithPlayers[]>([])
   const [openDialogs, setOpenDialogs] = useState<Record<string, boolean>>({})
+  const parentRef = useRef<HTMLDivElement>(null)
+  const [parentWidth, setParentWidth] = useState(0)
+
+  // Update parent width on mount and resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (parentRef.current) {
+        setParentWidth(parentRef.current.offsetWidth)
+      }
+    }
+    updateWidth()
+    window.addEventListener('resize', updateWidth)
+    return () => window.removeEventListener('resize', updateWidth)
+  }, [])
+
+  // Calculate number of columns based on parent width
+  const numColumns = useMemo(() => {
+    if (parentWidth < 640) return 1 // mobile
+    if (parentWidth < 1024) return 2 // tablet
+    return 3 // desktop
+  }, [parentWidth])
+
+  // Sort match requests
+  const sortedAndFilteredRequests = useMemo(() => {
+    let filtered = [...matchRequests]
+
+    // Sort by match date and status
+    return filtered.sort((a, b) => {
+      // Helper function to get priority
+      const getPriority = (request: MatchRequest) => {
+        // Requests waiting for acceptance first
+        if (request.responses?.some(r => r.status === 'pending')) return 0
+        
+        // Then completed matches
+        if (request.matches?.some(match => 
+          match.winner_id !== null && 
+          (match.player1_id === userId || match.player2_id === userId)
+        )) return 1
+        
+        // Then matches that are accepted but not played
+        if (request.responses?.some(r => r.status === 'accepted')) return 2
+        
+        // Then open requests with no responses
+        if (!request.responses || request.responses.length === 0) return 3
+        
+        // Finally rejected requests
+        if (request.responses?.every(r => r.status === 'rejected')) return 4
+        
+        return 3 // Default case
+      }
+
+      const priorityA = getPriority(a)
+      const priorityB = getPriority(b)
+
+      // If priorities are different, sort by priority
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB
+      }
+
+      // If priorities are the same, sort by date (ascending)
+      const aDateTime = new Date(a.preferred_date + ' ' + a.preferred_time).getTime()
+      const bDateTime = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
+      return aDateTime - bDateTime
+    })
+  }, [matchRequests, userId])
+
+  // Calculate rows for virtualization
+  const rows = useMemo(() => {
+    return Math.ceil(sortedAndFilteredRequests.length / numColumns)
+  }, [sortedAndFilteredRequests.length, numColumns])
+
+  interface VirtualItem {
+    index: number;
+    start: number;
+    end: number;
+    size: number;
+    lane: number;
+  }
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 300, // Estimated height of a row
+    overscan: 5, // Number of items to render outside of the visible area
+  })
 
   useEffect(() => {
     fetchMatchRequests()
@@ -795,50 +1067,6 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
-  // Sort match requests
-  const sortedAndFilteredRequests = useMemo(() => {
-    let filtered = [...matchRequests]
-
-    // Sort by match date and status
-    return filtered.sort((a, b) => {
-      // Helper function to get priority
-      const getPriority = (request: MatchRequest) => {
-        // Requests waiting for acceptance first
-        if (request.responses?.some(r => r.status === 'pending')) return 0
-        
-        // Then completed matches
-        if (request.matches?.some(match => 
-          match.winner_id !== null && 
-          (match.player1_id === userId || match.player2_id === userId)
-        )) return 1
-        
-        // Then matches that are accepted but not played
-        if (request.responses?.some(r => r.status === 'accepted')) return 2
-        
-        // Then open requests with no responses
-        if (!request.responses || request.responses.length === 0) return 3
-        
-        // Finally rejected requests
-        if (request.responses?.every(r => r.status === 'rejected')) return 4
-        
-        return 3 // Default case
-      }
-
-      const priorityA = getPriority(a)
-      const priorityB = getPriority(b)
-
-      // If priorities are different, sort by priority
-      if (priorityA !== priorityB) {
-        return priorityA - priorityB
-      }
-
-      // If priorities are the same, sort by date (ascending)
-      const aDateTime = new Date(a.preferred_date + ' ' + a.preferred_time).getTime()
-      const bDateTime = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
-      return aDateTime - bDateTime
-    })
-  }, [matchRequests, userId])
-
   // Function to fetch matches that need winner selection
   const fetchMatchesNeedingWinner = async () => {
     try {
@@ -1240,185 +1468,51 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         </Dialog>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sortedAndFilteredRequests.map((request) => (
-          <div key={request.id} className="space-y-4">
-            <Card 
-              className={cn(
-                "relative overflow-hidden",
-                request.responses?.some(r => r.status === 'accepted') && "bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20",
-                request.responses && request.responses.length > 0 && request.responses.every(r => r.status === 'rejected') && "bg-gradient-to-br from-destructive/20 to-destructive/10 border-destructive/30"
-              )}
-            >
-              <CardHeader className="p-4 pb-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-base">
-                        {format(new Date(request.preferred_date), 'MMM d')} at {request.preferred_time}
-                      </CardTitle>
-                      {request.matches?.some(match => 
-                        match.winner_id === userId && 
-                        (match.player1_id === userId || match.player2_id === userId) &&
-                        match.request_id === request.id
-                      ) && (
-                        <Trophy className="h-4 w-4 text-yellow-500" />
-                      )}
-                    </div>
-                    <CardDescription className="text-xs mt-0.5">
-                      {request.court?.name}
-                    </CardDescription>
-                  </div>
-                  <Badge 
-                    variant={request.matches?.some(match => 
-                      match.winner_id && 
-                      (match.player1_id === userId || match.player2_id === userId) &&
-                      match.request_id === request.id
-                    ) 
-                      ? "outline"
-                      : request.status === "confirmed" 
-                        ? "default" 
-                        : "secondary"}
-                    className={cn(
-                      "text-xs",
-                      request.matches?.some(match => match.winner_id === userId) && "text-yellow-500 border-yellow-500/20",
-                      request.matches?.some(match => 
-                        match.winner_id && match.winner_id !== userId &&
-                        (match.player1_id === userId || match.player2_id === userId)
-                      ) && "text-destructive border-destructive/20",
-                      !request.responses?.some(r => r.status === 'accepted') && request.status === "open" && "block",
-                      request.responses?.some(r => r.status === 'accepted') && !request.matches?.some(match => match.winner_id) && "hidden"
-                    )}
-                  >
-                    {request.matches?.some(match => match.winner_id === userId)
-                      ? "Match Won!"
-                      : request.matches?.some(match => 
-                          match.winner_id && match.winner_id !== userId &&
-                          (match.player1_id === userId || match.player2_id === userId)
-                        )
-                        ? "Match Lost!"
-                        : request.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-4 pt-2">
-                <div className="space-y-3 text-sm">
-                  <div className="flex items-center justify-between text-muted-foreground">
-                    <div className="flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5" />
-                      <span>{request.duration}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      {request.court?.is_indoor ? (
-                        <Cloud className="h-3.5 w-3.5" />
-                      ) : (
-                        <Sun className="h-3.5 w-3.5" />
-                      )}
-                      <span>{request.court?.surface}</span>
-                    </div>
-                  </div>
+      <div 
+        ref={parentRef} 
+        className="h-[600px] overflow-auto"
+      >
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const rowStartIndex = virtualRow.index * numColumns
+            const rowRequests = sortedAndFilteredRequests.slice(rowStartIndex, rowStartIndex + numColumns)
 
-                  {/* Show responses if there are any */}
-                  {request.responses && request.responses.length > 0 && (
-                    <div className="space-y-3 pt-2 border-t">
-                      {request.responses.map((response) => (
-                        <div key={response.id} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={getAvatarUrl(response.responder.avatar_url) || undefined} />
-                              <AvatarFallback>
-                                {response.responder.full_name.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-medium">{response.responder.full_name}</span>
-                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                                <PlayerStatsCard stats={{
-                                  totalMatches: response.responder.stats?.totalMatches ?? 0,
-                                  wonMatches: response.responder.stats?.wonMatches ?? 0,
-                                  winRate: response.responder.stats?.winRate ?? 0,
-                                  level: response.responder.level
-                                }} variant="compact" />
-                              </div>
-                            </div>
-                          </div>
-                          {response.status === 'pending' ? (
-                            <div className="flex items-center gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
-                                onClick={() => handleRejectResponse(response.id)}
-                              >
-                                <X className="h-3.5 w-3.5 mr-1" />
-                                Reject
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="h-7 px-2 text-xs bg-green-500 hover:bg-green-600 text-white"
-                                onClick={() => handleAcceptResponse(response.id)}
-                              >
-                                <Check className="h-3.5 w-3.5 mr-1" />
-                                Accept
-                              </Button>
-                            </div>
-                          ) : (
-                            <Badge variant={response.status === 'accepted' ? 'default' : 'secondary'}>
-                              {response.status}
-                            </Badge>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="flex items-center justify-between pt-2">
-                    <span className="text-xs text-muted-foreground">
-                      {format(new Date(request.created_at), 'MMM d, yyyy')}
-                    </span>
-                    {!request.responses?.some(r => r.status === 'accepted') && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm"
-                            className="h-7 px-2 text-xs hover:bg-destructive/90 hover:text-destructive-foreground"
-                          >
-                            Cancel
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Cancel Match Request</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to cancel this match request? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Keep Request</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleCancelRequest(request.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Yes, Cancel Request
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
+            return (
+              <div
+                key={virtualRow.index}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 absolute top-0 left-0 w-full"
+                style={{
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                {rowRequests.map((request) => (
+                  <div key={request.id} className="space-y-4">
+                    <MatchCard
+                      request={request}
+                      userId={userId}
+                      onCancelRequest={handleCancelRequest}
+                      onAcceptResponse={handleAcceptResponse}
+                      onRejectResponse={handleRejectResponse}
+                    />
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
-
-        {sortedAndFilteredRequests.length === 0 && (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            No match requests found for the selected filter.
-          </div>
-        )}
+                ))}
+              </div>
+            )
+          })}
+        </div>
       </div>
+
+      {sortedAndFilteredRequests.length === 0 && (
+        <div className="col-span-full text-center py-8 text-muted-foreground">
+          No match requests found for the selected filter.
+        </div>
+      )}
     </div>
   )
 } 
