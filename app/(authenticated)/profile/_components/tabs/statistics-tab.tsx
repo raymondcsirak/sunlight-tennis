@@ -30,14 +30,11 @@ interface Achievement {
 
 interface Statistics {
   total_matches: number
-  wins: number
-  losses: number
+  won_matches: number
   win_rate: number
   current_streak: number
   best_streak: number
-  total_xp: number
   current_level: number
-  next_level_xp: number
 }
 
 interface MatchData {
@@ -58,11 +55,6 @@ interface AchievementData {
   earned_at: string
 }
 
-interface PlayerExperience {
-  total_xp: number
-  current_level: number
-}
-
 interface StatisticsTabProps {
   userId: string
 }
@@ -72,14 +64,11 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [stats, setStats] = useState<Statistics>({
     total_matches: 0,
-    wins: 0,
-    losses: 0,
+    won_matches: 0,
     win_rate: 0,
     current_streak: 0,
     best_streak: 0,
-    total_xp: 0,
     current_level: 1,
-    next_level_xp: 1000,
   })
   const [loading, setLoading] = useState(true)
 
@@ -120,19 +109,18 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
 
         if (achievementsError) throw achievementsError
 
-        // Fetch player experience
-        const { data: xpData, error: xpError } = await supabase
-          .from("player_experience")
+        // Fetch player stats
+        const { data: playerStats, error: statsError } = await supabase
+          .from("player_stats")
           .select("*")
           .eq("user_id", userId)
           .single()
 
-        if (xpError) throw xpError
+        if (statsError) throw statsError
 
         // Transform and set the data
         const typedMatchesData = (matchesData || []) as unknown as MatchData[]
         const typedAchievementsData = achievementsData as AchievementData[]
-        const typedXpData = xpData as PlayerExperience
 
         setMatches(
           typedMatchesData.map((match) => ({
@@ -154,20 +142,14 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
           }))
         )
 
-        // Calculate statistics
-        const wins = typedMatchesData.filter((m) => m.winner_id === userId).length
-        const total = typedMatchesData.length
-
+        // Set stats directly from player_stats table
         setStats({
-          total_matches: total,
-          wins,
-          losses: total - wins,
-          win_rate: total > 0 ? (wins / total) * 100 : 0,
+          total_matches: playerStats.total_matches,
+          won_matches: playerStats.won_matches,
+          win_rate: playerStats.win_rate,
           current_streak: calculateCurrentStreak(typedMatchesData, userId),
           best_streak: calculateBestStreak(typedMatchesData, userId),
-          total_xp: typedXpData.total_xp,
-          current_level: typedXpData.current_level,
-          next_level_xp: calculateNextLevelXP(typedXpData.current_level),
+          current_level: playerStats.current_level,
         })
       } catch (error) {
         console.error("Error fetching statistics:", error)
@@ -201,7 +183,7 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.win_rate.toFixed(1)}%
+              {Math.round(stats.win_rate)}%
             </div>
           </CardContent>
         </Card>
@@ -228,17 +210,14 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
         <CardHeader>
           <CardTitle>Level Progress</CardTitle>
           <CardDescription>
-            Level {stats.current_level} • {stats.total_xp} XP
+            Level {stats.current_level}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Progress
-            value={(stats.total_xp / stats.next_level_xp) * 100}
+            value={100}
             className="h-2"
           />
-          <p className="mt-2 text-sm text-muted-foreground">
-            {stats.next_level_xp - stats.total_xp} XP needed for next level
-          </p>
         </CardContent>
       </Card>
 
@@ -333,9 +312,4 @@ function calculateBestStreak(matches: MatchData[], userId: string): number {
     }
   }
   return bestStreak
-}
-
-function calculateNextLevelXP(currentLevel: number): number {
-  // Simple exponential XP requirement: 1000 * (1.5 ^ (level - 1))
-  return Math.floor(1000 * Math.pow(1.5, currentLevel - 1))
 } 
