@@ -10,28 +10,53 @@ export default async function ForgotPassword(props: {
   searchParams: Promise<Message>;
 }) {
   const searchParams = await props.searchParams;
+  if ("message" in searchParams) {
+    return (
+      <div className="flex items-center justify-center gap-2 p-4">
+        <FormMessage message={searchParams} />
+      </div>
+    );
+  }
+
   return (
-    <>
-      <form className="flex-1 flex flex-col w-full gap-2 text-foreground [&>input]:mb-6 min-w-64 max-w-64 mx-auto">
-        <div>
-          <h1 className="text-2xl font-medium">Reset Password</h1>
-          <p className="text-sm text-secondary-foreground">
-            Already have an account?{" "}
-            <Link className="text-primary underline" href="/sign-in">
-              Sign in
-            </Link>
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <h1 className="text-2xl font-semibold tracking-tight">Resetare parolă</h1>
+        <p className="text-sm text-muted-foreground">
+          Ai deja cont?{" "}
+          <Link className="text-primary hover:underline" href="/sign-in">
+            Conectează-te
+          </Link>
+        </p>
+      </div>
+
+      <form className="space-y-4">
+        <div className="space-y-2">
           <Label htmlFor="email">Email</Label>
-          <Input name="email" placeholder="you@example.com" required />
-          <SubmitButton formAction={forgotPasswordAction}>
-            Reset Password
-          </SubmitButton>
-          <FormMessage message={searchParams} />
+          <Input 
+            id="email"
+            name="email" 
+            type="email"
+            placeholder="you@example.com" 
+            autoCapitalize="none"
+            autoComplete="email"
+            autoCorrect="off"
+            required 
+          />
         </div>
+
+        <SubmitButton 
+          className="w-full" 
+          formAction={forgotPasswordAction}
+          pendingText="Se trimite..."
+        >
+          Trimite email de resetare
+        </SubmitButton>
+
+        <FormMessage message={searchParams} />
       </form>
+
       <SmtpMessage />
-    </>
+    </div>
   );
 }
