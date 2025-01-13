@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Trophy, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
+import Image from "next/image"
 
 interface AchievementsTabProps {
   userId: string
@@ -17,8 +18,14 @@ interface Achievement {
   type: string
   name: string
   description: string | null
-  icon: string | null
+  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
+  icon_path: string | null
   created_at: string
+}
+
+function getTrophyUrl(path: string | null): string {
+  if (!path) return ''
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public${path}`
 }
 
 export function AchievementsTab({ userId }: AchievementsTabProps) {
@@ -33,7 +40,7 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
 
   useEffect(() => {
     loadAchievements()
-  }, [userId, supabase])
+  }, [userId])
 
   async function loadAchievements() {
     const { data, error } = await supabase
@@ -86,7 +93,7 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
   }
 
   const achievementsByType = achievements.reduce((acc, achievement) => {
-    const type = achievement.type
+    const type = achievement.type.split('_')[0] // Group by the first part of the type (e.g., 'first' from 'first_match_win')
     if (!acc[type]) {
       acc[type] = []
     }
@@ -122,7 +129,7 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
         Object.entries(achievementsByType).map(([type, typeAchievements]) => (
           <Card key={type}>
             <CardHeader>
-              <CardTitle className="capitalize">{type.toLowerCase()} Achievements</CardTitle>
+              <CardTitle className="capitalize">{type} Achievements</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -131,12 +138,34 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
                     key={achievement.id}
                     className="flex items-start space-x-4 rounded-lg border p-4"
                   >
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary">
-                      <Trophy className="h-4 w-4" />
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${
+                      achievement.icon_path 
+                        ? 'bg-transparent' 
+                        : 'bg-primary/10'
+                    }`}>
+                      {achievement.icon_path && getTrophyUrl(achievement.icon_path) ? (
+                        <Image
+                          src={getTrophyUrl(achievement.icon_path)}
+                          alt={achievement.name}
+                          width={48}
+                          height={48}
+                          className="object-contain"
+                        />
+                      ) : (
+                        <Trophy className="h-6 w-6 text-primary" />
+                      )}
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="font-medium leading-none">
+                    <div className="space-y-1 flex-1">
+                      <h4 className="font-medium leading-none flex items-center gap-2">
                         {achievement.name}
+                        <Badge variant="outline" className={`text-xs ${
+                          achievement.tier === 'gold' ? 'text-yellow-500 border-yellow-500/20' :
+                          achievement.tier === 'silver' ? 'text-gray-400 border-gray-400/20' :
+                          achievement.tier === 'bronze' ? 'text-amber-600 border-amber-600/20' :
+                          'text-purple-500 border-purple-500/20'
+                        }`}>
+                          {achievement.tier}
+                        </Badge>
                       </h4>
                       {achievement.description && (
                         <p className="text-sm text-muted-foreground">
