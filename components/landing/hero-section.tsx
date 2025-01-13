@@ -19,7 +19,7 @@ export function HeroSection() {
 
       {/* Content */}
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-xl">
+        <div className="max-w-xxl">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white space-y-1">
             <span className="block">STILUL DE VIAȚĂ</span>
             <span className="block text-primary">CARE TE MENȚINE</span>
