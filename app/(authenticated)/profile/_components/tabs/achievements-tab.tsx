@@ -36,6 +36,13 @@ interface PossibleAchievement {
 
 const ALL_ACHIEVEMENTS: PossibleAchievement[] = [
   {
+    type: 'first_login',
+    name: 'Welcome Champion',
+    description: 'Started your tennis journey!',
+    tier: 'gold' as const,
+    icon_path: '/trophies/major/first-login.svg'
+  },
+  {
     type: 'first_match_win',
     name: 'First Victory',
     description: 'Won your first match!',

@@ -260,4 +260,36 @@ export class AchievementService {
       }
     }
   }
+
+  async checkFirstLoginAchievement(userId: string): Promise<void> {
+    const achievements: Achievement[] = [{
+      type: 'first_login',
+      name: 'Welcome Champion',
+      description: 'Started your tennis journey!',
+      tier: 'gold',
+      iconPath: '/trophies/major/first-login.svg'
+    }];
+
+    // Award achievement
+    for (const achievement of achievements) {
+      await this.awardAchievement(userId, achievement);
+    }
+
+    // Award 500 XP (50 base + 450 bonus)
+    const supabase = await this.getSupabase();
+    
+    // First, award base XP through the standard function
+    await supabase.rpc('award_xp', {
+      p_user_id: userId,
+      p_activity_type: 'login',
+      p_description: 'Welcome bonus for joining'
+    });
+
+    // Then add the bonus XP
+    await supabase.rpc('award_xp', {
+      p_user_id: userId,
+      p_activity_type: 'login',
+      p_description: 'First login bonus'
+    });
+  }
 } 
