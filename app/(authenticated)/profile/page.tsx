@@ -7,6 +7,7 @@ import { TrophyRoom } from "./_components/trophy-room"
 import { calculateLevelProgress } from '@/utils/xp'
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
+import { AchievementsTab } from "./_components/tabs/achievements-tab"
 
 export default async function ProfilePage() {
   const cookieStore = await cookies()
@@ -47,7 +48,7 @@ export default async function ProfilePage() {
     .from("achievements")
     .select()
     .eq("user_id", user.id)
-    .order("earned_at", { ascending: false })
+    .order("created_at", { ascending: false })
     .limit(4)
 
   // Get player stats
@@ -70,12 +71,14 @@ export default async function ProfilePage() {
 
         <PlayerStatsCard stats={stats} variant="full" />
 
+        <AchievementsTab userId={user.id} />
+
         <TrophyRoom
           achievements={achievements?.map(a => ({
             id: a.id,
             type: a.type,
             title: a.name,
-            earnedAt: a.earned_at,
+            earnedAt: a.created_at,
           })) || []}
         />
       </div>

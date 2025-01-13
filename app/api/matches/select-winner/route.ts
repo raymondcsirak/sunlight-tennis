@@ -2,6 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { AchievementService } from '@/lib/services/achievement.service'
 
 // Input validation schema
 const SelectWinnerSchema = z.object({
@@ -181,6 +182,27 @@ export async function POST(req: Request) {
         if (notificationError) {
           console.error('Notification error:', notificationError)
         }
+
+        // Check achievements for both players
+        const achievementService = new AchievementService()
+        
+        // Check achievements for winner
+        await achievementService.checkAndAwardAchievements({
+          type: 'match_won',
+          userId: selection1.selected_winner_id
+        })
+
+        // Check achievements for both players for match played
+        await Promise.all([
+          achievementService.checkAndAwardAchievements({
+            type: 'match_played',
+            userId: match.player1_id
+          }),
+          achievementService.checkAndAwardAchievements({
+            type: 'match_played',
+            userId: match.player2_id
+          })
+        ])
 
         return NextResponse.json({
           status: 'completed',
