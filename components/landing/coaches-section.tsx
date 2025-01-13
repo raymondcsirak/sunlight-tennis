@@ -2,22 +2,22 @@ import Image from "next/image"
 
 const coaches = [
   {
-    name: "Alex Popescu",
-    role: "Head Coach",
+    name: "Zsolt",
+    role: "Antrenor Juniori",
     image: "https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/coach-1.jpg",
-    specialization: "Lorem ipsum dolor sit amet"
+    specialization: "Specializată în dezvoltarea tinerelor talente"
   },
   {
-    name: "Maria Ionescu",
-    role: "Junior Coach",
+    name: "Antonia",
+    role: "Antrenor Principal",
     image: "https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/coach-2.jpg",
-    specialization: "Consectetur adipiscing elit"
+    specialization: "Specialist în tehnici avansate de joc"
   },
   {
-    name: "Stefan Popa",
-    role: "Performance Coach",
+    name: "Toni",
+    role: "Antrenor de Performanță",
     image: "https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/coach-3.jpg",
-    specialization: "Sed do eiusmod tempor"
+    specialization: "Expert în pregătire fizică și strategie"
   }
 ]
 
@@ -27,10 +27,10 @@ export function CoachesSection() {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
-            Grow your skill with academy team
+            Dezvoltă-ți abilitățile cu echipa academiei
           </h2>
           <p className="text-muted-foreground text-lg">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore.
+            Antrenorii noștri profesioniști sunt aici să te ghideze în călătoria ta spre excelență în tenis.
           </p>
         </div>
 

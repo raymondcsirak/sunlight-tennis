@@ -114,18 +114,18 @@ export default async function RootLayout({
                     <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
                     <ul className="space-y-2">
                       <li>
-                        <Link href="/courts" className="text-muted-foreground hover:text-foreground">
-                          Courts
+                        <Link href="/sign-in" className="text-muted-foreground hover:text-foreground">
+                          Terenuri
                         </Link>
                       </li>
                       <li>
-                        <Link href="/partners" className="text-muted-foreground hover:text-foreground">
-                          Find Partners
+                        <Link href="/sign-in" className="text-muted-foreground hover:text-foreground">
+                          Gaseste Parteneri
                         </Link>
                       </li>
                       <li>
-                        <Link href="/profile" className="text-muted-foreground hover:text-foreground">
-                          Profile
+                        <Link href="/sign-in" className="text-muted-foreground hover:text-foreground">
+                          Profil
                         </Link>
                       </li>
                     </ul>
@@ -133,8 +133,8 @@ export default async function RootLayout({
                   <div>
                     <h3 className="text-lg font-semibold mb-4">Contact</h3>
                     <address className="text-muted-foreground not-italic">
-                      123 Tennis Court Street<br />
-                      Bucharest, Romania<br />
+                      Strada Mușcatelor 9<br />
+                      Satu Mare, Romania<br />
                       <a href="tel:+40123456789" className="hover:text-foreground">
                         +40 123 456 789
                       </a>

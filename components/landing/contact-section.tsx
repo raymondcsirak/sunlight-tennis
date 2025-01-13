@@ -11,17 +11,17 @@ export function ContactSection() {
           {/* Contact Information */}
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Get in Touch
+              Contactează-ne
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              Have questions about our services? We're here to help.
+              Ai întrebări despre serviciile noastre? Suntem aici să te ajutăm.
             </p>
 
             <div className="mt-8 space-y-6">
               <div className="flex items-center">
                 <MapPin className="h-6 w-6 text-primary" />
                 <span className="ml-4 text-foreground">
-                  123 Tennis Court Street, Bucharest, Romania
+                  Strada Mușcatelor 9, Satu Mare, România
                 </span>
               </div>
               <div className="flex items-center">
@@ -45,7 +45,7 @@ export function ContactSection() {
                   htmlFor="first-name"
                   className="block text-sm font-medium text-foreground"
                 >
-                  First name
+                  Prenume
                 </label>
                 <Input
                   type="text"
@@ -60,7 +60,7 @@ export function ContactSection() {
                   htmlFor="last-name"
                   className="block text-sm font-medium text-foreground"
                 >
-                  Last name
+                  Nume
                 </label>
                 <Input
                   type="text"
@@ -91,7 +91,7 @@ export function ContactSection() {
                 htmlFor="message"
                 className="block text-sm font-medium text-foreground"
               >
-                Message
+                Mesaj
               </label>
               <Textarea
                 id="message"
@@ -101,7 +101,7 @@ export function ContactSection() {
               />
             </div>
             <Button type="submit" className="w-full">
-              Send Message
+              Trimite Mesaj
             </Button>
           </form>
         </div>

@@ -2,27 +2,27 @@ import { CalendarDays, Users, Trophy, Clock } from "lucide-react"
 
 const features = [
   {
-    name: "Easy Court Booking",
+    name: "Rezervare Simplă",
     description:
-      "Book your preferred court in seconds with our intuitive booking system.",
+      "Rezervă terenul preferat în câteva secunde cu sistemul nostru intuitiv de rezervări.",
     icon: CalendarDays,
   },
   {
-    name: "Find Tennis Partners",
+    name: "Găsește Parteneri de Tenis",
     description:
-      "Connect with players of similar skill levels and expand your tennis network.",
+      "Conectează-te cu jucători de nivel similar și extinde-ți rețeaua de tenis.",
     icon: Users,
   },
   {
-    name: "Track Progress",
+    name: "Urmărește Progresul",
     description:
-      "Monitor your performance, track matches, and earn achievements as you improve.",
+      "Monitorizează-ți performanța, urmărește meciurile și câștigă realizări pe măsură ce te îmbunătățești.",
     icon: Trophy,
   },
   {
-    name: "Real-time Availability",
+    name: "Disponibilitate în Timp Real",
     description:
-      "See court availability and player status updates in real-time.",
+      "Vezi disponibilitatea terenurilor și actualizările statusului jucătorilor în timp real.",
     icon: Clock,
   },
 ]
@@ -33,10 +33,10 @@ export function FeaturesSection() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Everything You Need to Enjoy Tennis
+            Tot ce ai nevoie pentru a te bucura de tenis
           </h2>
           <p className="mt-4 text-xl text-muted-foreground">
-            Our platform provides all the tools you need to make the most of your tennis experience.
+            Platforma noastră îți oferă toate instrumentele necesare pentru a profita la maximum de experiența ta de tenis.
           </p>
         </div>
 

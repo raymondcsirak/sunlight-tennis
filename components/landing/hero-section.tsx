@@ -21,13 +21,13 @@ export function HeroSection() {
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-xl">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white space-y-1">
-            <span className="block">THE LIFESTYLE</span>
-            <span className="block text-primary">THAT KEEPS</span>
-            <span className="block">YOU ENERGIZED</span>
+            <span className="block">STILUL DE VIAȚĂ</span>
+            <span className="block text-primary">CARE TE MENȚINE</span>
+            <span className="block">ENERGIZAT</span>
           </h1>
           <p className="mt-6 text-lg md:text-xl text-gray-300 max-w-lg">
-            With its diverse list of members, professional equipment and lots of tidy courts, 
-            SunlightTennis is your perfect sports & recreation getaway!
+            Cu o listă diversă de membri, echipamente profesionale și numeroase terenuri îngrijite,
+            SunlightTennis este destinația perfectă pentru sport și recreere!
           </p>
           <div className="mt-8">
             <Button
@@ -35,7 +35,7 @@ export function HeroSection() {
               className="text-lg h-14 px-8 bg-primary hover:bg-primary/90"
               asChild
             >
-              <Link href="/courts">BOOK A COURT</Link>
+              <Link href="/sign-in">REZERVĂ UN TEREN</Link>
             </Button>
           </div>
         </div>
@@ -47,19 +47,19 @@ export function HeroSection() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="text-center">
               <div className="text-5xl font-bold text-primary">10+</div>
-              <div className="text-sm text-gray-300 mt-1">Professional Courts</div>
+              <div className="text-sm text-gray-300 mt-1">Terenuri Profesionale</div>
             </div>
             <div className="text-center">
               <div className="text-5xl font-bold text-primary">15+</div>
-              <div className="text-sm text-gray-300 mt-1">Expert Trainers</div>
+              <div className="text-sm text-gray-300 mt-1">Antrenori Experți</div>
             </div>
             <div className="text-center">
               <div className="text-5xl font-bold text-primary">500+</div>
-              <div className="text-sm text-gray-300 mt-1">Active Members</div>
+              <div className="text-sm text-gray-300 mt-1">Membri Activi</div>
             </div>
             <div className="text-center">
               <div className="text-5xl font-bold text-primary">18</div>
-              <div className="text-sm text-gray-300 mt-1">Years Experience</div>
+              <div className="text-sm text-gray-300 mt-1">Ani de Experiență</div>
             </div>
           </div>
         </div>

@@ -3,21 +3,21 @@ import { Quote } from "lucide-react"
 
 const testimonials = [
   {
-    content: "The facilities are top-notch and the community is amazing. I've improved my game significantly since joining.",
+    content: "Facilitățile sunt de top și comunitatea este extraordinară. Mi-am îmbunătățit semnificativ jocul de când m-am alăturat.",
     author: "Maria Popescu",
-    role: "Amateur Player",
+    role: "Jucător Amator",
     image: "https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/testimonial-1.jpg"
   },
   {
-    content: "Best tennis club in Bucharest! The court booking system is seamless, and the trainers are world-class.",
+    content: "Cel mai bun club de tenis din Satu Mare! Sistemul de rezervare a terenurilor este impecabil, iar antrenorii sunt de clasă mondială.",
     author: "Alexandru Ionescu",
-    role: "Professional Player",
+    role: "Jucător Profesionist",
     image: "https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/testimonial-2.jpg"
   },
   {
-    content: "Found amazing tennis partners through their matching system. The experience has been fantastic!",
+    content: "Am găsit parteneri de tenis extraordinari prin sistemul lor de potrivire. Experiența a fost fantastică!",
     author: "Elena Dragomir",
-    role: "Club Member",
+    role: "Membru Club",
     image: "https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/testimonial-3.jpg"
   }
 ]
@@ -29,7 +29,7 @@ export function TestimonialsSection() {
       <div className="absolute inset-0 z-0">
         <Image
           src="https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/tennis-pattern.jpg"
-          alt="Tennis pattern"
+          alt="Model tenis"
           fill
           className="object-cover brightness-[0.3]"
         />
@@ -38,11 +38,11 @@ export function TestimonialsSection() {
       <div className="relative z-10 container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            What Our Members Say
+            Ce Spun Membrii Noștri
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join our community of tennis enthusiasts and experience the difference
-            that makes us the leading tennis club in Bucharest.
+            Alătură-te comunității noastre de pasionați de tenis și experimentează diferența
+            care ne face cel mai important club de tenis din București.
           </p>
         </div>
 
