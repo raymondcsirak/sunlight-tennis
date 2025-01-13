@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, RefreshCw, ChevronLeft, ChevronRight, Lock } from "lucide-react"
+import { Trophy, RefreshCw, ChevronLeft, ChevronRight, Lock, Medal, Star, Award, Target, Calendar, Clock, Flame, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -96,6 +96,55 @@ const ALL_ACHIEVEMENTS: PossibleAchievement[] = [
     description: 'Completed 100 training sessions',
     tier: 'gold' as const,
     icon_path: '/trophies/major/training-legend.svg'
+  },
+  {
+    type: 'matches_won_10',
+    name: 'Rising Star',
+    description: 'Won 10 matches',
+    tier: 'bronze',
+    icon_path: 'Star'
+  },
+  {
+    type: 'matches_won_25',
+    name: 'Match Expert',
+    description: 'Won 25 matches',
+    tier: 'silver',
+    icon_path: 'Award'
+  },
+  {
+    type: 'streak_3',
+    name: 'Win Streak',
+    description: 'Won 3 matches in a row',
+    tier: 'bronze',
+    icon_path: 'Zap'
+  },
+  {
+    type: 'streak_5',
+    name: 'Hot Streak',
+    description: 'Won 5 matches in a row',
+    tier: 'silver',
+    icon_path: 'Flame'
+  },
+  {
+    type: 'court_bookings_10',
+    name: 'Court Regular',
+    description: 'Booked 10 court sessions',
+    tier: 'bronze',
+    icon_path: 'Calendar'
+  },
+  {
+    type: 'court_bookings_25',
+    name: 'Court Expert',
+    description: 'Booked 25 court sessions',
+    tier: 'silver',
+    icon_path: 'Target'
+  },
+  {
+    type: 'training_sessions_10',
+    name: 'Training Regular',
+    description: 'Completed 10 training sessions',
+    tier: 'bronze',
+    icon_path: 'Clock'
   }
 ]
 
@@ -241,16 +290,28 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
                         ? 'bg-transparent' 
                         : 'bg-primary/10'
                     }`}>
-                      {achievement.icon_path && getTrophyUrl(achievement.icon_path) ? (
-                        <Image
-                          src={getTrophyUrl(achievement.icon_path)}
-                          alt={achievement.name}
-                          width={96}
-                          height={96}
-                          className="object-contain"
-                        />
+                      {achievement.icon_path ? (
+                        achievement.icon_path.startsWith('/') ? (
+                          <Image
+                            src={getTrophyUrl(achievement.icon_path)}
+                            alt={achievement.name}
+                            width={48}
+                            height={48}
+                            className="mx-auto"
+                          />
+                        ) : (
+                          <div className="mx-auto">
+                            {achievement.icon_path === 'Star' && <Star className="w-12 h-12" />}
+                            {achievement.icon_path === 'Award' && <Award className="w-12 h-12" />}
+                            {achievement.icon_path === 'Zap' && <Zap className="w-12 h-12" />}
+                            {achievement.icon_path === 'Flame' && <Flame className="w-12 h-12" />}
+                            {achievement.icon_path === 'Calendar' && <Calendar className="w-12 h-12" />}
+                            {achievement.icon_path === 'Target' && <Target className="w-12 h-12" />}
+                            {achievement.icon_path === 'Clock' && <Clock className="w-12 h-12" />}
+                          </div>
+                        )
                       ) : (
-                        <Trophy className="h-12 w-12 text-primary" />
+                        <Trophy className="w-12 h-12 mx-auto" />
                       )}
                     </div>
                     <div className="space-y-2">
