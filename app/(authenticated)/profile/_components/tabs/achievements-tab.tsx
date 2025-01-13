@@ -8,6 +8,7 @@ import { Trophy, RefreshCw, ChevronLeft, ChevronRight, Lock, Medal, Star, Award,
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
+import { cn } from "@/lib/utils"
 
 interface AchievementsTabProps {
   userId: string
@@ -101,49 +102,49 @@ const ALL_ACHIEVEMENTS: PossibleAchievement[] = [
     type: 'matches_won_10',
     name: 'Rising Star',
     description: 'Won 10 matches',
-    tier: 'bronze',
+    tier: 'bronze' as const,
     icon_path: 'Star'
   },
   {
     type: 'matches_won_25',
     name: 'Match Expert',
     description: 'Won 25 matches',
-    tier: 'silver',
+    tier: 'silver' as const,
     icon_path: 'Award'
   },
   {
     type: 'streak_3',
     name: 'Win Streak',
     description: 'Won 3 matches in a row',
-    tier: 'bronze',
+    tier: 'bronze' as const,
     icon_path: 'Zap'
   },
   {
     type: 'streak_5',
     name: 'Hot Streak',
     description: 'Won 5 matches in a row',
-    tier: 'silver',
+    tier: 'silver' as const,
     icon_path: 'Flame'
   },
   {
     type: 'court_bookings_10',
     name: 'Court Regular',
     description: 'Booked 10 court sessions',
-    tier: 'bronze',
+    tier: 'bronze' as const,
     icon_path: 'Calendar'
   },
   {
     type: 'court_bookings_25',
     name: 'Court Expert',
     description: 'Booked 25 court sessions',
-    tier: 'silver',
+    tier: 'silver' as const,
     icon_path: 'Target'
   },
   {
     type: 'training_sessions_10',
     name: 'Training Regular',
     description: 'Completed 10 training sessions',
-    tier: 'bronze',
+    tier: 'bronze' as const,
     icon_path: 'Clock'
   }
 ]
@@ -151,6 +152,27 @@ const ALL_ACHIEVEMENTS: PossibleAchievement[] = [
 function getTrophyUrl(path: string | null): string {
   if (!path) return ''
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public${path}`
+}
+
+function getIconComponent(iconPath: string) {
+  switch (iconPath) {
+    case 'Star':
+      return Star;
+    case 'Award':
+      return Award;
+    case 'Calendar':
+      return Calendar;
+    case 'Target':
+      return Target;
+    case 'Clock':
+      return Clock;
+    case 'Flame':
+      return Flame;
+    case 'Zap':
+      return Zap;
+    default:
+      return Trophy;
+  }
 }
 
 export function AchievementsTab({ userId }: AchievementsTabProps) {
@@ -180,8 +202,21 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
       return
     }
 
+    console.log("Loaded achievements:", data)
+
     setAchievements(data || [])
     setIsLoading(false)
+
+    // Debug log for achievements with status
+    const achievementsWithStatus = ALL_ACHIEVEMENTS.map(achievement => {
+      const earned = data?.find(a => a.type === achievement.type)
+      return {
+        type: achievement.type,
+        earned: !!earned,
+        earnedAt: earned?.created_at
+      }
+    })
+    console.log("Achievements with status:", achievementsWithStatus)
   }
 
   async function handleRetroactiveCheck() {
@@ -290,28 +325,30 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
                         ? 'bg-transparent' 
                         : 'bg-primary/10'
                     }`}>
-                      {achievement.icon_path ? (
+                      {achievement.icon_path && (
                         achievement.icon_path.startsWith('/') ? (
                           <Image
-                            src={getTrophyUrl(achievement.icon_path)}
+                            src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public${achievement.icon_path}`}
                             alt={achievement.name}
                             width={48}
                             height={48}
-                            className="mx-auto"
+                            className="mb-2"
                           />
                         ) : (
-                          <div className="mx-auto">
-                            {achievement.icon_path === 'Star' && <Star className="w-12 h-12" />}
-                            {achievement.icon_path === 'Award' && <Award className="w-12 h-12" />}
-                            {achievement.icon_path === 'Zap' && <Zap className="w-12 h-12" />}
-                            {achievement.icon_path === 'Flame' && <Flame className="w-12 h-12" />}
-                            {achievement.icon_path === 'Calendar' && <Calendar className="w-12 h-12" />}
-                            {achievement.icon_path === 'Target' && <Target className="w-12 h-12" />}
-                            {achievement.icon_path === 'Clock' && <Clock className="w-12 h-12" />}
+                          <div className="mb-2">
+                            {(() => {
+                              const IconComponent = getIconComponent(achievement.icon_path);
+                              return IconComponent && (
+                                <IconComponent
+                                  className={cn(
+                                    "w-12 h-12",
+                                    achievement.earned ? "opacity-100" : "opacity-50"
+                                  )}
+                                />
+                              );
+                            })()}
                           </div>
                         )
-                      ) : (
-                        <Trophy className="w-12 h-12 mx-auto" />
                       )}
                     </div>
                     <div className="space-y-2">
