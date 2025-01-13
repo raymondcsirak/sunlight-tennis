@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react"
 import { createBrowserClient } from "@supabase/ssr"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Trophy, RefreshCw, ChevronLeft, ChevronRight, Lock, Medal, Star, Award, Target, Calendar, Clock, Flame, Zap } from "lucide-react"
+import { Trophy, ChevronLeft, ChevronRight, Lock, Medal, Star, Award, Target, Calendar, Clock, Flame, Zap } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
@@ -179,7 +179,6 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [isChecking, setIsChecking] = useState(false)
   const { toast } = useToast()
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -219,36 +218,6 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
     console.log("Achievements with status:", achievementsWithStatus)
   }
 
-  async function handleRetroactiveCheck() {
-    try {
-      setIsChecking(true)
-      const response = await fetch('/api/achievements/retroactive', {
-        method: 'POST'
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to check achievements')
-      }
-
-      await loadAchievements() // Reload achievements after check
-
-      toast({
-        title: "Achievements Checked",
-        description: "Your achievements have been retroactively checked and awarded.",
-        className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
-      })
-    } catch (error) {
-      console.error('Error checking achievements:', error)
-      toast({
-        title: "Error",
-        description: "Failed to check achievements. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsChecking(false)
-    }
-  }
-
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return
     const scrollAmount = 400 // Adjust this value to control scroll distance
@@ -279,15 +248,6 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Achievements</h2>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleRetroactiveCheck}
-          disabled={isChecking}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${isChecking ? 'animate-spin' : ''}`} />
-          Check Achievements
-        </Button>
       </div>
 
       <Card>
