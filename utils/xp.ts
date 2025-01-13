@@ -1,9 +1,6 @@
-export const XP_THRESHOLDS = {
-  LEVEL_2: 1000,
-  LEVEL_3: 2500,
-  LEVEL_4: 5000,
-  LEVEL_5: 10000,
-} as const
+export const BASE_XP = 1000
+export const LEVEL_MULTIPLIER = 2.0
+export const MAX_LEVEL = 99
 
 export type LevelProgress = {
   currentLevel: number
@@ -13,44 +10,26 @@ export type LevelProgress = {
   progressPercentage: number
 }
 
+export function getXpForLevel(level: number): number {
+  if (level <= 1) return 0
+  return Math.floor(BASE_XP * Math.pow(LEVEL_MULTIPLIER, level - 1))
+}
+
 export function calculateLevel(xp: number): number {
-  if (xp >= XP_THRESHOLDS.LEVEL_5) return 5
-  if (xp >= XP_THRESHOLDS.LEVEL_4) return 4
-  if (xp >= XP_THRESHOLDS.LEVEL_3) return 3
-  if (xp >= XP_THRESHOLDS.LEVEL_2) return 2
-  return 1
+  let level = 1
+  while (level < MAX_LEVEL && xp >= getXpForLevel(level + 1)) {
+    level++
+  }
+  return level
 }
 
 export function getXpForNextLevel(currentLevel: number): number {
-  switch (currentLevel) {
-    case 1:
-      return XP_THRESHOLDS.LEVEL_2
-    case 2:
-      return XP_THRESHOLDS.LEVEL_3
-    case 3:
-      return XP_THRESHOLDS.LEVEL_4
-    case 4:
-      return XP_THRESHOLDS.LEVEL_5
-    default:
-      return XP_THRESHOLDS.LEVEL_5
-  }
+  if (currentLevel >= MAX_LEVEL) return getXpForLevel(MAX_LEVEL)
+  return getXpForLevel(currentLevel + 1)
 }
 
 export function getXpThresholdForLevel(level: number): number {
-  switch (level) {
-    case 1:
-      return 0
-    case 2:
-      return XP_THRESHOLDS.LEVEL_2
-    case 3:
-      return XP_THRESHOLDS.LEVEL_3
-    case 4:
-      return XP_THRESHOLDS.LEVEL_4
-    case 5:
-      return XP_THRESHOLDS.LEVEL_5
-    default:
-      return 0
-  }
+  return getXpForLevel(level)
 }
 
 export function calculateLevelProgress(currentXp: number): LevelProgress {
