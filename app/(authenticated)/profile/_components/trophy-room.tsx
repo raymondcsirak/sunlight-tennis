@@ -1,12 +1,13 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { motion } from "framer-motion"
-import { Medal, Award, Trophy, Star } from "lucide-react"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Trophy, Medal, Star, Award, Crown } from "lucide-react"
+import { format } from "date-fns"
 
 interface Achievement {
   id: string
-  type: 'first_win' | '10_match_streak' | 'tournament_win' | 'skills_master'
+  type: string
   title: string
   earnedAt: string
 }
@@ -15,60 +16,81 @@ interface TrophyRoomProps {
   achievements: Achievement[]
 }
 
-const achievementIcons = {
-  first_win: Medal,
-  '10_match_streak': Award,
-  tournament_win: Trophy,
-  skills_master: Star,
-}
-
-const achievementColors = {
-  first_win: "text-yellow-500",
-  '10_match_streak': "text-blue-500",
-  tournament_win: "text-green-500",
-  skills_master: "text-purple-500",
-}
-
-const achievementBgColors = {
-  first_win: "bg-yellow-500/20",
-  '10_match_streak': "bg-blue-500/20",
-  tournament_win: "bg-green-500/20",
-  skills_master: "bg-purple-500/20",
+// Map achievement types to their visual representation
+const ACHIEVEMENT_ICONS: Record<string, {
+  icon: React.ReactNode
+  color: string
+  isMajor: boolean
+}> = {
+  first_match: {
+    icon: <Trophy className="h-8 w-8" />,
+    color: "text-yellow-500",
+    isMajor: true
+  },
+  streak_7: {
+    icon: <Medal className="h-8 w-8" />,
+    color: "text-blue-500",
+    isMajor: false
+  },
+  matches_10: {
+    icon: <Star className="h-8 w-8" />,
+    color: "text-purple-500",
+    isMajor: false
+  },
+  level_10: {
+    icon: <Crown className="h-8 w-8" />,
+    color: "text-amber-500",
+    isMajor: true
+  }
 }
 
 export function TrophyRoom({ achievements }: TrophyRoomProps) {
+  if (!achievements?.length) {
+    return (
+      <Card className="p-6">
+        <div className="text-center text-muted-foreground">
+          <Trophy className="mx-auto h-12 w-12 mb-2 opacity-20" />
+          <p>No achievements yet. Keep playing to earn trophies!</p>
+        </div>
+      </Card>
+    )
+  }
+
   return (
     <Card className="p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <Trophy className="h-5 w-5 text-yellow-500" />
-        <h2 className="text-xl font-semibold">Trophy Room</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Achievements</h3>
+        <Trophy className="h-5 w-5 text-muted-foreground" />
       </div>
+      
+      <ScrollArea className="h-[280px] pr-4">
+        <div className="space-y-4">
+          {achievements.map((achievement) => {
+            const achievementConfig = ACHIEVEMENT_ICONS[achievement.type] || {
+              icon: <Award className="h-8 w-8" />,
+              color: "text-gray-500",
+              isMajor: false
+            }
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {achievements.map((achievement, index) => {
-          const Icon = achievementIcons[achievement.type]
-          return (
-            <motion.div
-              key={achievement.id}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              className="flex flex-col items-center gap-2 p-4 rounded-lg border"
-            >
-              <div className={`p-3 rounded-full ${achievementBgColors[achievement.type]}`}>
-                <Icon className={`h-6 w-6 ${achievementColors[achievement.type]}`} />
+            return (
+              <div
+                key={achievement.id}
+                className="flex items-center gap-4 p-3 rounded-lg bg-muted/50"
+              >
+                <div className={`${achievementConfig.color} ${achievementConfig.isMajor ? "scale-110" : ""}`}>
+                  {achievementConfig.icon}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{achievement.title}</p>
+                  <p className="text-sm text-muted-foreground">
+                    Earned {format(new Date(achievement.earnedAt), "MMM d, yyyy")}
+                  </p>
+                </div>
               </div>
-              <h3 className="font-medium text-center">{achievement.title}</h3>
-              <p className="text-xs text-muted-foreground">
-                {new Date(achievement.earnedAt).toLocaleDateString(undefined, {
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </p>
-            </motion.div>
-          )
-        })}
-      </div>
+            )
+          })}
+        </div>
+      </ScrollArea>
     </Card>
   )
 } 
