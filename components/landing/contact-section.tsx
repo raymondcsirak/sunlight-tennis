@@ -100,7 +100,10 @@ export function ContactSection() {
                 className="mt-1"
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button 
+              type="submit" 
+              className="w-full transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
               Trimite Mesaj
             </Button>
           </form>

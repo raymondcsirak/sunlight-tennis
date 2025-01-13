@@ -32,7 +32,7 @@ export function HeroSection() {
           <div className="mt-8">
             <Button
               size="lg"
-              className="text-lg h-14 px-8 bg-primary hover:bg-primary/90"
+              className="text-lg h-14 px-8 bg-primary hover:bg-primary/90 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               asChild
             >
               <Link href="/sign-in">REZERVĂ UN TEREN</Link>
