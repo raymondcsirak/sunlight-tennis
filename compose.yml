@@ -1,0 +1,33 @@
+services:
+  app:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-username/sunlight-tennis}:latest
+    container_name: sunlight-tennis
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - WATCHTOWER_CLEANUP=true
+      - WATCHTOWER_INCLUDE_STOPPED=false
+      - WATCHTOWER_MONITOR_ONLY=false
+      - WATCHTOWER_POLL_INTERVAL=30
+      # For GitHub Container Registry authentication
+      - REPO_USER=${GITHUB_USER}
+      - REPO_PASS=${GITHUB_TOKEN}
+    command: --label-enable --debug 
