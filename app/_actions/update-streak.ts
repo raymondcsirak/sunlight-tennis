@@ -54,38 +54,6 @@ export async function updateStreak() {
 
     console.log('Streak update result:', streakData[0])
 
-    // Check for level up if XP was gained
-    if (streakData[0].xp_gained > 0) {
-      console.log('XP gained, checking for level up')
-      const { data: levelData, error: levelError } = await supabase
-        .rpc('check_level_up', {
-          user_id: user.id
-        })
-
-      if (levelError) {
-        console.error('Level check error:', levelError)
-        throw levelError
-      }
-
-      console.log('Level check result:', levelData?.[0])
-
-      // If leveled up, create a notification
-      if (levelData?.[0]?.leveled_up) {
-        console.log('Creating level up notification')
-        const { error: notifError } = await supabase.rpc('create_notification', {
-          p_user_id: user.id,
-          p_type: 'level_up',
-          p_title: 'Level Up!',
-          p_message: `Congratulations! You've reached Level ${levelData[0].new_level}!`,
-          p_data: JSON.stringify({ new_level: levelData[0].new_level })
-        })
-
-        if (notifError) {
-          console.error('Level up notification error:', notifError)
-        }
-      }
-    }
-
     // If streak was broken, create a notification
     if (streakData[0].streak_broken) {
       console.log('Creating streak broken notification')
