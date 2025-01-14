@@ -35,7 +35,7 @@ export function HeroSection() {
               className="text-lg h-14 px-8 bg-primary hover:bg-primary/90 transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
               asChild
             >
-              <Link href="/sign-in">REZERVĂ UN TEREN</Link>
+              <Link href="/sign-up">REZERVĂ UN TEREN</Link>
             </Button>
           </div>
         </div>
