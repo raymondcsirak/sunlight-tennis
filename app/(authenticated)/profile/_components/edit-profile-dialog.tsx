@@ -17,20 +17,36 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
+import { cn } from "@/lib/utils"
 
 interface EditProfileDialogProps {
   user: User
   profile: any
   children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-export function EditProfileDialog({ user, profile, children }: EditProfileDialogProps) {
-  const [open, setOpen] = useState(false)
+export function EditProfileDialog({ user, profile, children, open: controlledOpen, onOpenChange }: EditProfileDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [fullName, setFullName] = useState(profile?.full_name || "")
+  const [username, setUsername] = useState(profile?.username || "")
   const [phone, setPhone] = useState(profile?.phone || "")
   const { toast } = useToast()
   const router = useRouter()
+  
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = (newOpen: boolean) => {
+    // Only allow closing if we have a name or it's not the first profile creation
+    if (!newOpen && (fullName || profile?.full_name)) {
+      if (!isControlled) {
+        setInternalOpen(newOpen)
+      }
+      onOpenChange?.(newOpen)
+    }
+  }
 
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -39,12 +55,23 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!fullName.trim()) {
+      toast({
+        title: "Name required",
+        description: "Please enter your full name to continue.",
+        variant: "destructive",
+      })
+      return
+    }
+    
     setLoading(true)
 
     try {
       console.log("Updating profile with:", {
         id: user.id,
         full_name: fullName,
+        username,
         phone,
         updated_at: new Date().toISOString(),
       })
@@ -54,6 +81,7 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
         .upsert({
           id: user.id,
           full_name: fullName,
+          username,
           phone,
           updated_at: new Date().toISOString(),
         })
@@ -86,22 +114,39 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className={cn(
+        "sm:max-w-[425px]",
+        !profile?.full_name && "[&_button[aria-label='Close']]:hidden"
+      )}>
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>Edit profile</DialogTitle>
             <DialogDescription>
-              Make changes to your profile here. Click save when you're done.
+              {!profile?.full_name 
+                ? "Please set up your profile to continue. Name is required."
+                : "Make changes to your profile here. Click save when you're done."}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="full-name">Full name</Label>
+              <Label htmlFor="full-name">
+                Full name <span className="text-destructive">*</span>
+              </Label>
               <Input
                 id="full-name"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your full name"
+                required
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Choose a username"
               />
             </div>
             <div className="grid gap-2">
@@ -115,7 +160,7 @@ export function EditProfileDialog({ user, profile, children }: EditProfileDialog
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || !fullName.trim()}>
               {loading ? "Saving..." : "Save changes"}
             </Button>
           </DialogFooter>

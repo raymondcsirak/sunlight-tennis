@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { EditProfileDialog } from "./edit-profile-dialog"
 import { AvatarUpload } from "./avatar-upload"
 import { createBrowserClient } from "@supabase/ssr"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { CalendarIcon, MessageSquare, Trophy, Users, Settings, Home } from "lucide-react"
 import Link from "next/link"
@@ -73,6 +73,7 @@ export function ProfileLayout({ user, profile, playerXp, playerStats, children }
   const { toast } = useToast()
   const pathname = usePathname()
   const router = useRouter()
+  const [showEditProfile, setShowEditProfile] = useState(!profile?.full_name)
   
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -153,7 +154,12 @@ export function ProfileLayout({ user, profile, playerXp, playerStats, children }
                 {profile?.phone && (
                   <p className="text-sm text-muted-foreground">{profile.phone}</p>
                 )}
-                <EditProfileDialog user={user} profile={profile}>
+                <EditProfileDialog 
+                  user={user} 
+                  profile={profile}
+                  open={showEditProfile}
+                  onOpenChange={setShowEditProfile}
+                >
                   <Button variant="outline" size="sm" className="mt-2">
                     Edit Profile
                   </Button>
