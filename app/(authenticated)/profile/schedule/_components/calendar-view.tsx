@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { addDays, format, isSameDay, startOfDay } from "date-fns"
+import { addDays, format, isSameDay, startOfDay, differenceInMinutes, parseISO } from "date-fns"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -24,6 +24,7 @@ interface CalendarViewProps {
 
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8) // 8 AM to 8 PM
 const DAYS_TO_SHOW = 5
+const HOUR_HEIGHT = 80 // height of each hour slot in pixels
 
 export function CalendarView({ scheduleItems, userId }: CalendarViewProps) {
   const [startDate, setStartDate] = useState(startOfDay(new Date()))
@@ -47,15 +48,35 @@ export function CalendarView({ scheduleItems, userId }: CalendarViewProps) {
     setStartDate(prev => addDays(prev, DAYS_TO_SHOW))
   }
 
-  // Get items for a specific day and hour
-  const getItemsForTimeSlot = (date: Date, hour: number) => {
+  // Get items for a specific day
+  const getItemsForDay = (date: Date) => {
     return scheduleItems.filter(item => {
-      const itemStart = new Date(item.start_time)
-      return (
-        isSameDay(itemStart, date) && 
-        itemStart.getHours() === hour
-      )
+      const itemStart = parseISO(item.start_time)
+      return isSameDay(itemStart, date)
     })
+  }
+
+  // Calculate position and height for an event
+  const getEventStyles = (item: ScheduleItem) => {
+    const startTime = parseISO(item.start_time)
+    const endTime = parseISO(item.end_time)
+    
+    const startMinutes = startTime.getHours() * 60 + startTime.getMinutes()
+    const durationMinutes = differenceInMinutes(endTime, startTime)
+    
+    // Calculate position from top (relative to 8 AM)
+    const topPosition = ((startMinutes - 8 * 60) / 60) * HOUR_HEIGHT
+    
+    // Calculate height based on duration
+    const height = (durationMinutes / 60) * HOUR_HEIGHT
+
+    return {
+      top: `${topPosition}px`,
+      height: `${height}px`,
+      position: 'absolute' as const,
+      left: '4px',
+      right: '4px',
+    }
   }
 
   return (
@@ -92,6 +113,7 @@ export function CalendarView({ scheduleItems, userId }: CalendarViewProps) {
         {Array.from({ length: DAYS_TO_SHOW }).map((_, dayIndex) => {
           const date = addDays(startDate, dayIndex)
           const isToday = isSameDay(date, new Date())
+          const dayItems = getItemsForDay(date)
 
           return (
             <div key={dayIndex} className="bg-background min-w-[140px]">
@@ -111,33 +133,38 @@ export function CalendarView({ scheduleItems, userId }: CalendarViewProps) {
                 </div>
               </div>
 
-              {/* Time Slots */}
-              {HOURS.map(hour => {
-                const items = getItemsForTimeSlot(date, hour)
-                return (
+              {/* Time Slots with Events */}
+              <div className="relative">
+                {/* Background Grid */}
+                {HOURS.map(hour => (
                   <div 
                     key={hour}
                     className={cn(
-                      "h-20 border-b border-r p-1",
+                      "h-20 border-b border-r",
                       isToday && "bg-primary/5"
                     )}
+                  />
+                ))}
+
+                {/* Events */}
+                {dayItems.map(item => (
+                  <div
+                    key={item.id}
+                    style={getEventStyles(item)}
+                    className={cn(
+                      "rounded-md px-2 py-1 text-xs",
+                      item.type === 'court_booking' && "bg-blue-500/20 text-blue-700 dark:text-blue-300",
+                      item.type === 'training_session' && "bg-green-500/20 text-green-700 dark:text-green-300",
+                      item.type === 'match' && "bg-orange-500/20 text-orange-700 dark:text-orange-300"
+                    )}
                   >
-                    {items.map(item => (
-                      <div
-                        key={item.id}
-                        className={cn(
-                          "text-xs p-1 rounded mb-1 truncate",
-                          item.type === 'court_booking' && "bg-blue-500/10 text-blue-500",
-                          item.type === 'training_session' && "bg-green-500/10 text-green-500",
-                          item.type === 'match' && "bg-orange-500/10 text-orange-500"
-                        )}
-                      >
-                        {item.title}
-                      </div>
-                    ))}
+                    <div className="font-medium truncate">{item.title}</div>
+                    <div className="truncate text-[10px] opacity-80">
+                      {format(parseISO(item.start_time), 'h:mm a')} - {format(parseISO(item.end_time), 'h:mm a')}
+                    </div>
                   </div>
-                )
-              })}
+                ))}
+              </div>
             </div>
           )
         })}
@@ -147,7 +174,7 @@ export function CalendarView({ scheduleItems, userId }: CalendarViewProps) {
           <div 
             className="absolute left-0 right-0 border-t-2 border-red-500 z-10"
             style={{
-              top: `${((currentTime.getHours() - 8) * 80) + (currentTime.getMinutes() * (80 / 60))}px`
+              top: `${((currentTime.getHours() - 8) * HOUR_HEIGHT) + (currentTime.getMinutes() * (HOUR_HEIGHT / 60))}px`
             }}
           />
         )}
