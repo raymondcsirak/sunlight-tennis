@@ -39,6 +39,8 @@ interface TrainingSession {
 interface Match {
   id: string
   status: string
+  player1_id: string
+  player2_id: string
   match_request: {
     preferred_date: string
     preferred_time: string
@@ -52,6 +54,27 @@ interface Match {
     full_name: string
   }
   player2: {
+    full_name: string
+  }
+}
+
+interface AcceptedRequest {
+  id: string
+  creator_id: string
+  preferred_date: string
+  preferred_time: string
+  duration: string
+  court: {
+    name: string
+    surface: string
+  }
+  match_request_responses: Array<{
+    id: string
+    responder: {
+      full_name: string
+    }
+  }>
+  creator: {
     full_name: string
   }
 }
@@ -100,7 +123,9 @@ async function getScheduleItems(userId: string): Promise<ScheduleItem[]> {
     .select(`
       id,
       status,
-      match_request!inner(
+      player1_id,
+      player2_id,
+      match_request:match_requests!inner(
         preferred_date,
         preferred_time,
         duration,
@@ -119,6 +144,34 @@ async function getScheduleItems(userId: string): Promise<ScheduleItem[]> {
     .or(`player1_id.eq.${userId},player2_id.eq.${userId}`)
     .eq('status', 'scheduled')
     .returns<Match[]>()
+
+  // Get accepted match requests that don't have a match yet
+  const { data: acceptedRequests } = await supabase
+    .from('match_requests')
+    .select(`
+      id,
+      creator_id,
+      preferred_date,
+      preferred_time,
+      duration,
+      court:courts(
+        name,
+        surface
+      ),
+      match_request_responses!inner(
+        id,
+        responder:profiles(
+          full_name
+        )
+      ),
+      creator:profiles!match_requests_creator_id_fkey(
+        full_name
+      )
+    `)
+    .or(`creator_id.eq.${userId},match_request_responses.responder_id.eq.${userId}`)
+    .eq('match_request_responses.status', 'accepted')
+    .not('id', 'in', `(select request_id from matches)`)
+    .returns<AcceptedRequest[]>()
 
   // Transform the data into a unified format
   const scheduleItems: ScheduleItem[] = [
@@ -144,16 +197,32 @@ async function getScheduleItems(userId: string): Promise<ScheduleItem[]> {
         coach: session.coach
       }
     })) || []),
-    ...(matches?.map(match => ({
-      id: match.id,
+    ...(matches?.map(match => {
+      const isPlayer1 = match.player1_id === userId;
+      const opponent = isPlayer1 ? match.player2 : match.player1;
+      return {
+        id: match.id,
+        type: 'match' as const,
+        title: `Match vs ${opponent.full_name}`,
+        start_time: `${match.match_request.preferred_date}T${match.match_request.preferred_time}`,
+        end_time: new Date(new Date(`${match.match_request.preferred_date}T${match.match_request.preferred_time}`).getTime() + parseInt(match.match_request.duration.split(':')[0]) * 60 * 60000).toISOString(),
+        status: match.status,
+        metadata: {
+          court: match.match_request.court,
+          opponent
+        }
+      }
+    }) || []),
+    ...(acceptedRequests?.map(request => ({
+      id: request.id,
       type: 'match' as const,
-      title: `Match vs ${match.player1.full_name === userId ? match.player2.full_name : match.player1.full_name}`,
-      start_time: `${match.match_request.preferred_date}T${match.match_request.preferred_time}`,
-      end_time: new Date(new Date(`${match.match_request.preferred_date}T${match.match_request.preferred_time}`).getTime() + parseInt(match.match_request.duration) * 60000).toISOString(),
-      status: match.status,
+      title: `Match vs ${request.creator_id === userId ? request.match_request_responses[0].responder.full_name : request.creator.full_name}`,
+      start_time: `${request.preferred_date}T${request.preferred_time}`,
+      end_time: new Date(new Date(`${request.preferred_date}T${request.preferred_time}`).getTime() + parseInt(request.duration) * 60000).toISOString(),
+      status: 'scheduled',
       metadata: {
-        court: match.match_request.court,
-        opponent: match.player1.full_name === userId ? match.player2 : match.player1
+        court: request.court,
+        opponent: request.creator_id === userId ? request.match_request_responses[0].responder : request.creator
       }
     })) || [])
   ]
