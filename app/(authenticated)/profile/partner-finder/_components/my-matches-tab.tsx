@@ -1336,6 +1336,31 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }, [userId])
 
+  // Subscribe to match request response updates
+  useEffect(() => {
+    const channel = supabase
+      .channel('match-response-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'match_request_responses',
+          filter: `request_id=in.(${matchRequests.map(r => r.id).join(',')})`,
+        },
+        () => {
+          // Refetch match requests when responses change
+          void fetchMatchRequests()
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [matchRequests])
+
   const handleDeleteMatch = async (requestId: string) => {
     try {
       // First, mark the match request as deleted
