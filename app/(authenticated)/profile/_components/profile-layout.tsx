@@ -38,17 +38,17 @@ const menuItems = [
     href: "/profile",
   },
   {
-    label: "Find Partner",
+    label: "Find a Partner",
     icon: Users,
     href: "/profile/partner-finder",
   },
   {
-    label: "Book Court",
+    label: "Book a Court",
     icon: CalendarIcon,
     href: "/profile/courts",
   },
   {
-    label: "Training Session",
+    label: "Training Sessions",
     icon: Trophy,
     href: "/profile/training",
   },
