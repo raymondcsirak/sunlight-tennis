@@ -60,7 +60,7 @@ const menuItems = [
   {
     label: "Messages",
     icon: MessageSquare,
-    href: "/messages",
+    href: "/profile/messages",
   },
   {
     label: "Skills",
