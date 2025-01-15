@@ -53,6 +53,11 @@ const menuItems = [
     href: "/profile/training",
   },
   {
+    label: "Schedule",
+    icon: CalendarIcon,
+    href: "/profile/schedule",
+  },
+  {
     label: "Messages",
     icon: MessageSquare,
     href: "/messages",

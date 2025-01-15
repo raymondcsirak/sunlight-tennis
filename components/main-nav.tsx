@@ -46,6 +46,17 @@ export function MainNav({ className }: MainNavProps) {
       >
         Training
       </Link>
+      <Link
+        href="/profile/schedule"
+        className={cn(
+          "text-sm font-medium transition-colors hover:text-primary",
+          pathname === "/profile/schedule"
+            ? "text-primary"
+            : "text-muted-foreground"
+        )}
+      >
+        Schedule
+      </Link>
     </nav>
   )
 } 
