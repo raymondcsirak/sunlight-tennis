@@ -74,6 +74,48 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
     fetchRequests()
   }, [])
 
+  // Add real-time subscription for match requests
+  useEffect(() => {
+    const requestsChannel = supabase
+      .channel('open-requests-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'match_requests',
+          filter: `creator_id=neq.${userId}`,
+        },
+        () => {
+          // Refetch requests when there are changes
+          void fetchRequests()
+        }
+      )
+      .subscribe()
+
+    const responsesChannel = supabase
+      .channel('request-responses-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'match_request_responses',
+        },
+        () => {
+          // Refetch requests when responses change
+          void fetchRequests()
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      void supabase.removeChannel(requestsChannel)
+      void supabase.removeChannel(responsesChannel)
+    }
+  }, [userId])
+
   const fetchRequests = async () => {
     try {
       const { data: requestsData, error } = await supabase
