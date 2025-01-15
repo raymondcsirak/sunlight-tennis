@@ -53,7 +53,7 @@ const menuItems = [
     href: "/profile/training",
   },
   {
-    label: "Schedule",
+    label: "My Schedule",
     icon: CalendarIcon,
     href: "/profile/schedule",
   },
