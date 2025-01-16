@@ -1032,7 +1032,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       if (updateError) throw updateError
 
       // Create a match record
-      const { error: matchError } = await supabase
+      const { data: matchData, error: matchError } = await supabase
         .from('matches')
         .insert({
           player1_id: responseData.request.creator_id,
@@ -1040,33 +1040,50 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
           request_id: responseData.request_id,
           winner_id: null
         })
-
-      if (matchError) throw matchError
-
-      // Create a message thread for the players
-      const { data: threadData, error: threadError } = await supabase
-        .from('message_threads')
-        .insert({
-          participant1_id: responseData.request.creator_id,
-          participant2_id: responseData.responder_id,
-          match_ids: [responseData.request_id]
-        })
         .select()
         .single()
 
+      if (matchError) throw matchError
+
+      // Use the find_or_create_thread function to get or create a thread
+      const { data: threadData, error: threadError } = await supabase
+        .rpc('find_or_create_thread', {
+          user1_id: responseData.request.creator_id,
+          user2_id: responseData.responder_id
+        })
+
       if (threadError) throw threadError
+
+      // Update thread with the new match ID
+      const { data: currentThread, error: fetchError } = await supabase
+        .from('message_threads')
+        .select('match_ids')
+        .eq('id', threadData)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      const { error: threadUpdateError } = await supabase
+        .from('message_threads')
+        .update({
+          match_ids: [...(currentThread.match_ids || []), matchData.id],
+          last_message_at: new Date().toISOString()
+        })
+        .eq('id', threadData)
+
+      if (threadUpdateError) throw threadUpdateError
 
       // Create a system message in the thread
       const { error: messageError } = await supabase
         .from('messages')
         .insert({
-          thread_id: threadData.id,
+          thread_id: threadData,
           sender_id: responseData.request.creator_id,
           content: `Match scheduled for ${format(new Date(responseData.request.preferred_date), 'MMM d')} at ${responseData.request.preferred_time}`,
           is_system_message: true,
           metadata: {
             type: 'match_accepted',
-            match_id: responseData.request_id,
+            match_id: matchData.id,
             date: responseData.request.preferred_date,
             time: responseData.request.preferred_time
           }

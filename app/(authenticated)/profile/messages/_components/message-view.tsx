@@ -11,6 +11,17 @@ import { format } from "date-fns"
 import { Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useToast } from "@/components/ui/use-toast"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface Profile {
   id: string
@@ -142,24 +153,77 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
     }
   }
 
+  const handleDeleteThread = async () => {
+    try {
+      const { error } = await supabase
+        .from('message_threads')
+        .delete()
+        .eq('id', thread.id)
+
+      if (error) throw error
+
+      toast({
+        title: "Thread Deleted",
+        description: "The conversation has been deleted.",
+      })
+
+      router.push('/profile/messages')
+      router.refresh()
+    } catch (error) {
+      console.error('Error deleting thread:', error)
+      toast({
+        title: "Error",
+        description: "Failed to delete conversation. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   return (
     <>
       {/* Header */}
-      <div className="p-4 border-b flex items-center gap-3">
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={otherParticipant.avatar_url || undefined} />
-          <AvatarFallback>
-            {otherParticipant.full_name.split(' ').map(n => n[0]).join('')}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <h2 className="font-semibold">{otherParticipant.full_name}</h2>
-          {thread.match_ids?.length > 0 && (
-            <p className="text-sm text-muted-foreground">
-              {thread.match_ids.length} {thread.match_ids.length === 1 ? 'match' : 'matches'} together
-            </p>
-          )}
+      <div className="p-4 border-b flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={otherParticipant.avatar_url || undefined} />
+            <AvatarFallback>
+              {otherParticipant.full_name.split(' ').map(n => n[0]).join('')}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <h2 className="font-semibold">{otherParticipant.full_name}</h2>
+            {thread.match_ids?.length > 0 && (
+              <p className="text-sm text-muted-foreground">
+                {thread.match_ids.length} {thread.match_ids.length === 1 ? 'match' : 'matches'} together
+              </p>
+            )}
+          </div>
         </div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10">
+              Delete Chat
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete this conversation? This action cannot be undone.
+                Match history and records will be preserved.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteThread}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Messages */}
