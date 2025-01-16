@@ -15,9 +15,9 @@ export default async function MessagesPage({
 }: PageProps) {
   const supabase = await createClient()
 
-  // Check auth
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
+  // Check auth using getUser instead of getSession
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  if (userError || !user) {
     redirect("/sign-in")
   }
 
@@ -25,16 +25,16 @@ export default async function MessagesPage({
   const { data: profile } = await supabase
     .from('profiles')
     .select('*')
-    .eq('id', session.user.id)
+    .eq('id', user.id)
     .single()
 
   const { data: playerXp } = await supabase
     .from('player_xp')
     .select('current_xp')
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
-  const playerStats = await getPlayerStats(session.user.id)
+  const playerStats = await getPlayerStats(user.id)
 
   // Get thread ID from search params
   const params = await searchParams
@@ -55,7 +55,7 @@ export default async function MessagesPage({
         metadata
       )
     `)
-    .or(`participant1_id.eq.${session.user.id},participant2_id.eq.${session.user.id}`)
+    .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
     .order('last_message_at', { ascending: false })
 
   // Get current thread's messages if thread ID is provided
@@ -78,38 +78,57 @@ export default async function MessagesPage({
     .eq('id', currentThreadId)
     .single() : { data: null }
 
+  // Transform avatar URLs to full URLs
+  const transformAvatarUrls = (data: any) => {
+    if (!data) return data;
+    
+    if (data.participant1?.avatar_url) {
+      data.participant1.avatar_url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.participant1.avatar_url}`
+    }
+    if (data.participant2?.avatar_url) {
+      data.participant2.avatar_url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${data.participant2.avatar_url}`
+    }
+    return data;
+  }
+
+  // Transform avatar URLs for all threads and current thread
+  const transformedThreads = threads?.map(thread => transformAvatarUrls(thread))
+  const transformedCurrentThread = transformAvatarUrls(currentThread)
+
   return (
     <ProfileLayout
-      user={session.user}
+      user={user}
       profile={profile}
       playerXp={playerXp ? { current_xp: playerXp.current_xp } : undefined}
       playerStats={playerStats}
     >
-      <div className="flex h-[calc(100vh-4rem)] bg-background">
-        {/* Thread List Sidebar */}
-        <div className="w-80 border-r flex flex-col">
-          <div className="p-4 border-b">
-            <h1 className="text-xl font-semibold">Messages</h1>
-          </div>
-          <ThreadList 
-            threads={threads || []} 
-            currentUserId={session.user.id}
-            currentThreadId={currentThreadId}
-          />
-        </div>
-
-        {/* Message View */}
-        <div className="flex-1 flex flex-col">
-          {currentThread ? (
-            <MessageView 
-              thread={currentThread}
-              currentUserId={session.user.id}
-            />
-          ) : (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-              Select a conversation to start messaging
+      <div className="h-[calc(100vh-16rem)] flex flex-col">
+        <div className="flex-1 flex overflow-hidden">
+          {/* Thread List Sidebar */}
+          <div className="w-80 border-r flex flex-col">
+            <div className="shrink-0 p-4 border-b">
+              <h1 className="text-xl font-semibold">Messages</h1>
             </div>
-          )}
+            <ThreadList 
+              threads={transformedThreads || []} 
+              currentUserId={user.id}
+              currentThreadId={currentThreadId}
+            />
+          </div>
+
+          {/* Message View */}
+          <div className="flex-1 flex flex-col">
+            {transformedCurrentThread ? (
+              <MessageView 
+                thread={transformedCurrentThread}
+                currentUserId={user.id}
+              />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                Select a conversation to start messaging
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </ProfileLayout>

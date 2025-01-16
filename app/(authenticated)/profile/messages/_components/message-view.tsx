@@ -182,10 +182,14 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
   return (
     <>
       {/* Header */}
-      <div className="p-4 border-b flex items-center justify-between">
+      <div className="shrink-0 p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={otherParticipant.avatar_url || undefined} />
+          <Avatar className="h-10 w-10 shrink-0">
+            <AvatarImage 
+              src={otherParticipant.avatar_url || undefined} 
+              className="object-cover"
+              alt={otherParticipant.full_name}
+            />
             <AvatarFallback>
               {otherParticipant.full_name.split(' ').map(n => n[0]).join('')}
             </AvatarFallback>
@@ -243,8 +247,12 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
                   isCurrentUser && "flex-row-reverse"
                 )}
               >
-                <Avatar className="h-8 w-8 mt-1">
-                  <AvatarImage src={sender.avatar_url || undefined} />
+                <Avatar className="h-8 w-8 mt-1 shrink-0">
+                  <AvatarImage 
+                    src={sender.avatar_url || undefined} 
+                    className="object-cover"
+                    alt={sender.full_name}
+                  />
                   <AvatarFallback>
                     {sender.full_name.split(' ').map(n => n[0]).join('')}
                   </AvatarFallback>

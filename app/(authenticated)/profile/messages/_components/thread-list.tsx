@@ -62,8 +62,12 @@ export function ThreadList({ threads, currentUserId, currentThreadId }: ThreadLi
                 isSelected && "bg-muted"
               )}
             >
-              <Avatar className="h-10 w-10">
-                <AvatarImage src={otherParticipant.avatar_url || undefined} />
+              <Avatar className="h-10 w-10 shrink-0">
+                <AvatarImage 
+                  src={otherParticipant.avatar_url || undefined} 
+                  className="object-cover"
+                  alt={otherParticipant.full_name}
+                />
                 <AvatarFallback>
                   {otherParticipant.full_name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
