@@ -61,7 +61,7 @@ export default async function ProfilePage() {
       playerXp={playerXp}
       playerStats={stats}
     >
-      <div className="space-y-6">
+      <div className="space-y-4 lg:space-y-6">
         <XPProgress
           level={progress.currentLevel}
           currentXp={progress.levelProgress}
@@ -71,16 +71,18 @@ export default async function ProfilePage() {
 
         <PlayerStatsCard stats={stats} variant="full" />
 
-        <AchievementsTab userId={user.id} />
+        <div className="grid grid-cols-1 gap-4 lg:gap-6">
+          <AchievementsTab userId={user.id} />
 
-        <TrophyRoom
-          achievements={achievements?.map(a => ({
-            id: a.id,
-            type: a.type,
-            title: a.name,
-            earnedAt: a.created_at,
-          })) || []}
-        />
+          <TrophyRoom
+            achievements={achievements?.map(a => ({
+              id: a.id,
+              type: a.type,
+              title: a.name,
+              earnedAt: a.created_at,
+            })) || []}
+          />
+        </div>
       </div>
     </ProfileLayout>
   )

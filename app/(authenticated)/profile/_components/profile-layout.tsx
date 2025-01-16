@@ -7,12 +7,13 @@ import { AvatarUpload } from "./avatar-upload"
 import { createBrowserClient } from "@supabase/ssr"
 import { useCallback, useState } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import { CalendarIcon, MessageSquare, Trophy, Users, Settings, Home } from "lucide-react"
+import { CalendarIcon, MessageSquare, Trophy, Users, Settings, Home, Menu } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { calculateLevelProgress } from "@/utils/xp"
 import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
 interface PlayerStats {
   totalMatches: number
@@ -156,8 +157,72 @@ export function ProfileLayout({
       </div>
       
       <div className="absolute inset-0 top-16 flex">
-        {/* Left Sidebar */}
-        <div className="w-64 border-r border-border/40 backdrop-blur-sm bg-card/50 overflow-y-auto">
+        {/* Mobile Menu Button */}
+        <div className="lg:hidden fixed top-[4.1rem] left-4 z-50">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0 w-80">
+              <div className="border-r border-border/40 backdrop-blur-sm bg-card/50 h-full overflow-y-auto">
+                <div className="p-6 space-y-6">
+                  {/* Profile Section */}
+                  <div className="flex flex-col items-center space-y-4">
+                    <AvatarUpload
+                      url={avatarUrl}
+                      onUpload={updateAvatar}
+                      size={150}
+                    />
+                    <div className="text-center space-y-1.5">
+                      <h2 className="font-semibold">{profile?.full_name || 'Anonymous Player'}</h2>
+                      <p className="text-sm text-muted-foreground">{profile?.username || 'No username set'}</p>
+                      {profile?.phone && (
+                        <p className="text-sm text-muted-foreground">{profile.phone}</p>
+                      )}
+                      <EditProfileDialog 
+                        user={user} 
+                        profile={profile}
+                        open={showEditProfile}
+                        onOpenChange={setShowEditProfile}
+                      >
+                        <Button variant="outline" size="sm" className="mt-2">
+                          Edit Profile
+                        </Button>
+                      </EditProfileDialog>
+                    </div>
+
+                    {/* Stats Cards */}
+                    <PlayerStatsCard stats={playerStats} variant="compact" />
+                  </div>
+
+                  {/* Navigation Menu */}
+                  <nav className="space-y-1">
+                    {menuItems.map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                          pathname === item.href 
+                            ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary)_/_0.25)]" 
+                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block w-64 border-r border-border/40 backdrop-blur-sm bg-card/50 overflow-y-auto">
           <div className="p-6 space-y-6">
             {/* Profile Section */}
             <div className="flex flex-col items-center space-y-4">
@@ -210,7 +275,7 @@ export function ProfileLayout({
         </div>
 
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="flex-1 relative overflow-y-auto">
           {hideFooter ? (
             // For full-height content like messages, render without padding and card
             <div className="h-full">
@@ -218,8 +283,8 @@ export function ProfileLayout({
             </div>
           ) : (
             // For normal content, keep the existing padding and card style
-            <div className="container py-6 px-8">
-              <div className="bg-card/50 backdrop-blur-sm shadow-lg rounded-lg p-6">
+            <div className="container py-6 px-4 lg:px-8">
+              <div className="bg-card/50 backdrop-blur-sm shadow-lg rounded-lg p-4 lg:p-6">
                 {children}
               </div>
             </div>
