@@ -57,25 +57,24 @@ export async function getAvailableCoaches(
       }
     }
 
-    // Then, get all training sessions for the given time period
+    // Get all training sessions that overlap with the requested time period
     const { data: sessions, error: sessionsError } = await supabase
       .from('training_sessions')
       .select('coach_id')
       .eq('status', 'confirmed')
-      .neq('status', 'cancelled')
       .gte('start_time', `${date}T00:00:00Z`)
       .lt('start_time', `${date}T23:59:59Z`)
-      .or(
-        `and(start_time.lte.${endTime},end_time.gt.${startTime})`
-      )
+      .or(`and(start_time.lte.${endTime},end_time.gt.${startTime})`)
 
     if (sessionsError) {
       console.error('Sessions error:', sessionsError)
       throw sessionsError
     }
 
+    console.log('Found sessions:', sessions)
+
     // Create a Set of busy coach IDs for quick lookup
-    const busyCoachIds = new Set(sessions.map(s => s.coach_id))
+    const busyCoachIds = new Set(sessions?.map(s => s.coach_id) || [])
 
     // Mark coaches as available or not
     const coachesWithAvailability: CoachWithAvailability[] = coaches.map(coach => ({

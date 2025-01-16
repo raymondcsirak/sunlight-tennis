@@ -50,27 +50,24 @@ export async function getAvailableCourts(
       }
     }
 
-    // Then, get all bookings for the given time period
+    // Get all bookings that overlap with the requested time period
     const { data: bookings, error: bookingsError } = await supabase
       .from('court_bookings')
       .select('court_id')
       .eq('booking_status', 'confirmed')
-      .neq('booking_status', 'cancelled')
       .gte('start_time', `${date}T00:00:00Z`)
       .lt('start_time', `${date}T23:59:59Z`)
-      .or(
-        `and(start_time.lte.${endTime},end_time.gt.${startTime})`
-      )
+      .or(`and(start_time.lte.${endTime},end_time.gt.${startTime})`)
 
     if (bookingsError) {
       console.error('Bookings error:', bookingsError)
       throw bookingsError
     }
 
-    console.log('Bookings found:', bookings)
+    console.log('Found bookings:', bookings)
 
     // Create a Set of booked court IDs for quick lookup
-    const bookedCourtIds = new Set(bookings.map(b => b.court_id))
+    const bookedCourtIds = new Set(bookings?.map(b => b.court_id) || [])
 
     // Mark courts as available or not
     const courtsWithAvailability: CourtWithAvailability[] = courts.map(court => ({
