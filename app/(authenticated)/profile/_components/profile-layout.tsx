@@ -22,13 +22,19 @@ interface PlayerStats {
 }
 
 interface ProfileLayoutProps {
+  children: React.ReactNode
   user: User
   profile: any
   playerXp?: {
     current_xp: number
   }
-  playerStats: PlayerStats
-  children: React.ReactNode
+  playerStats: {
+    totalMatches: number
+    wonMatches: number
+    winRate: number
+    level: number
+  }
+  hideFooter?: boolean
 }
 
 const menuItems = [
@@ -74,7 +80,14 @@ const menuItems = [
   },
 ]
 
-export function ProfileLayout({ user, profile, playerXp, playerStats, children }: ProfileLayoutProps) {
+export function ProfileLayout({ 
+  children, 
+  user, 
+  profile, 
+  playerXp, 
+  playerStats,
+  hideFooter = false 
+}: ProfileLayoutProps) {
   const { toast } = useToast()
   const pathname = usePathname()
   const router = useRouter()
@@ -135,17 +148,17 @@ export function ProfileLayout({ user, profile, playerXp, playerStats, children }
   console.log("Avatar URL:", avatarUrl)
 
   return (
-    <div className="min-h-screen bg-background relative pt-16">
+    <div className="fixed inset-0 pt-16 bg-background">
       {/* Subtle gradient glow effect */}
-      <div className="fixed top-16 inset-x-0 bottom-0 pointer-events-none">
+      <div className="absolute top-16 inset-x-0 bottom-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent h-24" />
         <div className="absolute inset-0 bg-[radial-gradient(70%_35%_at_50%_0%,rgba(var(--primary)_/_0.03)_0%,transparent_100%)]" />
       </div>
       
-      <div className="relative flex">
+      <div className="absolute inset-0 top-16 flex">
         {/* Left Sidebar */}
-        <div className="w-64 min-h-[calc(100vh-4rem)] border-r border-border/40 backdrop-blur-sm bg-card/50">
-          <div className="sticky top-16 p-6 space-y-6">
+        <div className="w-64 border-r border-border/40 backdrop-blur-sm bg-card/50 overflow-y-auto">
+          <div className="p-6 space-y-6">
             {/* Profile Section */}
             <div className="flex flex-col items-center space-y-4">
               <AvatarUpload
@@ -197,12 +210,20 @@ export function ProfileLayout({ user, profile, playerXp, playerStats, children }
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 min-h-[calc(100vh-4rem)]">
-          <div className="container py-6 px-8">
-            <div className="bg-card/50 backdrop-blur-sm shadow-lg rounded-lg p-6">
+        <div className="flex-1">
+          {hideFooter ? (
+            // For full-height content like messages, render without padding and card
+            <div className="h-full">
               {children}
             </div>
-          </div>
+          ) : (
+            // For normal content, keep the existing padding and card style
+            <div className="container py-6 px-8">
+              <div className="bg-card/50 backdrop-blur-sm shadow-lg rounded-lg p-6">
+                {children}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

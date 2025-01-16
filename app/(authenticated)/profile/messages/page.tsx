@@ -101,34 +101,33 @@ export default async function MessagesPage({
       profile={profile}
       playerXp={playerXp ? { current_xp: playerXp.current_xp } : undefined}
       playerStats={playerStats}
+      hideFooter={true}
     >
-      <div className="h-[calc(100vh-16rem)] flex flex-col">
-        <div className="flex-1 flex overflow-hidden">
-          {/* Thread List Sidebar */}
-          <div className="w-80 border-r flex flex-col">
-            <div className="shrink-0 p-4 border-b">
-              <h1 className="text-xl font-semibold">Messages</h1>
-            </div>
+      <div className="h-full flex">
+        <div className="w-80 border-r bg-background flex flex-col">
+          <div className="p-4 border-b shrink-0">
+            <h1 className="text-xl font-semibold">Messages</h1>
+          </div>
+          <div className="flex-1 overflow-y-auto">
             <ThreadList 
               threads={transformedThreads || []} 
               currentUserId={user.id}
               currentThreadId={currentThreadId}
             />
           </div>
-
-          {/* Message View */}
-          <div className="flex-1 flex flex-col">
-            {transformedCurrentThread ? (
-              <MessageView 
-                thread={transformedCurrentThread}
-                currentUserId={user.id}
-              />
-            ) : (
-              <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                Select a conversation to start messaging
-              </div>
-            )}
-          </div>
+        </div>
+        
+        <div className="flex-1 bg-background">
+          {transformedCurrentThread ? (
+            <MessageView 
+              thread={transformedCurrentThread}
+              currentUserId={user.id}
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center text-muted-foreground">
+              Select a conversation to start messaging
+            </div>
+          )}
         </div>
       </div>
     </ProfileLayout>

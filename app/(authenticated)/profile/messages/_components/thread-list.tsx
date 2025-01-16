@@ -45,6 +45,11 @@ export function ThreadList({ threads, currentUserId, currentThreadId }: ThreadLi
       : thread.participant1
   }
 
+  const handleThreadClick = (e: React.MouseEvent, threadId: string) => {
+    e.preventDefault()
+    router.replace(`/profile/messages?thread=${threadId}`, { scroll: false })
+  }
+
   return (
     <ScrollArea className="flex-1">
       <div className="flex flex-col p-2 gap-1">
@@ -56,7 +61,7 @@ export function ThreadList({ threads, currentUserId, currentThreadId }: ThreadLi
           return (
             <button
               key={thread.id}
-              onClick={() => router.push(`/profile/messages?thread=${thread.id}`)}
+              onClick={(e) => handleThreadClick(e, thread.id)}
               className={cn(
                 "flex items-start gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors text-left",
                 isSelected && "bg-muted"

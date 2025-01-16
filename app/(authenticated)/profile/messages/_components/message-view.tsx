@@ -56,6 +56,7 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
   const router = useRouter()
   const { toast } = useToast()
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
   const supabase = createBrowserClient(
@@ -67,6 +68,16 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
     thread.participant1.id === currentUserId 
       ? thread.participant2 
       : thread.participant1
+
+  // Reset scroll position when thread changes
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        scrollContainer.scrollTop = 0
+      }
+    }
+  }, [thread.id])
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -180,7 +191,7 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
   }
 
   return (
-    <>
+    <div className="flex flex-col h-full">
       {/* Header */}
       <div className="shrink-0 p-4 border-b flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -231,8 +242,8 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
       </div>
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4">
-        <div className="space-y-4">
+      <ScrollArea ref={scrollAreaRef} className="flex-1 px-4">
+        <div className="py-4 space-y-4">
           {thread.messages.map((message) => {
             const isCurrentUser = message.sender_id === currentUserId
             const sender = isCurrentUser 
@@ -289,7 +300,7 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
       </ScrollArea>
 
       {/* Message Input */}
-      <div className="p-4 border-t">
+      <div className="shrink-0 p-4 border-t">
         <div className="flex gap-2">
           <Textarea
             ref={textareaRef}
@@ -305,6 +316,6 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
           </Button>
         </div>
       </div>
-    </>
+    </div>
   )
 } 
