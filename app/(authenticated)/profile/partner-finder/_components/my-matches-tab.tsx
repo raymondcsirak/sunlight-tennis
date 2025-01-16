@@ -1043,6 +1043,37 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (matchError) throw matchError
 
+      // Create a message thread for the players
+      const { data: threadData, error: threadError } = await supabase
+        .from('message_threads')
+        .insert({
+          participant1_id: responseData.request.creator_id,
+          participant2_id: responseData.responder_id,
+          match_ids: [responseData.request_id]
+        })
+        .select()
+        .single()
+
+      if (threadError) throw threadError
+
+      // Create a system message in the thread
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          thread_id: threadData.id,
+          sender_id: responseData.request.creator_id,
+          content: `Match scheduled for ${format(new Date(responseData.request.preferred_date), 'MMM d')} at ${responseData.request.preferred_time}`,
+          is_system_message: true,
+          metadata: {
+            type: 'match_accepted',
+            match_id: responseData.request_id,
+            date: responseData.request.preferred_date,
+            time: responseData.request.preferred_time
+          }
+        })
+
+      if (messageError) throw messageError
+
       // Create a notification for the responder
       const { error: notificationError } = await supabase
         .from('notifications')

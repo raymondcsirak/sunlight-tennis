@@ -47,7 +47,7 @@ export default async function MessagesPage({
       *,
       participant1:participant1_id(id, full_name, avatar_url),
       participant2:participant2_id(id, full_name, avatar_url),
-      messages!inner(
+      messages(
         id,
         content,
         created_at,
@@ -55,8 +55,8 @@ export default async function MessagesPage({
         metadata
       )
     `)
+    .or(`participant1_id.eq.${session.user.id},participant2_id.eq.${session.user.id}`)
     .order('last_message_at', { ascending: false })
-    .limit(1, { foreignTable: 'messages' })
 
   // Get current thread's messages if thread ID is provided
   const { data: currentThread } = currentThreadId ? await supabase
