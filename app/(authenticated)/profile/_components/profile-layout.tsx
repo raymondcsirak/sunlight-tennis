@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { EditProfileDialog } from "./edit-profile-dialog"
 import { AvatarUpload } from "./avatar-upload"
 import { createBrowserClient } from "@supabase/ssr"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import { CalendarIcon, MessageSquare, Trophy, Users, Settings, Home, Menu } from "lucide-react"
 import Link from "next/link"
@@ -38,49 +38,6 @@ interface ProfileLayoutProps {
   hideFooter?: boolean
 }
 
-const menuItems = [
-  {
-    label: "My Profile",
-    icon: Home,
-    href: "/profile",
-  },
-  {
-    label: "Find a Partner",
-    icon: Users,
-    href: "/profile/partner-finder",
-  },
-  {
-    label: "Book a Court",
-    icon: CalendarIcon,
-    href: "/profile/courts",
-  },
-  {
-    label: "Training Sessions",
-    icon: Trophy,
-    href: "/profile/training",
-  },
-  {
-    label: "My Schedule",
-    icon: CalendarIcon,
-    href: "/profile/schedule",
-  },
-  {
-    label: "Messages",
-    icon: MessageSquare,
-    href: "/profile/messages",
-  },
-  {
-    label: "Skills",
-    icon: Trophy,
-    href: "/profile/skills",
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: "/profile/settings",
-  },
-]
-
 export function ProfileLayout({ 
   children, 
   user, 
@@ -93,11 +50,104 @@ export function ProfileLayout({
   const pathname = usePathname()
   const router = useRouter()
   const [showEditProfile, setShowEditProfile] = useState(!profile?.full_name)
+  const [hasUnreadMessages, setHasUnreadMessages] = useState(false)
   
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
+
+  const menuItems = [
+    {
+      label: "My Profile",
+      icon: Home,
+      href: "/profile",
+    },
+    {
+      label: "Find a Partner",
+      icon: Users,
+      href: "/profile/partner-finder",
+    },
+    {
+      label: "Book a Court",
+      icon: CalendarIcon,
+      href: "/profile/courts",
+    },
+    {
+      label: "Training Sessions",
+      icon: Trophy,
+      href: "/profile/training",
+    },
+    {
+      label: "My Schedule",
+      icon: CalendarIcon,
+      href: "/profile/schedule",
+    },
+    {
+      label: "Messages",
+      icon: MessageSquare,
+      href: "/profile/messages",
+      showNotification: hasUnreadMessages
+    },
+    {
+      label: "Skills",
+      icon: Trophy,
+      href: "/profile/skills",
+    },
+    {
+      label: "Settings",
+      icon: Settings,
+      href: "/profile/settings",
+    },
+  ]
+
+  // Check for unread messages
+  useEffect(() => {
+    const checkUnreadMessages = async () => {
+      const { data: threads } = await supabase
+        .from('message_threads')
+        .select(`
+          id,
+          messages!inner (
+            id,
+            sender_id,
+            read_at
+          )
+        `)
+        .or(`participant1_id.eq.${user.id},participant2_id.eq.${user.id}`)
+        .order('last_message_at', { ascending: false })
+
+      const hasUnread = threads?.some(thread => 
+        thread.messages.some(message => 
+          message.sender_id !== user.id && !message.read_at
+        )
+      )
+
+      setHasUnreadMessages(!!hasUnread)
+    }
+
+    checkUnreadMessages()
+
+    // Subscribe to new messages
+    const channel = supabase
+      .channel('message_notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'messages'
+        },
+        () => {
+          checkUnreadMessages()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [supabase, user.id])
 
   // Calculate level progress
   const progress = calculateLevelProgress(playerXp?.current_xp || 0)
@@ -204,7 +254,7 @@ export function ProfileLayout({
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                          "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative",
                           pathname === item.href 
                             ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary)_/_0.25)]" 
                             : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -212,6 +262,9 @@ export function ProfileLayout({
                       >
                         <item.icon className="h-4 w-4" />
                         {item.label}
+                        {item.showNotification && (
+                          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
+                        )}
                       </Link>
                     ))}
                   </nav>
@@ -260,7 +313,7 @@ export function ProfileLayout({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors relative",
                     pathname === item.href 
                       ? "bg-primary text-primary-foreground shadow-[0_0_15px_rgba(var(--primary)_/_0.25)]" 
                       : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -268,6 +321,9 @@ export function ProfileLayout({
                 >
                   <item.icon className="h-4 w-4" />
                   {item.label}
+                  {item.showNotification && (
+                    <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" />
+                  )}
                 </Link>
               ))}
             </nav>
