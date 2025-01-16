@@ -10,14 +10,22 @@ export async function updateStreak() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
+        getAll() {
+          return cookieStore.getAll().map(cookie => ({
+            name: cookie.name,
+            value: cookie.value,
+          }));
         },
-        set(name: string, value: string, options: any) {
-          // Server actions don't need to set cookies
-        },
-        remove(name: string, options: any) {
-          // Server actions don't need to remove cookies
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
+          } catch (error) {
+            // The `set` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
         },
       },
     }
@@ -76,11 +84,6 @@ export async function updateStreak() {
     }
   } catch (error) {
     console.error('Error updating streak:', error)
-    // Log the full error object for debugging
-    console.error('Full error details:', JSON.stringify(error, null, 2))
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Failed to update streak'
-    }
+    throw error
   }
 } 
