@@ -15,6 +15,7 @@ export function MainNav({ className }: MainNavProps) {
     <nav className={cn("flex items-center space-x-4 lg:space-x-6", className)}>
       <Link
         href="/find-partner"
+        prefetch={true}
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
           pathname === "/find-partner"
@@ -26,6 +27,7 @@ export function MainNav({ className }: MainNavProps) {
       </Link>
       <Link
         href="/courts"
+        prefetch={true}
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
           pathname === "/courts"
@@ -37,6 +39,7 @@ export function MainNav({ className }: MainNavProps) {
       </Link>
       <Link
         href="/training"
+        prefetch={true}
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
           pathname === "/training"
@@ -48,6 +51,7 @@ export function MainNav({ className }: MainNavProps) {
       </Link>
       <Link
         href="/profile/schedule"
+        prefetch={true}
         className={cn(
           "text-sm font-medium transition-colors hover:text-primary",
           pathname === "/profile/schedule"

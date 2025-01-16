@@ -28,31 +28,34 @@ export default async function ProfilePage() {
     redirect("/sign-in")
   }
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select()
-    .eq("id", user.id)
-    .single()
-
-  const { data: playerXp } = await supabase
-    .from("player_xp")
-    .select()
-    .eq("user_id", user.id)
-    .single()
+  // Fetch all data in parallel
+  const [
+    { data: profile },
+    { data: playerXp },
+    { data: achievements },
+    stats
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select()
+      .eq("id", user.id)
+      .single(),
+    supabase
+      .from("player_xp")
+      .select()
+      .eq("user_id", user.id)
+      .single(),
+    supabase
+      .from("achievements")
+      .select()
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(4),
+    getPlayerStats(user.id)
+  ])
 
   // Calculate level progress using our utility
   const progress = calculateLevelProgress(playerXp?.current_xp || 0)
-
-  // Get achievements
-  const { data: achievements } = await supabase
-    .from("achievements")
-    .select()
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
-    .limit(4)
-
-  // Get player stats
-  const stats = await getPlayerStats(user.id)
 
   return (
     <ProfileLayout 

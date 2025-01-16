@@ -238,23 +238,26 @@ export default async function SchedulePage() {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user?.id)
-    .single()
-
-  const { data: playerXp } = await supabase
-    .from('player_xp')
-    .select('*')
-    .eq('user_id', user?.id)
-    .single()
-
-  // Get player stats
-  const stats = await getPlayerStats(user!.id)
-
-  // Get schedule items
-  const scheduleItems = await getScheduleItems(user!.id)
+  // Fetch all data in parallel
+  const [
+    { data: profile },
+    { data: playerXp },
+    stats,
+    scheduleItems
+  ] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', user?.id)
+      .single(),
+    supabase
+      .from('player_xp')
+      .select('*')
+      .eq('user_id', user?.id)
+      .single(),
+    getPlayerStats(user!.id),
+    getScheduleItems(user!.id)
+  ])
 
   return (
     <ProfileLayout 
