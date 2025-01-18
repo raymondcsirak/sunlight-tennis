@@ -12,6 +12,7 @@ import { updateStreak } from "./_actions/update-streak"
 
 const geist = Geist({
   subsets: ["latin"],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -91,7 +92,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={geist.className} suppressHydrationWarning>
-      <body className="bg-background text-foreground">
+      <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>
           <ThemeProvider
             attribute="class"
@@ -113,7 +114,9 @@ export default async function RootLayout({
               </nav>
             </header>
 
-            {children}
+            <main className="flex-1">
+              {children}
+            </main>
 
             <footer className="bg-muted py-12">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

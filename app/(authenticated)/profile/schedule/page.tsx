@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { ProfileLayout } from '../_components/profile-layout'
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 import { CalendarView } from './_components/calendar-view'
+import { redirect } from 'next/navigation'
 
 interface ScheduleItem {
   id: string
@@ -230,6 +231,9 @@ async function getScheduleItems(userId: string): Promise<ScheduleItem[]> {
   return scheduleItems
 }
 
+// Force dynamic rendering since we need auth data
+export const dynamic = 'force-dynamic'
+
 export default async function SchedulePage() {
   const cookieStore = cookies()
   const supabase = await createClient()
@@ -237,6 +241,11 @@ export default async function SchedulePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
+
+  // Redirect if not authenticated
+  if (!user) {
+    redirect('/sign-in')
+  }
 
   // Fetch all data in parallel
   const [
@@ -248,15 +257,15 @@ export default async function SchedulePage() {
     supabase
       .from('profiles')
       .select('*')
-      .eq('id', user?.id)
+      .eq('id', user.id)
       .single(),
     supabase
       .from('player_xp')
       .select('*')
-      .eq('user_id', user?.id)
+      .eq('user_id', user.id)
       .single(),
-    getPlayerStats(user!.id),
-    getScheduleItems(user!.id)
+    getPlayerStats(user.id),
+    getScheduleItems(user.id)
   ])
 
   return (
