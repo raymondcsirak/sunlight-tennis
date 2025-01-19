@@ -244,7 +244,7 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
       {/* Messages */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 px-4">
         <div className="py-4 space-y-4">
-          {thread.messages.map((message) => {
+          {[...thread.messages].reverse().map((message) => {
             const isCurrentUser = message.sender_id === currentUserId
             const sender = isCurrentUser 
               ? (thread.participant1.id === currentUserId ? thread.participant1 : thread.participant2)
