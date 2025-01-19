@@ -1,23 +1,28 @@
 import { createBrowserClient } from "@supabase/ssr"
 
+// Tipul pentru evenimentele care pot declansa realizari
 export type AchievementEvent = {
   type: 'match_won' | 'match_played' | 'training_completed' | 'level_up' | 'streak_reached'
   userId: string
   metadata?: Record<string, any>
 }
 
+// Nivelurile de prestigiu pentru realizari
 export type AchievementTier = 'bronze' | 'silver' | 'gold' | 'platinum'
 
+// Structura unei realizari
 export type Achievement = {
-  type: string
-  name: string
-  description: string
-  tier: AchievementTier
-  iconPath: string
-  metadata?: Record<string, any>
+  type: string                    // Tipul realizarii
+  name: string                    // Numele realizarii
+  description: string             // Descrierea realizarii
+  tier: AchievementTier          // Nivelul de prestigiu
+  iconPath: string               // Calea catre iconita
+  metadata?: Record<string, any>  // Date aditionale (optional)
 }
 
+// Serviciul pentru gestionarea realizarilor
 export class AchievementService {
+  // Initializeaza conexiunea cu Supabase
   private getSupabase() {
     return createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +38,7 @@ export class AchievementService {
     )
   }
 
+  // Obtine statisticile unui utilizator din baza de date
   private async getUserStats(userId: string) {
     const supabase = await this.getSupabase()
     console.log('Getting stats for user:', userId)
@@ -65,6 +71,7 @@ export class AchievementService {
     }
   }
 
+  // Acorda o realizare unui utilizator
   private async awardAchievement(userId: string, achievement: Achievement) {
     const supabase = await this.getSupabase()
     
@@ -79,9 +86,11 @@ export class AchievementService {
     })
   }
 
+  // Verifica realizarile legate de meciuri castigate
   private async checkMatchAchievements(userId: string, stats: { wonMatches: number }) {
     const achievements: Achievement[] = []
 
+    // Prima victorie
     if (stats.wonMatches >= 1) {
       achievements.push({
         type: 'first_match_win',
@@ -92,6 +101,7 @@ export class AchievementService {
       })
     }
 
+    // 50 de victorii
     if (stats.wonMatches >= 50) {
       achievements.push({
         type: 'matches_won_50',
@@ -102,6 +112,7 @@ export class AchievementService {
       })
     }
 
+    // 100 de victorii
     if (stats.wonMatches >= 100) {
       achievements.push({
         type: 'matches_won_100',
@@ -115,9 +126,11 @@ export class AchievementService {
     return achievements
   }
 
+  // Verifica realizarile legate de serii consecutive
   private async checkStreakAchievements(userId: string, stats: { currentStreak: number }) {
     const achievements: Achievement[] = []
 
+    // Serie de 10 victorii consecutive
     if (stats.currentStreak >= 10) {
       achievements.push({
         type: 'streak_master_10',
@@ -131,9 +144,11 @@ export class AchievementService {
     return achievements
   }
 
+  // Verifica realizarile legate de rezervari
   private async checkBookingAchievements(userId: string, stats: { totalBookings: number }) {
     const achievements: Achievement[] = []
 
+    // 50 de rezervari
     if (stats.totalBookings >= 50) {
       achievements.push({
         type: 'court_veteran_50',
@@ -144,6 +159,7 @@ export class AchievementService {
       })
     }
 
+    // 100 de rezervari
     if (stats.totalBookings >= 100) {
       achievements.push({
         type: 'court_master_100',
@@ -157,9 +173,11 @@ export class AchievementService {
     return achievements
   }
 
+  // Verifica realizarile legate de antrenamente
   private async checkTrainingAchievements(userId: string, stats: { totalTrainings: number }) {
     const achievements: Achievement[] = []
 
+    // 25 de antrenamente
     if (stats.totalTrainings >= 25) {
       achievements.push({
         type: 'training_expert_25',
@@ -170,6 +188,7 @@ export class AchievementService {
       })
     }
 
+    // 50 de antrenamente
     if (stats.totalTrainings >= 50) {
       achievements.push({
         type: 'training_master_50',
@@ -180,6 +199,7 @@ export class AchievementService {
       })
     }
 
+    // 100 de antrenamente
     if (stats.totalTrainings >= 100) {
       achievements.push({
         type: 'training_legend_100',
@@ -193,11 +213,12 @@ export class AchievementService {
     return achievements
   }
 
+  // Verifica si acorda realizari in functie de evenimentul primit
   async checkAndAwardAchievements(event: AchievementEvent): Promise<void> {
     const stats = await this.getUserStats(event.userId)
     const achievements: Achievement[] = []
 
-    // Check relevant achievements based on event type
+    // Verifica realizarile relevante in functie de tipul evenimentului
     switch (event.type) {
       case 'match_won':
         achievements.push(...await this.checkMatchAchievements(event.userId, stats))
@@ -216,19 +237,20 @@ export class AchievementService {
         break
     }
 
-    // Award any earned achievements
+    // Acorda realizarile obtinute
     for (const achievement of achievements) {
       await this.awardAchievement(event.userId, achievement)
     }
   }
 
-  // Helper to retroactively check all achievements for a user
+  // Functie ajutatoare pentru verificarea retroactiva a tuturor realizarilor unui utilizator
   async retroactivelyCheckAchievements(userId: string): Promise<void> {
     const stats = await this.getUserStats(userId)
     console.log('User Stats:', stats)
     
     const achievements: Achievement[] = []
 
+    // Verifica toate tipurile de realizari
     const matchAchievements = await this.checkMatchAchievements(userId, stats)
     console.log('Match Achievements:', matchAchievements)
     
@@ -241,6 +263,7 @@ export class AchievementService {
     const trainingAchievements = await this.checkTrainingAchievements(userId, stats)
     console.log('Training Achievements:', trainingAchievements)
 
+    // Combina toate realizarile gasite
     achievements.push(
       ...matchAchievements,
       ...streakAchievements,
@@ -250,6 +273,7 @@ export class AchievementService {
 
     console.log('Total Achievements to Award:', achievements)
 
+    // Acorda realizarile obtinute
     for (const achievement of achievements) {
       try {
         console.log('Awarding achievement:', achievement)

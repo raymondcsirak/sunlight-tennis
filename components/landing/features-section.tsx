@@ -1,5 +1,7 @@
+// Importuri pentru iconitele folosite in sectiunea de caracteristici
 import { CalendarDays, Users, Trophy, Clock } from "lucide-react"
 
+// Array cu datele caracteristicilor principale ale platformei
 const features = [
   {
     name: "Rezervare Simplă",
@@ -27,10 +29,14 @@ const features = [
   },
 ]
 
+// Componenta pentru sectiunea de caracteristici din pagina de landing
 export function FeaturesSection() {
   return (
+    // Container principal cu padding si fundal
     <div className="py-24 bg-background">
+      {/* Container pentru continut cu latimea maxima limitata */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Sectiunea de titlu si descriere centrată */}
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Tot ce ai nevoie pentru a te bucura de tenis
@@ -40,17 +46,23 @@ export function FeaturesSection() {
           </p>
         </div>
 
+        {/* Grid pentru afisarea caracteristicilor */}
         <div className="mt-20">
           <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Iterare prin array-ul de caracteristici pentru afisare */}
             {features.map((feature) => (
               <div key={feature.name} className="relative">
+                {/* Container pentru fiecare caracteristica cu iconita si text */}
                 <div className="flex flex-col items-center">
+                  {/* Iconita caracteristicii cu fundal si culoare personalizata */}
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <feature.icon className="h-8 w-8" aria-hidden="true" />
                   </div>
+                  {/* Titlul caracteristicii */}
                   <h3 className="mt-6 text-xl font-semibold text-foreground">
                     {feature.name}
                   </h3>
+                  {/* Descrierea caracteristicii */}
                   <p className="mt-2 text-center text-muted-foreground">
                     {feature.description}
                   </p>
