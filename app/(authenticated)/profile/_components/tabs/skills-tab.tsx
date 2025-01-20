@@ -9,15 +9,18 @@ import { useToast } from "@/components/ui/use-toast"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 
+// Interfata pentru structura unei abilitati
 interface Skill {
   skill_type: string
   level: number
 }
 
+// Interfata pentru proprietatile componentei SkillsTab
 interface SkillsTabProps {
   userId: string
 }
 
+// Tipuri de abilitati si descrierile lor
 type SkillType = 'Forehand' | 'Backhand' | 'Serve' | 'Volley' | 'Footwork' | 'Mental Game'
 
 const SKILL_DESCRIPTIONS: Record<SkillType, [string, string]> = {
@@ -29,6 +32,7 @@ const SKILL_DESCRIPTIONS: Record<SkillType, [string, string]> = {
   'Mental Game': ['Basic match temperament', 'Elite mental strength']
 }
 
+// Componenta principala pentru tab-ul de abilitati
 export function SkillsTab({ userId }: SkillsTabProps) {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
@@ -40,6 +44,7 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Hook pentru incarcarea abilitatilor utilizatorului
   useEffect(() => {
     async function loadSkills() {
       const { data, error } = await supabase
@@ -90,6 +95,7 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     loadSkills()
   }, [userId, supabase])
 
+  // Functie pentru actualizarea unei abilitati
   const handleSkillUpdate = async (skillType: string, level: number) => {
     const updatedSkills = skills.map(skill => 
       skill.skill_type === skillType ? { ...skill, level } : skill
@@ -97,6 +103,7 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     setSkills(updatedSkills)
   }
 
+  // Functie pentru salvarea abilitatilor
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -133,15 +140,18 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     }
   }
 
+  // Afisare mesaj de incarcare
   if (loading) {
     return <div>Loading skills...</div>
   }
 
+  // Date pentru graficul de abilitati
   const chartData = skills.map(skill => ({
     skill: skill.skill_type,
     value: skill.level * 20 // Convert 1-5 scale to 0-100 for the chart
   }))
 
+  // Afisare grafic de abilitati
   return (
     <div className="grid grid-cols-2 gap-6">
       <Card>

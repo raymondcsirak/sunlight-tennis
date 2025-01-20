@@ -1,10 +1,12 @@
 "use client"
 
+// Importă componentele necesare
 import { Card } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Trophy, Medal, Star, Award, Crown } from "lucide-react"
 import { format } from "date-fns"
 
+// Interfață pentru realizări
 interface Achievement {
   id: string
   type: string
@@ -12,11 +14,12 @@ interface Achievement {
   earnedAt: string
 }
 
+// Interfață pentru proprietățile TrophyRoom
 interface TrophyRoomProps {
   achievements: Achievement[]
 }
 
-// Map achievement types to their visual representation
+// Mapare a tipurilor de realizări la reprezentarea lor vizuală
 const ACHIEVEMENT_ICONS: Record<string, {
   icon: React.ReactNode
   color: string
@@ -44,6 +47,7 @@ const ACHIEVEMENT_ICONS: Record<string, {
   }
 }
 
+// Componenta TrophyRoom care afișează realizările utilizatorului
 export function TrophyRoom({ achievements }: TrophyRoomProps) {
   if (!achievements?.length) {
     return (

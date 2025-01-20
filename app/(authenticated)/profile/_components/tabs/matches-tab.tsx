@@ -5,10 +5,12 @@ import { createBrowserClient } from "@supabase/ssr"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
+// Interfata pentru proprietatile componentei MatchesTab
 interface MatchesTabProps {
   userId: string
 }
 
+// Interfata pentru structura unui meci
 interface Match {
   id: string
   player1_id: string
@@ -22,6 +24,7 @@ interface Match {
   }
 }
 
+// Componenta principala pentru tab-ul de meciuri
 export function MatchesTab({ userId }: MatchesTabProps) {
   const [matches, setMatches] = useState<Match[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -30,6 +33,7 @@ export function MatchesTab({ userId }: MatchesTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Hook pentru incarcarea meciurilor utilizatorului
   useEffect(() => {
     async function loadMatches() {
       const { data, error } = await supabase
@@ -54,10 +58,12 @@ export function MatchesTab({ userId }: MatchesTabProps) {
     loadMatches()
   }, [userId, supabase])
 
+  // Afisare mesaj de incarcare
   if (isLoading) {
     return <div>Loading matches...</div>
   }
 
+  // Afisare mesaj cand nu exista meciuri
   if (matches.length === 0) {
     return (
       <Card>
@@ -71,6 +77,7 @@ export function MatchesTab({ userId }: MatchesTabProps) {
     )
   }
 
+  // Afisare lista de meciuri
   return (
     <div className="space-y-4">
       {matches.map((match) => (

@@ -16,6 +16,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
 
+// Constante pentru orele disponibile, durate si numarul de jucatori
 const AVAILABLE_TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
@@ -28,7 +29,9 @@ const DURATIONS = [
 
 const PLAYERS = ['1', '2', '4']
 
+// Componenta principala pentru tab-ul de terenuri
 export function CourtsTab() {
+  // Hook-uri pentru gestionarea starii componentelor si datelor
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string>()
   const [duration, setDuration] = useState<string>()
@@ -43,6 +46,7 @@ export function CourtsTab() {
   const [isTimeConfigConfirmed, setIsTimeConfigConfirmed] = useState(false)
   const [showBookingConfirmation, setShowBookingConfirmation] = useState(false)
 
+  // Efect pentru incarcarea initiala a terenurilor disponibile
   useEffect(() => {
     // Initial fetch of all courts
     async function fetchInitialCourts() {
@@ -142,7 +146,7 @@ export function CourtsTab() {
     }
   }, [date, time, toast])
 
-  // Helper function to get weather icon
+  // Functie pentru a obtine iconita corespunzatoare conditiilor meteo
   const getWeatherIcon = (condition: string) => {
     console.log('Getting icon for condition:', condition)
     switch (condition.toLowerCase()) {
@@ -166,6 +170,7 @@ export function CourtsTab() {
     }
   }
 
+  // Functie pentru resetarea formularului de rezervare
   const resetForm = () => {
     setDate(new Date())
     setTime(undefined)
@@ -176,6 +181,7 @@ export function CourtsTab() {
     setShowBookingConfirmation(false)
   }
 
+  // Functie pentru gestionarea rezervarii
   const handleBooking = async () => {
     if (!date || !time || !duration || !players || !selectedCourt) return
 
@@ -213,6 +219,7 @@ export function CourtsTab() {
     }
   }
 
+  // Functie pentru confirmarea configurarii timpului
   const handleTimeConfigConfirm = () => {
     if (!date || !time || !duration || !players) {
       toast({
@@ -225,11 +232,13 @@ export function CourtsTab() {
     setIsTimeConfigConfirmed(true)
   }
 
+  // Functie pentru confirmarea rezervarii
   const handleBookingConfirm = async () => {
     setShowBookingConfirmation(false)
     await handleBooking()
   }
 
+  // Functie pentru selectarea terenului
   const handleCourtSelect = (courtId: string) => {
     setSelectedCourt(courtId)
     setShowBookingConfirmation(true)
@@ -238,7 +247,7 @@ export function CourtsTab() {
   return (
     <div className="animate-in">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Calendar Section */}
+        {/* Sectiunea de calendar */}
         <Card 
           className="p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm"
         >

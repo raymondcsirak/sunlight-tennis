@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
+// Datele de activitate pentru heatmap
 const activityData = [
   { day: "Sun", hour: 8, value: 1 },
   { day: "Sat", hour: 10, value: 1 },
@@ -12,13 +13,16 @@ const activityData = [
   { day: "Mon", hour: 12, value: 1 },
 ]
 
+// Zilele saptamanii si orele pentru afisarea pe axele heatmap-ului
 const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const hours = Array.from({ length: 12 }, (_, i) => (i + 8).toString()) // 8 AM to 8 PM
 
+// Interfata pentru proprietatile componentei ActivityTab
 interface ActivityTabProps {
   userId: string
 }
 
+// Componenta principala pentru tab-ul de activitate
 export function ActivityTab({ userId }: ActivityTabProps) {
   return (
     <div className="space-y-6">
@@ -72,4 +76,6 @@ export function ActivityTab({ userId }: ActivityTabProps) {
       </Card>
     </div>
   )
-} 
+}
+
+// Structura heatmap-ului de activitate cu etichete pentru axe si puncte de activitate 

@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+// Interfata pentru setarile utilizatorului
 interface UserSettings {
   email_notifications: boolean
   push_notifications: boolean
@@ -26,11 +27,13 @@ interface UserSettings {
   language: "en" | "ro"
 }
 
+// Interfata pentru proprietatile componentei SettingsTab
 interface SettingsTabProps {
   userId: string
   initialSettings?: UserSettings
 }
 
+// Componenta principala pentru tab-ul de setari
 export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
   const [settings, setSettings] = useState<UserSettings>(initialSettings || {
     email_notifications: true,
@@ -51,7 +54,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Load initial settings if not provided
+  // Hook pentru incarcarea setarilor utilizatorului
   useEffect(() => {
     async function loadSettings() {
       const { data, error } = await supabase
@@ -76,6 +79,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
     }
   }, [userId, initialSettings, supabase])
 
+  // Functie pentru salvarea setarilor
   const handleSaveSettings = async () => {
     setSaving(true)
     try {
@@ -126,7 +130,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
 
   return (
     <div className="space-y-8">
-      {/* Notification Settings */}
+      {/* Afisare setari de notificari */}
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Notification Preferences</h2>
         <div className="space-y-4">
@@ -173,7 +177,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
         </div>
       </div>
 
-      {/* Privacy Settings */}
+      {/* Afisare setari de confidentialitate */}
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Privacy Settings</h2>
         <div className="space-y-4">
@@ -210,7 +214,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
         </div>
       </div>
 
-      {/* Preferences */}
+      {/* Afisare preferinte */}
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Preferences</h2>
         <div className="space-y-4">

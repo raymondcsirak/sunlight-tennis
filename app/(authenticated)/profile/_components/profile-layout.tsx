@@ -15,6 +15,7 @@ import { calculateLevelProgress } from "@/utils/xp"
 import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 
+// Interfață pentru statistici ale jucătorului
 interface PlayerStats {
   totalMatches: number
   wonMatches: number
@@ -22,6 +23,7 @@ interface PlayerStats {
   level: number
 }
 
+// Proprietăți pentru componenta ProfileLayout
 interface ProfileLayoutProps {
   children: React.ReactNode
   user: User
@@ -38,6 +40,7 @@ interface ProfileLayoutProps {
   hideFooter?: boolean
 }
 
+// Componenta principală ProfileLayout
 export function ProfileLayout({ 
   children, 
   user, 
@@ -190,7 +193,7 @@ export function ProfileLayout({
     }
   }, [user.id, supabase, toast, router])
 
-  // Get the full avatar URL if we have a path
+  // Obține URL-ul complet al avatarului dacă există un path
   const avatarUrl = profile?.avatar_url
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${profile.avatar_url}`
     : undefined
@@ -200,14 +203,14 @@ export function ProfileLayout({
 
   return (
     <div className="fixed inset-0 pt-16 bg-background">
-      {/* Subtle gradient glow effect */}
+      {/* Comentariu: Efect de strălucire subtilă în fundal */}
       <div className="absolute top-16 inset-x-0 bottom-0 pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.02] to-transparent h-24" />
         <div className="absolute inset-0 bg-[radial-gradient(70%_35%_at_50%_0%,rgba(var(--primary)_/_0.03)_0%,transparent_100%)]" />
       </div>
       
       <div className="absolute inset-0 top-16 flex">
-        {/* Mobile Menu Button */}
+        {/* Butonul de meniu pentru mobil */}
         <div className="lg:hidden fixed top-[4.1rem] left-4 z-50">
           <Sheet>
             <SheetTrigger asChild>
@@ -218,7 +221,7 @@ export function ProfileLayout({
             <SheetContent side="left" className="p-0 w-80">
               <div className="border-r border-border/40 backdrop-blur-sm bg-card/50 h-full overflow-y-auto">
                 <div className="p-6 space-y-6">
-                  {/* Profile Section */}
+                  {/* Secțiunea de profil care include încărcarea avatarului și detaliile utilizatorului */}
                   <div className="flex flex-col items-center space-y-4">
                     <AvatarUpload
                       url={avatarUrl}
@@ -243,11 +246,11 @@ export function ProfileLayout({
                       </EditProfileDialog>
                     </div>
 
-                    {/* Stats Cards */}
+                    {/* Carduri cu statistici ale jucătorului */}
                     <PlayerStatsCard stats={playerStats} variant="compact" />
                   </div>
 
-                  {/* Navigation Menu */}
+                  {/* Meniul de navigare pentru acțiuni legate de profil */}
                   <nav className="space-y-1">
                     {menuItems.map((item) => (
                       <Link
@@ -278,7 +281,7 @@ export function ProfileLayout({
         {/* Desktop Sidebar */}
         <div className="hidden lg:block w-64 border-r border-border/40 backdrop-blur-sm bg-card/50 overflow-y-auto">
           <div className="p-6 space-y-6">
-            {/* Profile Section */}
+            {/* Secțiunea de profil care include încărcarea avatarului și detaliile utilizatorului */}
             <div className="flex flex-col items-center space-y-4">
               <AvatarUpload
                 url={avatarUrl}
@@ -303,7 +306,7 @@ export function ProfileLayout({
                 </EditProfileDialog>
               </div>
 
-              {/* Stats Cards */}
+              {/* Carduri cu statistici ale jucătorului */}
               <PlayerStatsCard stats={playerStats} variant="compact" />
             </div>
 
@@ -335,12 +338,12 @@ export function ProfileLayout({
         {/* Main Content */}
         <div className="flex-1 relative overflow-y-auto">
           {hideFooter ? (
-            // For full-height content like messages, render without padding and card
+            // Conținut cu înălțime completă pentru mesaje
             <div className="h-full">
               {children}
             </div>
           ) : (
-            // For normal content, keep the existing padding and card style
+            // Stil de card pentru conținut normal
             <div className="container py-6 px-4 lg:px-8">
               <div className="bg-card/50 backdrop-blur-sm shadow-lg rounded-lg p-4 lg:p-6">
                 {children}

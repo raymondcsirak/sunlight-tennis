@@ -1,11 +1,13 @@
 "use client"
 
+// Importă modulele necesare
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Star, Flame } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 
+// Interfață pentru proprietățile XPProgress
 interface XPProgressProps {
   level: number
   currentXp: number
@@ -13,6 +15,7 @@ interface XPProgressProps {
   streak: number
 }
 
+// Componenta XPProgress care afișează progresul XP și seria curentă
 export function XPProgress({ level, currentXp, xpForNextLevel, streak }: XPProgressProps) {
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [showXpGain, setShowXpGain] = useState(false)
@@ -38,12 +41,12 @@ export function XPProgress({ level, currentXp, xpForNextLevel, streak }: XPProgr
     setPrevStreak(streak)
   }, [streak, prevStreak])
 
-  // Calculate progress percentage
+  // Calculează procentajul de progres
   const progress = Math.min(Math.floor((currentXp / xpForNextLevel) * 100), 100)
 
   return (
     <div className="space-y-6">
-      {/* Level Block */}
+      {/* Blocul de nivel */}
       <div className="relative">
         <Card className="p-6 bg-gradient-to-br from-background to-muted/50">
           <div className="flex items-start justify-between">
@@ -70,7 +73,7 @@ export function XPProgress({ level, currentXp, xpForNextLevel, streak }: XPProgr
           </div>
         </Card>
 
-        {/* XP Gain Animation */}
+        {/* Animația pentru câștigul de XP */}
         <AnimatePresence>
           {showXpGain && (
             <motion.div
@@ -84,7 +87,7 @@ export function XPProgress({ level, currentXp, xpForNextLevel, streak }: XPProgr
           )}
         </AnimatePresence>
 
-        {/* Level Up Animation */}
+        {/* Animația pentru avansarea în nivel */}
         <AnimatePresence>
           {showLevelUp && (
             <motion.div
@@ -101,7 +104,7 @@ export function XPProgress({ level, currentXp, xpForNextLevel, streak }: XPProgr
         </AnimatePresence>
       </div>
 
-      {/* Current Streak */}
+      {/* Seria curentă */}
       <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>

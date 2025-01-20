@@ -1,17 +1,21 @@
 "use client"
 
+// Importă componentele necesare
 import { Card } from "@/components/ui/card"
 import { motion } from "framer-motion"
 
+// Interfață pentru proprietățile StatsCards
 interface StatsCardsProps {
   totalMatches: number
   winRate: number
   totalHours: number
 }
 
+// Componenta StatsCards care afișează carduri cu statistici
 export function StatsCards({ totalMatches, winRate, totalHours }: StatsCardsProps) {
   return (
     <div className="grid grid-cols-3 gap-4">
+      {/* Card pentru Total Matches */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -23,6 +27,7 @@ export function StatsCards({ totalMatches, winRate, totalHours }: StatsCardsProp
         </Card>
       </motion.div>
 
+      {/* Card pentru Win Rate */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -34,6 +39,7 @@ export function StatsCards({ totalMatches, winRate, totalHours }: StatsCardsProp
         </Card>
       </motion.div>
 
+      {/* Card pentru Total Hours */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

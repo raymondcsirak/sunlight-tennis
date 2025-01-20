@@ -15,6 +15,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { fetchWeatherForecast, type WeatherForecast } from '@/lib/utils/weather'
 
+// Constante pentru orele disponibile si durate
 const AVAILABLE_TIMES = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', 
   '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'
@@ -25,6 +26,7 @@ const DURATIONS = [
   { value: '120', label: '2 hours' }
 ]
 
+// Componenta principala pentru tab-ul de antrenament
 export function TrainingTab() {
   const [date, setDate] = useState<Date | undefined>(new Date())
   const [time, setTime] = useState<string>()
@@ -39,6 +41,7 @@ export function TrainingTab() {
   const [isTimeConfigConfirmed, setIsTimeConfigConfirmed] = useState(false)
   const [showBookingConfirmation, setShowBookingConfirmation] = useState(false)
 
+  // Hook pentru incarcarea initiala a antrenorilor disponibili
   useEffect(() => {
     // Initial fetch of all coaches
     async function fetchInitialCoaches() {
@@ -63,6 +66,7 @@ export function TrainingTab() {
     fetchInitialCoaches()
   }, [])
 
+  // Hook pentru incarcarea antrenorilor disponibili in functie de data si ora
   useEffect(() => {
     async function fetchAvailableCoaches() {
       if (!date || !time || !duration) return
@@ -97,7 +101,7 @@ export function TrainingTab() {
     fetchAvailableCoaches()
   }, [date, time, duration, toast])
 
-  // Fetch weather when date or time changes
+  // Hook pentru incarcarea prognozei meteo
   useEffect(() => {
     async function fetchWeather() {
       if (!date || !time) {
@@ -138,7 +142,7 @@ export function TrainingTab() {
     }
   }, [date, time, toast])
 
-  // Helper function to get weather icon
+  // Functie pentru obtinerea iconitei corespunzatoare conditiilor meteo
   const getWeatherIcon = (condition: string) => {
     switch (condition.toLowerCase()) {
       case 'clear':
@@ -160,6 +164,7 @@ export function TrainingTab() {
     }
   }
 
+  // Functie pentru resetarea formularului de rezervare
   const resetForm = () => {
     setDate(new Date())
     setTime(undefined)
@@ -169,6 +174,7 @@ export function TrainingTab() {
     setShowBookingConfirmation(false)
   }
 
+  // Functie pentru gestionarea rezervarii
   const handleBooking = async () => {
     if (!date || !time || !duration || !selectedCoach) return
 
@@ -205,6 +211,7 @@ export function TrainingTab() {
     }
   }
 
+  // Functie pentru confirmarea configurarii timpului
   const handleTimeConfigConfirm = () => {
     if (!date || !time || !duration) {
       toast({
@@ -217,11 +224,13 @@ export function TrainingTab() {
     setIsTimeConfigConfirmed(true)
   }
 
+  // Functie pentru confirmarea rezervarii
   const handleBookingConfirm = async () => {
     setShowBookingConfirmation(false)
     await handleBooking()
   }
 
+  // Functie pentru selectarea antrenorului
   const handleCoachSelect = (coachId: string) => {
     setSelectedCoach(coachId)
     setShowBookingConfirmation(true)
@@ -230,7 +239,7 @@ export function TrainingTab() {
   return (
     <div className="animate-in">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Calendar Section */}
+        {/* Sectiunea de calendar */}
         <Card 
           className="p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm"
         >
@@ -278,7 +287,7 @@ export function TrainingTab() {
           />
         </Card>
 
-        {/* Weather and Booking Panel */}
+        {/* Sectiunea de afisare a informatiilor meteo si a formularului de rezervare */}
         <Card 
           className="p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm"
         >

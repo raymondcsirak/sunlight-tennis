@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
 
+// Interfete pentru proprietatile componentei si structura realizarilor
 interface AchievementsTabProps {
   userId: string
 }
@@ -34,6 +35,7 @@ interface PossibleAchievement {
   created_at?: string
 }
 
+// Lista constanta cu toate realizarile posibile si detaliile acestora
 const ALL_ACHIEVEMENTS: PossibleAchievement[] = [
   {
     type: 'first_login',
@@ -156,11 +158,13 @@ const ALL_ACHIEVEMENTS: PossibleAchievement[] = [
   }
 ]
 
+// Functie pentru obtinerea URL-ului trofeului din calea specificata
 function getTrophyUrl(path: string | null): string {
   if (!path) return ''
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public${path}`
 }
 
+// Functie pentru obtinerea componentei iconitei pe baza caii specificate
 function getIconComponent(iconPath: string) {
   switch (iconPath) {
     case 'Star':
@@ -182,6 +186,7 @@ function getIconComponent(iconPath: string) {
   }
 }
 
+// Componenta principala pentru tab-ul de realizari
 export function AchievementsTab({ userId }: AchievementsTabProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [achievements, setAchievements] = useState<Achievement[]>([])
@@ -192,10 +197,12 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Hook pentru incarcarea realizarilor utilizatorului din baza de date
   useEffect(() => {
     loadAchievements()
   }, [userId])
 
+  // Functie pentru incarcarea realizarilor utilizatorului
   async function loadAchievements() {
     const { data, error } = await supabase
       .from("achievements")
@@ -225,6 +232,7 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
     console.log("Achievements with status:", achievementsWithStatus)
   }
 
+  // Functie pentru gestionarea scroll-ului in containerul de realizari
   const handleScroll = (direction: 'left' | 'right') => {
     if (!scrollContainerRef.current) return
     const scrollAmount = 400 // Adjust this value to control scroll distance
@@ -237,7 +245,7 @@ export function AchievementsTab({ userId }: AchievementsTabProps) {
     }
   }
 
-  // Combine all achievements with earned status
+  // Combinarea tuturor realizarilor cu statusul de obtinere
   const allAchievementsWithStatus = ALL_ACHIEVEMENTS.map(achievement => {
     const earned = achievements.find(a => a.type === achievement.type)
     return {

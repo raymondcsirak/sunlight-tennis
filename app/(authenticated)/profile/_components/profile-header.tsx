@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { EditProfileDialog } from "./edit-profile-dialog"
 import { useState } from "react"
 
+// Interfata pentru proprietatile componentei ProfileHeader
 interface ProfileHeaderProps {
   user: User
   profile: {
@@ -15,6 +16,7 @@ interface ProfileHeaderProps {
   } | null
 }
 
+// Componenta principala pentru antetul profilului
 export function ProfileHeader({ user, profile }: ProfileHeaderProps) {
   return (
     <Card className="p-6">

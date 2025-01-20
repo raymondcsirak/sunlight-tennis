@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
+// Date de performanta pentru grafic
 const performanceData = [
   { date: 'Jan 1', value: 50 },
   { date: 'Feb 1', value: 55 },
@@ -14,14 +15,16 @@ const performanceData = [
   { date: 'Jul 1', value: 68 },
 ]
 
+// Interfata pentru proprietatile componentei PerformanceTab
 interface PerformanceTabProps {
   userId: string
 }
 
+// Componenta principala pentru tab-ul de performanta
 export function PerformanceTab({ userId }: PerformanceTabProps) {
   return (
     <div className="space-y-6">
-      {/* Stats Cards */}
+      {/* Afisare carduri cu statistici */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -57,7 +60,7 @@ export function PerformanceTab({ userId }: PerformanceTabProps) {
         </Card>
       </div>
 
-      {/* Performance Chart */}
+      {/* Afisare grafic de performanta in timp */}
       <Card>
         <CardHeader>
           <CardTitle>Performance Over Time</CardTitle>

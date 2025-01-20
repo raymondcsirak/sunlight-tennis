@@ -9,15 +9,18 @@ import { cn } from "@/lib/utils"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 
+// Constante pentru dimensiunea maxima a avatarului si tipurile de fisiere permise
 const AVATAR_MAX_SIZE = 2 * 1024 * 1024 // 2MB
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"]
 
+// Interfata pentru proprietatile componentei AvatarUpload
 export interface AvatarUploadProps {
   url?: string | null
   onUpload: (url: string) => Promise<void>
   size?: number
 }
 
+// Componenta principala pentru incarcare avatar
 export function AvatarUpload({ url, onUpload, size = 150 }: AvatarUploadProps) {
   const [uploading, setUploading] = useState(false)
   const { toast } = useToast()
@@ -26,6 +29,7 @@ export function AvatarUpload({ url, onUpload, size = 150 }: AvatarUploadProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Functie pentru validarea fisierului incarcat
   const validateFile = (file: File) => {
     if (!ALLOWED_FILE_TYPES.includes(file.type)) {
       throw new Error("File type not supported. Please upload a JPEG, PNG, or WebP image.")
@@ -36,6 +40,7 @@ export function AvatarUpload({ url, onUpload, size = 150 }: AvatarUploadProps) {
     }
   }
 
+  // Functie pentru stergerea avatarului vechi
   const deleteOldAvatar = async (oldUrl: string) => {
     if (!oldUrl) return
 
@@ -52,6 +57,7 @@ export function AvatarUpload({ url, onUpload, size = 150 }: AvatarUploadProps) {
     }
   }
 
+  // Functie pentru gestionarea selectiei fisierului
   const handleFileSelected = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
       if (!event.target.files || event.target.files.length === 0) {

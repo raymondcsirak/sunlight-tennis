@@ -12,6 +12,7 @@ import {
 import { Progress } from "@/components/ui/progress"
 import { Trophy } from "lucide-react"
 
+// Interfata pentru structura unui meci
 interface Match {
   id: string
   opponent_name: string
@@ -20,6 +21,7 @@ interface Match {
   date: string
 }
 
+// Interfata pentru structura unei realizari
 interface Achievement {
   id: string
   type: string
@@ -28,6 +30,7 @@ interface Achievement {
   earned_at: string
 }
 
+// Interfata pentru structura statisticilor
 interface Statistics {
   total_matches: number
   won_matches: number
@@ -37,6 +40,7 @@ interface Statistics {
   current_level: number
 }
 
+// Interfata pentru datele unui meci
 interface MatchData {
   id: string
   score: string
@@ -47,6 +51,7 @@ interface MatchData {
   }
 }
 
+// Interfata pentru datele unei realizari
 interface AchievementData {
   id: string
   type: string
@@ -55,10 +60,12 @@ interface AchievementData {
   earned_at: string
 }
 
+// Interfata pentru proprietatile componentei StatisticsTab
 interface StatisticsTabProps {
   userId: string
 }
 
+// Componenta principala pentru tab-ul de statistici
 export function StatisticsTab({ userId }: StatisticsTabProps) {
   const [matches, setMatches] = useState<Match[]>([])
   const [achievements, setAchievements] = useState<Achievement[]>([])
@@ -77,6 +84,7 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Hook pentru incarcarea statisticilor utilizatorului
   useEffect(() => {
     async function fetchStatistics() {
       try {
@@ -161,6 +169,7 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
     fetchStatistics()
   }, [userId, supabase])
 
+  // Afisare mesaj de incarcare
   if (loading) {
     return <div>Loading statistics...</div>
   }
@@ -288,6 +297,7 @@ export function StatisticsTab({ userId }: StatisticsTabProps) {
   )
 }
 
+// Functie pentru calcularea seriei curente
 function calculateCurrentStreak(matches: MatchData[], userId: string): number {
   let streak = 0
   for (const match of matches) {
@@ -300,6 +310,7 @@ function calculateCurrentStreak(matches: MatchData[], userId: string): number {
   return streak
 }
 
+// Functie pentru calcularea celei mai bune serii
 function calculateBestStreak(matches: MatchData[], userId: string): number {
   let currentStreak = 0
   let bestStreak = 0

@@ -19,6 +19,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
+// Interfata pentru proprietatile componentei EditProfileDialog
 interface EditProfileDialogProps {
   user: User
   profile: any
@@ -27,6 +28,7 @@ interface EditProfileDialogProps {
   onOpenChange?: (open: boolean) => void
 }
 
+// Componenta principala pentru dialogul de editare a profilului
 export function EditProfileDialog({ user, profile, children, open: controlledOpen, onOpenChange }: EditProfileDialogProps) {
   const [internalOpen, setInternalOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -53,6 +55,7 @@ export function EditProfileDialog({ user, profile, children, open: controlledOpe
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
+  // Functie pentru gestionarea formularului de editare a profilului
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
