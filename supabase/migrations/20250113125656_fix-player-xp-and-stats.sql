@@ -1,11 +1,11 @@
--- Ensure player_xp records exist for all users
+-- Asigura ca player_xp records exista pentru toate user-ii
 INSERT INTO player_xp (user_id, current_xp, current_level)
 SELECT id, 0, 1
 FROM auth.users
 WHERE id NOT IN (SELECT user_id FROM player_xp)
 ON CONFLICT (user_id) DO NOTHING;
 
--- Drop and recreate the calculate_player_stats function to fix win counting
+-- Sterge si recreeaza functia calculate_player_stats pentru a corecta count-ul de victorii
 CREATE OR REPLACE FUNCTION calculate_player_stats(player_uuid UUID)
 RETURNS void AS $$
 DECLARE
@@ -15,7 +15,7 @@ DECLARE
     player_level INTEGER;
     current_streak INTEGER;
 BEGIN
-    -- Get total matches and wins
+    -- Obtine totalul de meciuri si castiguri
     SELECT 
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE winner_id = player_uuid) as wins
@@ -24,7 +24,7 @@ BEGIN
     WHERE (player1_id = player_uuid OR player2_id = player_uuid)
         AND status = 'completed';
 
-    -- Calculate current streak
+    -- Calculeaza streak-ul curent
     WITH ordered_matches AS (
         SELECT 
             winner_id = player_uuid as is_win,
@@ -47,24 +47,24 @@ BEGIN
         )
     ) streak;
 
-    -- Get current level from player_xp
+    -- Obtine nivelul curent din player_xp
     SELECT current_level INTO player_level
     FROM player_xp
     WHERE user_id = player_uuid;
 
-    -- If no level found, default to 1
+    -- Daca nu se gaseste nivel, seteaza la 1
     IF player_level IS NULL THEN
         player_level := 1;
     END IF;
 
-    -- Calculate win rate
+    -- Calculeaza procentul de castiguri
     IF total_count > 0 THEN
         win_rate_calc := ROUND((wins_count::NUMERIC / total_count::NUMERIC * 100)::NUMERIC, 2);
     ELSE
         win_rate_calc := 0;
     END IF;
 
-    -- Insert or update player stats
+    -- Insereaza sau actualizeaza stats-urile player-ului
     INSERT INTO player_stats (
         user_id,
         current_level,
@@ -93,7 +93,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Recalculate stats for all users who have played matches
+-- Recalculeaza stats pentru toate user-ii care au jucat meciuri
 DO $$
 DECLARE
     user_record RECORD;

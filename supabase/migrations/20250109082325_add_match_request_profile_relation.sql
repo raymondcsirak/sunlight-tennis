@@ -1,4 +1,4 @@
--- Add foreign key constraint for creator_id in match_requests table
+-- Adaugare constrangeri de foreign key pentru creator_id in tabelul match_requests
 ALTER TABLE match_requests
 DROP CONSTRAINT IF EXISTS match_requests_creator_id_fkey;
 
@@ -8,7 +8,7 @@ FOREIGN KEY (creator_id)
 REFERENCES profiles(id)
 ON DELETE CASCADE;
 
--- Update the RLS policies to use the new relationship
+-- Stergere politici RLS existente
 DROP POLICY IF EXISTS "Users can view all match requests" ON match_requests;
 DROP POLICY IF EXISTS "Users can create their own requests" ON match_requests;
 DROP POLICY IF EXISTS "Users can update their own requests" ON match_requests;

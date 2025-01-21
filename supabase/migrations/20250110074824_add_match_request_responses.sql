@@ -1,11 +1,11 @@
--- Create enum for response status if it doesn't exist
+-- Creare enum pentru statusul raspunsurilor daca nu exista
 DO $$ BEGIN
     CREATE TYPE match_response_status AS ENUM ('pending', 'accepted', 'rejected');
 EXCEPTION
     WHEN duplicate_object THEN null;
 END $$;
 
--- Create match request responses table
+-- Creare tabel raspunsuri cereri de match
 CREATE TABLE IF NOT EXISTS match_request_responses (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     request_id UUID REFERENCES match_requests(id) ON DELETE CASCADE,
@@ -16,15 +16,15 @@ CREATE TABLE IF NOT EXISTS match_request_responses (
     UNIQUE(request_id, responder_id)
 );
 
--- Enable RLS
+-- Activare RLS
 ALTER TABLE match_request_responses ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if they exist
+-- Stergere politici existente daca exista
 DROP POLICY IF EXISTS "Users can view responses for their requests" ON match_request_responses;
 DROP POLICY IF EXISTS "Users can create responses" ON match_request_responses;
 DROP POLICY IF EXISTS "Users can update their own responses" ON match_request_responses;
 
--- Create policies for match request responses
+-- Creare politici pentru raspunsuri cereri de match
 CREATE POLICY "Users can view responses for their requests"
     ON match_request_responses FOR SELECT
     USING (
@@ -50,7 +50,7 @@ CREATE POLICY "Users can update their own responses"
     USING (responder_id = auth.uid())
     WITH CHECK (responder_id = auth.uid());
 
--- Add updated_at trigger if it doesn't exist
+-- Adaugare trigger pentru actualizare updated_at daca nu exista
 DO $$ BEGIN
     CREATE TRIGGER update_match_request_responses_updated_at
         BEFORE UPDATE ON match_request_responses

@@ -1,9 +1,9 @@
--- Drop existing RLS policies for xp_history
+-- Sterge politici RLS existente pentru xp_history
 DROP POLICY IF EXISTS "Users can view their own XP history" ON xp_history;
 DROP POLICY IF EXISTS "Users can insert their own XP history" ON xp_history;
 DROP POLICY IF EXISTS "Service role can insert XP history" ON xp_history;
 
--- Create new RLS policies
+-- Creeaza politici RLS noi
 CREATE POLICY "Users can view their own XP history"
     ON xp_history FOR SELECT
     TO authenticated
@@ -15,5 +15,5 @@ CREATE POLICY "Service role can manage XP history"
     USING (true)
     WITH CHECK (true);
 
--- Ensure RLS is enabled
+-- Asigura RLS activ
 ALTER TABLE xp_history ENABLE ROW LEVEL SECURITY;

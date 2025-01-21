@@ -1,4 +1,4 @@
--- Add delete policy for message threads
+-- Adauga politica de stergere pentru thread-uri de mesaje
 CREATE POLICY "Users can delete their threads"
     ON message_threads FOR DELETE
     USING (
@@ -6,12 +6,12 @@ CREATE POLICY "Users can delete their threads"
         auth.uid() = participant2_id
     );
 
--- Add delete policy for messages in deleted threads (cascade delete)
+-- Adauga politica de stergere pentru mesaje in thread-uri sterse (stergere cascada)
 CREATE POLICY "System can delete messages in deleted threads"
     ON messages FOR DELETE
     USING (true);
 
--- Add cascade delete trigger
+-- Adauga trigger de stergere cascada
 CREATE OR REPLACE FUNCTION delete_thread_messages()
 RETURNS TRIGGER AS $$
 BEGIN

@@ -1,9 +1,9 @@
--- Drop existing policies
+-- Sterge politici existente
 DROP POLICY IF EXISTS "Users can view their own bookings" ON court_bookings;
 DROP POLICY IF EXISTS "Users can create their own bookings" ON court_bookings;
 DROP POLICY IF EXISTS "Users can update their own bookings" ON court_bookings;
 
--- Create new policies
+-- Creeaza noile politici
 CREATE POLICY "Anyone can view confirmed bookings"
     ON court_bookings FOR SELECT
     USING (true);

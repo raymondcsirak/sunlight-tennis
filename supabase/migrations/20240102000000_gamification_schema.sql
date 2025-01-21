@@ -1,7 +1,7 @@
--- Enable required extensions
+-- Activare extensii necesare
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Drop existing tables and types if they exist
+-- Stergere tabele si tipuri existente
 DROP TABLE IF EXISTS login_streaks CASCADE;
 DROP TABLE IF EXISTS xp_history CASCADE;
 DROP TABLE IF EXISTS achievements CASCADE;
@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS player_skills CASCADE;
 DROP TYPE IF EXISTS achievement_type CASCADE;
 DROP TYPE IF EXISTS skill_level CASCADE;
 
--- Player Skills
+-- Tipuri de abilitati
 CREATE TYPE skill_level AS ENUM ('1', '2', '3', '4', '5');
 
 CREATE TABLE player_skills (
@@ -24,7 +24,7 @@ CREATE TABLE player_skills (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Player Experience
+-- Experienta jucatorului
 CREATE TABLE player_experience (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE player_experience (
   CONSTRAINT valid_level CHECK (current_level >= 1)
 );
 
--- Achievements
+-- Tipuri de realizari
 CREATE TYPE achievement_type AS ENUM (
   'WELCOME', 'DEDICATION', 'VICTORY', 'STREAK', 'TOURNAMENT', 'BOOKING', 'TRAINING'
 );
@@ -53,7 +53,7 @@ CREATE TABLE achievements (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- XP History for tracking XP gains
+-- Loguri de XP pentru urmarirea obtinerii XP
 CREATE TABLE xp_history (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -64,7 +64,7 @@ CREATE TABLE xp_history (
   CONSTRAINT positive_xp CHECK (amount > 0)
 );
 
--- Login Streaks for tracking consecutive logins
+-- Streaks de logare pentru urmarirea logarilor consecutivi
 CREATE TABLE login_streaks (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -76,14 +76,14 @@ CREATE TABLE login_streaks (
   CONSTRAINT valid_streak CHECK (current_streak >= 0 AND longest_streak >= 0)
 );
 
--- Enable RLS
+-- Activare RLS
 ALTER TABLE player_skills ENABLE ROW LEVEL SECURITY;
 ALTER TABLE player_experience ENABLE ROW LEVEL SECURITY;
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE xp_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE login_streaks ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- Politici RLS
 CREATE POLICY "Users can view their own skills"
   ON player_skills FOR SELECT
   USING (auth.uid() = user_id);
@@ -112,7 +112,7 @@ CREATE POLICY "Users can view their own login streaks"
   ON login_streaks FOR SELECT
   USING (auth.uid() = user_id);
 
--- Functions
+-- Functii
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -121,7 +121,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers
+-- Trigger-uri
 CREATE TRIGGER update_player_skills_updated_at
   BEFORE UPDATE ON player_skills
   FOR EACH ROW

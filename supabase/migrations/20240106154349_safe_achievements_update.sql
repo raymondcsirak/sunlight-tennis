@@ -1,4 +1,4 @@
--- Create enum type for achievement types if it doesn't exist
+-- Creare tip enum pentru tipuri de realizari daca nu exista
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'achievement_type') THEN
@@ -13,7 +13,7 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;
 
--- Safely create achievements table if it doesn't exist
+-- Creare tabel realizari daca nu exista
 CREATE TABLE IF NOT EXISTS achievements (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS achievements (
     UNIQUE(user_id, type)
 );
 
--- Only enable RLS if it's not already enabled
+-- Activare RLS daca nu este deja activata
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -41,7 +41,7 @@ BEGIN
     END IF;
 END $$;
 
--- Safely create policies (they will error if they already exist, which is fine)
+-- Creare politici (ele vor da eroare daca exista deja, ceea ce este bine)
 DO $$ 
 BEGIN
     BEGIN
@@ -63,7 +63,7 @@ BEGIN
     END;
 END $$;
 
--- Safely create trigger (will error if exists, which is fine)
+-- Creare trigger (va da eroare daca exista deja, ceea ce este bine)
 DO $$
 BEGIN
     CREATE TRIGGER update_achievements_updated_at
@@ -75,7 +75,7 @@ EXCEPTION
         NULL;
 END $$;
 
--- Create or replace helper function to get achievement details
+-- Creare sau inlocuire functie de obtinere detalii realizari
 CREATE OR REPLACE FUNCTION get_achievement_details(achievement_type achievement_type)
 RETURNS TABLE (name TEXT, description TEXT) AS $$
 BEGIN

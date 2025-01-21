@@ -1,4 +1,4 @@
--- Function to create test notifications
+-- Functie de creare notificari de test
 CREATE OR REPLACE FUNCTION create_test_notifications(p_user_id UUID)
 RETURNS void AS $$
 BEGIN
@@ -10,7 +10,7 @@ BEGIN
         'You have a match scheduled for tomorrow at 2 PM.'
     );
 
-    -- XP gained notification
+    -- Notificare XP obtinut
     PERFORM create_notification(
         p_user_id,
         'xp_gained'::notification_type,
@@ -18,7 +18,7 @@ BEGIN
         'You earned 100 XP for completing a match.'
     );
 
-    -- Level up notification
+    -- Notificare nivel obtinut
     PERFORM create_notification(
         p_user_id,
         'level_up'::notification_type,
@@ -26,7 +26,7 @@ BEGIN
         'Congratulations! You reached Level 5.'
     );
 
-    -- Achievement notification
+    -- Notificare realizare
     PERFORM create_notification(
         p_user_id,
         'achievement_unlocked'::notification_type,
@@ -34,7 +34,7 @@ BEGIN
         'You unlocked the "Match Master" achievement.'
     );
 
-    -- Training reminder
+    -- Reminder
     PERFORM create_notification(
         p_user_id,
         'training_reminder'::notification_type,

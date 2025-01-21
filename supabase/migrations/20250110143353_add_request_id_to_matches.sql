@@ -1,9 +1,9 @@
--- Add request_id column to matches table
+-- Adaugare coloana request_id in tabelul matches
 ALTER TABLE matches
 ADD COLUMN request_id UUID REFERENCES match_requests(id) ON DELETE CASCADE;
 
--- Update the matches table to set request_id based on existing matches
--- This assumes that matches were created from accepted match requests
+-- Actualizare tabelul matches pentru setare request_id in functie de meciuri existente
+-- Aceasta presupune ca meciurile au fost create din cereri de meci acceptate
 UPDATE matches m
 SET request_id = mr.id
 FROM match_requests mr

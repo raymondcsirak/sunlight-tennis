@@ -1,7 +1,7 @@
--- Enable RLS on matches table
+-- Activare RLS pe tabelul matches
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 
--- Policy to allow users to view matches they are part of
+-- Politica pentru vizualizare meciuri in care sunt implicati utilizatori autentificati
 CREATE POLICY "Users can view their own matches"
 ON matches FOR SELECT
 TO authenticated
@@ -10,7 +10,7 @@ USING (
   auth.uid() = player2_id
 );
 
--- Policy to allow creating matches from accepted requests
+-- Politica pentru creare meciuri din cereri acceptate
 CREATE POLICY "Users can create matches from accepted requests"
 ON matches FOR INSERT
 TO authenticated
@@ -28,7 +28,7 @@ WITH CHECK (
   )
 );
 
--- Policy to allow updating matches they are part of
+-- Politica pentru actualizare meciuri in care sunt implicati utilizatori autentificati
 CREATE POLICY "Users can update their own matches"
 ON matches FOR UPDATE
 TO authenticated

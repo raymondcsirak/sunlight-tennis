@@ -1,24 +1,24 @@
--- Drop existing achievement function if exists
+-- Sterge functia existenta de premii daca exista
 DROP FUNCTION IF EXISTS retroactively_award_achievements(UUID) CASCADE;
 
--- Add missing achievement-related columns to player_stats
+-- Adauga coloanele lipsa de premii-related la player_stats
 ALTER TABLE player_stats
 ADD COLUMN IF NOT EXISTS total_bookings INT DEFAULT 0,
 ADD COLUMN IF NOT EXISTS total_trainings INT DEFAULT 0;
 
--- Update the retroactive achievements function to use player_stats
+-- Actualizeaza functia de premii retroactive pentru a folosi player_stats
 CREATE OR REPLACE FUNCTION retroactively_award_achievements(p_user_id UUID)
 RETURNS TABLE (debug_info JSONB) AS $$
 DECLARE
   stats RECORD;
   debug_data JSONB;
 BEGIN
-  -- Get all stats at once
+  -- Obtine toate stats-urile in acelasi timp
   SELECT * INTO stats
   FROM player_stats
   WHERE user_id = p_user_id;
 
-  -- Store debug info
+  -- Stocheaza info de debug
   debug_data := jsonb_build_object(
     'user_id', p_user_id,
     'total_matches', stats.total_matches,
@@ -27,7 +27,7 @@ BEGIN
     'total_trainings', stats.total_trainings
   );
 
-  -- Match Achievements
+  -- Premii de match
   IF stats.won_matches >= 1 THEN
     PERFORM award_achievement(
       p_user_id, 'first_match_win',
@@ -52,7 +52,7 @@ BEGIN
     );
   END IF;
 
-  -- Court Booking Achievements
+  -- Premii de booking
   IF stats.total_bookings >= 50 THEN
     PERFORM award_achievement(
       p_user_id, 'court_veteran_50',
@@ -69,7 +69,7 @@ BEGIN
     );
   END IF;
 
-  -- Training Achievements
+  -- Premii de training
   IF stats.total_trainings >= 25 THEN
     PERFORM award_achievement(
       p_user_id, 'training_expert_25',

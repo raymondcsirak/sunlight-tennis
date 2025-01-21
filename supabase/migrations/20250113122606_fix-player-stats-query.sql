@@ -1,4 +1,4 @@
--- Drop and recreate the calculate_player_stats function with fixed query
+-- Sterge si recreeaza functia calculate_player_stats cu query corecta
 CREATE OR REPLACE FUNCTION calculate_player_stats(player_uuid UUID)
 RETURNS void AS $$
 DECLARE
@@ -7,7 +7,7 @@ DECLARE
     win_rate_calc NUMERIC(5,2);
     player_level INTEGER;
 BEGIN
-    -- Get total matches and wins with a more inclusive query
+    -- Obtine totalul de meciuri si castiguri cu o query mai inclusiva
     WITH match_stats AS (
         SELECT 
             COUNT(*) as total,
@@ -18,24 +18,24 @@ BEGIN
     )
     SELECT total, wins INTO total_count, wins_count FROM match_stats;
 
-    -- Calculate win rate with 2 decimal places
+    -- Calculeaza procentul de castiguri cu 2 zecimale
     IF total_count > 0 THEN
         win_rate_calc := ROUND((wins_count::NUMERIC / total_count::NUMERIC * 100)::NUMERIC, 2);
     ELSE
         win_rate_calc := 0;
     END IF;
 
-    -- Get current level
+    -- Obtine nivelul curent
     SELECT px.current_level INTO player_level
     FROM player_xp px
     WHERE px.user_id = player_uuid;
 
-    -- If no level found, default to 1
+    -- Daca nu se gaseste nivel, seteaza la 1
     IF player_level IS NULL THEN
         player_level := 1;
     END IF;
 
-    -- Insert or update player stats
+    -- Insereaza sau actualizeaza stats-urile player-ului
     INSERT INTO player_stats (
         user_id,
         current_level,
@@ -61,12 +61,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Recalculate stats for all users
+-- Recalculeaza stats pentru toate user-ii
 DO $$
 DECLARE
     user_record RECORD;
 BEGIN
-    -- Get all users who have played matches
+    -- Obtine toate user-ii care au jucat meciuri
     FOR user_record IN 
         SELECT DISTINCT 
             CASE 
@@ -77,7 +77,7 @@ BEGIN
         FROM matches
         WHERE status = 'completed'
     LOOP
-        -- Calculate stats for each user
+        -- Calculeaza stats pentru fiecare user
         PERFORM calculate_player_stats(user_record.user_id);
     END LOOP;
 END;

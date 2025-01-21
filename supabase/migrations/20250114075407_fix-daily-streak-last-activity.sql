@@ -1,4 +1,11 @@
--- Modify the update_daily_streak function to handle NULL last_activity_date
+-- Sistem de activitate zilnica
+-- Implementeaza:
+-- - Actualizare automata streak la activitate
+-- - Verificare ultima activitate pentru mentinere streak
+-- - Resetare streak la inactivitate
+-- - Acordare XP bonus pentru streak-uri
+
+-- Modifica functia update_daily_streak pentru a gestiona NULL last_activity_date
 CREATE OR REPLACE FUNCTION update_daily_streak(user_id UUID)
 RETURNS TABLE (
     streak_days INTEGER,
@@ -12,13 +19,13 @@ DECLARE
     bonus_xp INTEGER := 0;
     v_streak_broken BOOLEAN := false;
 BEGIN
-    -- Get user's last activity date
+    -- Obtine data ultimei activitati a user-ului
     SELECT last_activity_date 
     INTO last_date
     FROM player_xp
     WHERE player_xp.user_id = update_daily_streak.user_id;
 
-    -- If no record exists or last_activity_date is null, update it
+    -- Daca nu exista un record sau last_activity_date este NULL, actualizeaza-l
     IF last_date IS NULL THEN
         UPDATE player_xp
         SET 
@@ -26,7 +33,7 @@ BEGIN
             last_activity_date = current_date
         WHERE player_xp.user_id = update_daily_streak.user_id;
         
-        -- If no record was updated, create one
+        -- Daca nu a fost actualizat niciun record, creeaza unul
         IF NOT FOUND THEN
             INSERT INTO player_xp (
                 user_id, 
@@ -48,7 +55,7 @@ BEGIN
                 last_activity_date = current_date;
         END IF;
         
-        -- Return initial values
+        -- Returneaza valorile initiale
         RETURN QUERY SELECT 
             1::INTEGER,
             base_streak_xp::INTEGER,
@@ -56,16 +63,16 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Rest of the function remains the same
+    -- Restul functiei ramane la fel
     IF current_date - last_date = 1 THEN
-        -- Consecutive day, increase streak
+        -- Zi consecutiva, creste streak
         UPDATE player_xp
         SET 
             current_streak_days = current_streak_days + 1,
             last_activity_date = current_date
         WHERE player_xp.user_id = update_daily_streak.user_id;
         
-        -- Calculate bonus XP for milestone streaks
+        -- Calculeaza XP bonus pentru streak-uri de 7 zile si 30 zile
         SELECT 
             CASE 
                 WHEN current_streak_days = 7 THEN 100  -- Weekly streak bonus
@@ -76,7 +83,7 @@ BEGIN
         WHERE player_xp.user_id = update_daily_streak.user_id;
 
     ELSIF current_date = last_date THEN
-        -- Already logged in today, no streak update needed
+        -- A fost logat in aceasta zi, nu e nevoie de update
         RETURN QUERY SELECT 
             current_streak_days::INTEGER,
             0::INTEGER,
@@ -85,7 +92,7 @@ BEGIN
         WHERE player_xp.user_id = update_daily_streak.user_id;
         RETURN;
     ELSE
-        -- Streak broken
+        -- Streak rupt
         UPDATE player_xp
         SET 
             current_streak_days = 1,
@@ -94,7 +101,7 @@ BEGIN
         v_streak_broken := true;
     END IF;
 
-    -- Record XP gain in history if there is XP to be gained
+    -- Inregistreaza XP castigat in istoric daca exista XP de castigat
     IF base_streak_xp + bonus_xp > 0 THEN
         INSERT INTO xp_history (
             user_id,
@@ -111,13 +118,13 @@ BEGIN
             END
         );
         
-        -- Update total XP
+        -- Actualizeaza total XP
         UPDATE player_xp
         SET current_xp = current_xp + base_streak_xp + bonus_xp
         WHERE player_xp.user_id = update_daily_streak.user_id;
     END IF;
 
-    -- Return updated values
+    -- Returneaza valorile actualizate
     RETURN QUERY 
     SELECT 
         current_streak_days::INTEGER,
@@ -128,7 +135,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Update existing player_xp records that have NULL last_activity_date
+-- Actualizeaza recordurile existente player_xp care au NULL last_activity_date
 UPDATE player_xp
 SET last_activity_date = created_at::DATE
 WHERE last_activity_date IS NULL;

@@ -1,9 +1,20 @@
--- Enable required extensions
+-- Schema initiala pentru aplicatia Sunlight Tennis
+-- Contine structura de baza pentru:
+-- - Profile utilizatori
+-- - Sistem de notificari
+-- - Configurari de baza
+-- - Politici de securitate (RLS)
+
+-- Activam extensiile necesare
+create extension if not exists "vector" with schema "public";
+create extension if not exists "pg_net" with schema "public";
+
+-- Creeaza extensiile necesare
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "postgis";
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
 
--- Create functions for triggers
+-- Creeaza functii pentru trigger-uri
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -12,14 +23,14 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Create enum types
+-- Creeaza tipuri de enum
 CREATE TYPE user_status AS ENUM ('online', 'playing', 'away');
 CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled');
 CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded');
 CREATE TYPE match_status AS ENUM ('scheduled', 'in_progress', 'completed', 'cancelled');
 CREATE TYPE surface_type AS ENUM ('clay', 'hard', 'grass', 'artificial');
 
--- Create profiles table (extends auth.users)
+-- Creeaza tabelul profiles (extinde auth.users)
 CREATE TABLE profiles (
     id UUID REFERENCES auth.users(id) PRIMARY KEY,
     full_name TEXT,
@@ -31,7 +42,7 @@ CREATE TABLE profiles (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Create user_settings table
+-- Creeaza tabelul user_settings
 CREATE TABLE user_settings (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) NOT NULL UNIQUE,
@@ -48,13 +59,13 @@ CREATE TABLE user_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Add trigger for user_settings updated_at
+-- Creeaza trigger pentru user_settings updated_at
 CREATE TRIGGER update_user_settings_updated_at
     BEFORE UPDATE ON user_settings
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Create courts table
+-- Creeaza tabelul courts
 CREATE TABLE courts (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     name TEXT NOT NULL,
@@ -68,7 +79,7 @@ CREATE TABLE courts (
     image_url TEXT
 );
 
--- Create bookings table
+-- Creeaza tabelul bookings
 CREATE TABLE bookings (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     court_id UUID REFERENCES courts(id) NOT NULL,
@@ -88,7 +99,7 @@ CREATE TABLE bookings (
         )
 );
 
--- Create matches table
+-- Creeaza tabelul matches
 CREATE TABLE matches (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     booking_id UUID REFERENCES bookings(id) NOT NULL,
@@ -100,7 +111,7 @@ CREATE TABLE matches (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Create achievements table
+-- Creeaza tabelul achievements
 CREATE TABLE achievements (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) NOT NULL,
@@ -110,7 +121,7 @@ CREATE TABLE achievements (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Create player_experience table
+-- Creeaza tabelul player_experience
 CREATE TABLE player_experience (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) NOT NULL UNIQUE,
@@ -120,13 +131,13 @@ CREATE TABLE player_experience (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Add trigger for player_experience updated_at
+-- Creeaza trigger pentru player_experience updated_at
 CREATE TRIGGER update_player_experience_updated_at
     BEFORE UPDATE ON player_experience
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Set up Row Level Security (RLS)
+-- Activeaza RLS pentru toate tabelele
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE courts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE bookings ENABLE ROW LEVEL SECURITY;
@@ -135,9 +146,9 @@ ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE player_experience ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
--- Create RLS Policies
+-- Creeaza politici RLS
 
--- Profiles: viewable by everyone, but only editable by the owner
+-- Politica pentru profiles: vizibile pentru toată lumea, dar doar editabile de către proprietar
 CREATE POLICY "Profiles are viewable by everyone"
     ON profiles FOR SELECT
     USING (true);
@@ -150,12 +161,12 @@ CREATE POLICY "Users can update own profile"
     ON profiles FOR UPDATE
     USING (auth.uid() = id);
 
--- Courts: viewable by everyone, but only manageable by admin
+-- Courts: vizibile pentru toată lumea, dar doar administrabile de către admin
 CREATE POLICY "Courts are viewable by everyone"
     ON courts FOR SELECT
     USING (true);
 
--- Bookings: users can view their own bookings and create new ones
+-- Politica pentru bookings: user-ii pot vedea propriile rezervari si pot crea noi rezervari
 CREATE POLICY "Users can view own bookings"
     ON bookings FOR SELECT
     USING (auth.uid() = user_id);
@@ -168,7 +179,7 @@ CREATE POLICY "Users can update own bookings"
     ON bookings FOR UPDATE
     USING (auth.uid() = user_id);
 
--- Matches: participants can view and update their matches
+-- Politica pentru matches: participantii pot vedea si actualiza propriile meciuri
 CREATE POLICY "Match participants can view their matches"
     ON matches FOR SELECT
     USING (auth.uid() IN (player1_id, player2_id));
@@ -177,12 +188,12 @@ CREATE POLICY "Match participants can update their matches"
     ON matches FOR UPDATE
     USING (auth.uid() IN (player1_id, player2_id));
 
--- Achievements: viewable by everyone, but only system can create
+-- Achievements: vizibile pentru toată lumea, dar doar sistemul poate crea
 CREATE POLICY "Achievements are viewable by everyone"
     ON achievements FOR SELECT
     USING (true);
 
--- Player Experience: users can view their own experience, system can update
+-- Player Experience: user-ii pot vedea propriul lor XP, sistemul poate actualiza
 CREATE POLICY "Users can view own experience"
     ON player_experience FOR SELECT
     USING (auth.uid() = user_id);
@@ -192,7 +203,7 @@ CREATE POLICY "System can update experience"
     USING (true)
     WITH CHECK (true);
 
--- User Settings: users can view and update their own settings
+-- User Settings: user-ii pot vedea si actualiza propriile setari
 CREATE POLICY "Users can view own settings"
     ON user_settings FOR SELECT
     USING (auth.uid() = user_id);
@@ -205,11 +216,11 @@ CREATE POLICY "Users can update own settings"
     ON user_settings FOR UPDATE
     USING (auth.uid() = user_id);
 
--- Create storage bucket for avatars
+-- Creeaza bucket-ul de storage pentru avatar-uri
 INSERT INTO storage.buckets (id, name, public) 
 VALUES ('avatars', 'avatars', true);
 
--- Create storage policies for avatars bucket
+-- Creeaza politici de storage pentru bucket-ul de avatar-uri
 CREATE POLICY "Avatar images are publicly accessible"
     ON storage.objects FOR SELECT
     USING (bucket_id = 'avatars');
@@ -235,7 +246,7 @@ CREATE POLICY "Users can delete their own avatar"
         auth.uid()::text = (storage.foldername(name))[1]
     );
 
--- Add updated_at triggers to all tables
+-- Creeaza trigger-uri pentru updated_at la toate tabelele
 CREATE TRIGGER update_profiles_updated_at
     BEFORE UPDATE ON profiles
     FOR EACH ROW

@@ -1,13 +1,13 @@
--- Update the XP calculation function to use steeper curve
+-- Actualizeaza functia de calculare XP pentru a folosi o curba mai abrupta
 CREATE OR REPLACE FUNCTION calculate_xp_for_level(level_number INTEGER)
 RETURNS INTEGER AS $$
 BEGIN
-    -- Base XP: 1000, doubles each level
+    -- XP de baza: 1000, dubleaza la fiecare nivel
     RETURN FLOOR(1000 * POWER(2.0, level_number - 1));
 END;
 $$ LANGUAGE plpgsql;
 
--- Update the level calculation function
+-- Actualizeaza functia de calculare nivel
 CREATE OR REPLACE FUNCTION calculate_player_level(xp INTEGER)
 RETURNS INTEGER AS $$
 DECLARE
@@ -23,6 +23,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Recalculate levels for all players
+-- Recalculeaza nivelurile pentru toate player-ii
 UPDATE player_xp
 SET current_level = calculate_player_level(current_xp);

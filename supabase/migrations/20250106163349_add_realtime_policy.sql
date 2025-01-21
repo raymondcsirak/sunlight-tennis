@@ -1,4 +1,4 @@
--- Enable realtime for notifications table if not already enabled
+-- Activare realtime pentru tabelul notificari daca nu este deja activat
 DO $$
 BEGIN
   IF NOT EXISTS (
@@ -12,7 +12,7 @@ BEGIN
 END
 $$;
 
--- Add policy for realtime
+-- Adaugare politica pentru realtime
 BEGIN;
   ALTER TABLE notifications REPLICA IDENTITY FULL;
 COMMIT; 

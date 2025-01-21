@@ -1,4 +1,11 @@
--- Create match_winner_selections table
+-- Sistem de gestionare meciuri
+-- Implementeaza:
+-- - Tabelul pentru meciuri si rezultate
+-- - Sistem de selectare castigator cu validare
+-- - Actualizare automata statistici jucatori
+-- - Notificari pentru confirmari rezultate
+
+-- Creeaza tabelul pentru selectii de castigator
 CREATE TABLE IF NOT EXISTS match_winner_selections (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     match_id UUID REFERENCES matches(id) ON DELETE CASCADE NOT NULL,
@@ -9,10 +16,10 @@ CREATE TABLE IF NOT EXISTS match_winner_selections (
     UNIQUE(match_id, selector_id)
 );
 
--- Enable RLS
+-- Activeaza RLS
 ALTER TABLE match_winner_selections ENABLE ROW LEVEL SECURITY;
 
--- Create policies
+-- Creeaza politici
 CREATE POLICY "Users can view winner selections for their matches"
     ON match_winner_selections FOR SELECT
     USING (
@@ -40,7 +47,7 @@ CREATE POLICY "Users can update their own selections"
     USING (selector_id = auth.uid())
     WITH CHECK (selector_id = auth.uid());
 
--- Function to validate and update match winner
+-- Functie pentru validare si actualizare castigator meci
 CREATE OR REPLACE FUNCTION validate_and_update_match_winner()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -48,12 +55,12 @@ DECLARE
     player2_selection UUID;
     match_record RECORD;
 BEGIN
-    -- Get the match details
+    -- Obtine detalii despre meci
     SELECT player1_id, player2_id, status INTO match_record
     FROM matches
     WHERE id = NEW.match_id;
 
-    -- Get both players' selections
+    -- Obtine selectii ambilor jucatori
     SELECT selected_winner_id INTO player1_selection
     FROM match_winner_selections
     WHERE match_id = NEW.match_id AND selector_id = match_record.player1_id;
@@ -62,17 +69,17 @@ BEGIN
     FROM match_winner_selections
     WHERE match_id = NEW.match_id AND selector_id = match_record.player2_id;
 
-    -- If both players have selected and they agree
+    -- Daca ambii jucatori au ales si sunt de acord
     IF player1_selection IS NOT NULL AND player2_selection IS NOT NULL AND 
        player1_selection = player2_selection THEN
         
-        -- Update the match winner
+        -- Actualizeaza castigatorul meciului
         UPDATE matches 
         SET winner_id = player1_selection,
             xp_awarded = false
         WHERE id = NEW.match_id;
 
-        -- Create a notification for both players
+        -- Creeaza notificare pentru ambii jucatori
         INSERT INTO notifications (user_id, type, title, message, data)
         SELECT 
             user_id,
@@ -94,44 +101,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for winner validation
+-- Creeaza trigger pentru validare castigator
 CREATE TRIGGER validate_match_winner
     AFTER INSERT OR UPDATE ON match_winner_selections
     FOR EACH ROW
     EXECUTE FUNCTION validate_and_update_match_winner();
 
--- Add updated_at trigger
+-- Creeaza trigger pentru updated_at
 CREATE TRIGGER update_match_winner_selections_updated_at
     BEFORE UPDATE ON match_winner_selections
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Add new notification types
+-- Adauga tipuri de notificare noi
 ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'match_completed';
 
--- Function to check if a match needs winner selection
+-- Functie pentru verificare daca un meci are nevoie de selectie castigator
 CREATE OR REPLACE FUNCTION check_match_needs_winner_selection(match_id UUID, user_id UUID)
 RETURNS BOOLEAN AS $$
 DECLARE
     match_record RECORD;
     has_selected BOOLEAN;
 BEGIN
-    -- Get match details
+    -- Obtine detalii despre meci
     SELECT * INTO match_record
     FROM matches
     WHERE id = match_id;
 
-    -- Check if the user is a player in this match
+    -- Verifica daca user-ul este un participant in acest meci
     IF user_id != match_record.player1_id AND user_id != match_record.player2_id THEN
         RETURN FALSE;
     END IF;
 
-    -- Check if the match is completed and needs winner selection
+    -- Verifica daca meciul este finalizat si are nevoie de selectie castigator
     IF match_record.status != 'completed' OR match_record.winner_id IS NOT NULL THEN
         RETURN FALSE;
     END IF;
 
-    -- Check if the user has already made a selection
+    -- Verifica daca user-ul a deja facut o selectie
     SELECT EXISTS (
         SELECT 1 
         FROM match_winner_selections 
@@ -139,7 +146,7 @@ BEGIN
         AND selector_id = user_id
     ) INTO has_selected;
 
-    -- Return true if the user hasn't made a selection yet
+    -- Returneaza true daca user-ul nu a facut o selectie
     RETURN NOT has_selected;
 END;
 $$ LANGUAGE plpgsql;

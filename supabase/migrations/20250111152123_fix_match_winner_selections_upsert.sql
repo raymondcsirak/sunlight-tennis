@@ -1,11 +1,11 @@
--- Drop existing policies for match_winner_selections
+-- Stergere politici existente pentru match_winner_selections
 DROP POLICY IF EXISTS "Players can create or update selections for their matches" ON match_winner_selections;
 DROP POLICY IF EXISTS "Players can update their own selections" ON match_winner_selections;
 
--- Drop existing trigger
+-- Stergere trigger existent
 DROP TRIGGER IF EXISTS handle_winner_selection_trigger ON match_winner_selections;
 
--- Create a single policy that handles both INSERT and UPDATE
+-- Creeaza o singura politica care gestioneaza atat INSERT cat si UPDATE
 CREATE POLICY "Players can create and update their own selections"
 ON match_winner_selections
 FOR ALL
@@ -35,7 +35,7 @@ WITH CHECK (
   )
 );
 
--- Recreate the trigger function to handle notifications more reliably
+-- Recreeaza functia trigger pentru a gestiona notificari mai fiabil
 CREATE OR REPLACE FUNCTION handle_winner_selection()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -43,7 +43,7 @@ DECLARE
   other_selection RECORD;
   notification_error RECORD;
 BEGIN
-  -- Get the match details
+  -- Obtine detalii meci
   SELECT * INTO match_record
   FROM matches
   WHERE id = NEW.match_id;
@@ -52,21 +52,21 @@ BEGIN
     RAISE EXCEPTION 'Match not found';
   END IF;
 
-  -- Get the other player's selection if it exists
+  -- Obtine selectia altui jucator daca exista
   SELECT * INTO other_selection
   FROM match_winner_selections
   WHERE match_id = NEW.match_id
   AND selector_id != NEW.selector_id;
 
-  -- If both players have selected and agree
+  -- Daca ambii jucatori au selectat si sunt de acord
   IF other_selection IS NOT NULL AND other_selection.selected_winner_id = NEW.selected_winner_id THEN
-    -- Update match winner
+    -- Actualizeaza castigatorul meciului
     UPDATE matches
     SET winner_id = NEW.selected_winner_id,
         xp_awarded = false
     WHERE id = NEW.match_id;
 
-    -- Create notifications for both players
+    -- Creeaza notificari pentru ambii jucatori
     INSERT INTO notifications (user_id, type, title, message, data)
     VALUES
       (match_record.player1_id, 'match_completed', 'Match Result Confirmed',
@@ -82,9 +82,9 @@ BEGIN
        END,
        jsonb_build_object('match_id', NEW.match_id, 'winner_id', NEW.selected_winner_id));
 
-  -- If both players have selected but disagree
+  -- Daca ambii jucatori au selectat dar nu sunt de acord
   ELSIF other_selection IS NOT NULL AND other_selection.selected_winner_id != NEW.selected_winner_id THEN
-    -- Create dispute notifications
+    -- Creeaza notificari de disputa
     INSERT INTO notifications (user_id, type, title, message, data)
     VALUES
       (match_record.player1_id, 'match_dispute', 'Match Result Dispute',
@@ -98,13 +98,13 @@ BEGIN
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN
-    -- Log the error and re-raise
+    -- Log error
     RAISE NOTICE 'Error in handle_winner_selection: %', SQLERRM;
     RAISE;
 END;
 $$ LANGUAGE plpgsql;
 
--- Create the trigger
+-- Creeaza trigger
 CREATE TRIGGER handle_winner_selection_trigger
   AFTER INSERT OR UPDATE ON match_winner_selections
   FOR EACH ROW

@@ -1,4 +1,4 @@
--- Function to award achievements and create notifications atomically
+-- Functie pentru a acorda premii si a crea notificari atomically
 CREATE OR REPLACE FUNCTION award_achievements_with_notifications(
   p_user_id UUID,
   p_achievements JSONB
@@ -6,10 +6,10 @@ CREATE OR REPLACE FUNCTION award_achievements_with_notifications(
 DECLARE
   achievement RECORD;
 BEGIN
-  -- Insert achievements and corresponding notifications in a single transaction
+  -- Insereaza premii si notificari corespunzatoare in aceeasi transactie
   FOR achievement IN SELECT * FROM jsonb_array_elements(p_achievements)
   LOOP
-    -- Insert the achievement
+    -- Insereaza premia
     INSERT INTO achievements (
       user_id,
       type,
@@ -25,9 +25,9 @@ BEGIN
     )
     ON CONFLICT (user_id, type) DO NOTHING;
 
-    -- Only create notification if achievement was inserted (not already earned)
+    -- Creeaza notificare doar daca premia a fost insereata (nu a fost deja castigata)
     IF FOUND THEN
-      -- Insert the notification
+      -- Insereaza notificarea
       INSERT INTO notifications (
         user_id,
         type,
@@ -51,10 +51,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Ensure the function can be executed by authenticated users
+-- Asigura ca functia poate fi executata de useri autentificati
 GRANT EXECUTE ON FUNCTION award_achievements_with_notifications(UUID, JSONB) TO authenticated;
 
--- Add 'achievement' to notification_type if it doesn't exist
+-- Adauga 'achievement' la notification_type daca nu exista deja
 DO $$
 BEGIN
   IF NOT EXISTS (

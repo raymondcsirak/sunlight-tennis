@@ -1,3 +1,10 @@
+-- Sistem de finalizare meciuri
+-- Implementeaza:
+-- - Validare selectii castigator de la ambii jucatori
+-- - Prevenire conditii de concurenta la actualizare
+-- - Actualizare automata statistici jucatori
+-- - Acordare XP pentru victorie si participare
+
 -- First, update any matches that have winners but aren't marked as completed
 UPDATE matches
 SET status = 'completed'
@@ -62,11 +69,11 @@ BEGIN
        END,
        jsonb_build_object('match_id', NEW.match_id, 'winner_id', NEW.selected_winner_id));
 
-  -- If both players have selected but disagree
-  ELSIF other_selection IS NOT NULL AND other_selection.selected_winner_id != NEW.selected_winner_id THEN
-    -- Create dispute notifications
-    INSERT INTO notifications (user_id, type, title, message, data)
-    VALUES
+    -- Daca ambii jucatori au ales dar nu sunt de acord
+    ELSIF other_selection IS NOT NULL AND other_selection.selected_winner_id != NEW.selected_winner_id THEN
+        -- Creeaza notificari de disputa
+        INSERT INTO notifications (user_id, type, title, message, data)
+        VALUES
       (match_record.player1_id, 'match_dispute', 'Match Result Dispute',
        'There is a disagreement about the match result. Both players selected different winners. Please discuss and update your selections.',
        jsonb_build_object('match_id', NEW.match_id)),
@@ -79,27 +86,27 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create a single trigger for winner selection that handles everything
+-- Creeaza un singur trigger pentru alegerea castigatorului care gestioneaza totul
 CREATE TRIGGER handle_winner_selection_trigger
   AFTER INSERT OR UPDATE ON match_winner_selections
   FOR EACH ROW
   EXECUTE FUNCTION handle_winner_selection();
 
--- Create a function to handle XP awards separately
+-- Creeaza o functie pentru a gestiona acordarea XP separat
 CREATE OR REPLACE FUNCTION handle_match_xp_awards()
 RETURNS TRIGGER AS $$
 DECLARE
     v_player1_name TEXT;
     v_player2_name TEXT;
 BEGIN
-    -- Only proceed if status changed to completed and XP hasn't been awarded yet
+    -- Procedeaza doar daca statusul a fost schimbat in completed si XP nu a fost deja acordat
     IF NEW.status = 'completed' AND OLD.status != 'completed' AND NOT OLD.xp_awarded THEN
-        -- Get player names
+        -- Obtine numele jucatorilor
         SELECT p1.full_name, p2.full_name INTO v_player1_name, v_player2_name
         FROM profiles p1, profiles p2
         WHERE p1.id = NEW.player1_id AND p2.id = NEW.player2_id;
 
-        -- Award XP for winning
+        -- Acordare XP pentru castig
         PERFORM award_xp(
             NEW.winner_id,
             'match_won',
@@ -111,7 +118,7 @@ BEGIN
             )
         );
 
-        -- Award XP for participation to both players
+        -- Acordare XP pentru participare la ambii jucatori
         PERFORM award_xp(
             NEW.player1_id,
             'match_played',
@@ -124,7 +131,7 @@ BEGIN
             format('Played match against %s', v_player1_name)
         );
 
-        -- Mark XP as awarded
+        -- Marcheaza XP ca fiind acordat
         NEW.xp_awarded := true;
     END IF;
 
@@ -132,7 +139,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger for XP awards
+-- Creeaza trigger pentru acordarea XP
 CREATE TRIGGER handle_match_xp_awards_trigger
     BEFORE UPDATE OF status ON matches
     FOR EACH ROW

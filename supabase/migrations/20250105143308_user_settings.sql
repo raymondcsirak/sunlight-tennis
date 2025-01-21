@@ -1,7 +1,7 @@
--- Drop existing table and its dependencies
+-- Stergere tabel daca exista
 DROP TABLE IF EXISTS user_settings CASCADE;
 
--- Create user_settings table
+-- Creare tabel user_settings
 CREATE TABLE user_settings (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) NOT NULL UNIQUE,
@@ -18,10 +18,10 @@ CREATE TABLE user_settings (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW())
 );
 
--- Enable RLS
+-- Activare RLS
 ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
 
--- Add RLS policies
+-- Creare politici RLS
 CREATE POLICY "Users can view own settings"
     ON user_settings FOR SELECT
     USING (auth.uid() = user_id);
@@ -34,7 +34,7 @@ CREATE POLICY "Users can update own settings"
     ON user_settings FOR UPDATE
     USING (auth.uid() = user_id);
 
--- Add updated_at trigger
+-- Creare trigger pentru actualizare updated_at
 CREATE TRIGGER update_user_settings_updated_at
     BEFORE UPDATE ON user_settings
     FOR EACH ROW

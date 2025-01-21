@@ -1,26 +1,26 @@
--- Drop existing policies
+-- Sterge politici existente
 DROP POLICY IF EXISTS "Allow users to read all player stats" ON player_stats;
 DROP POLICY IF EXISTS "Allow system functions to update player stats" ON player_stats;
 
--- Create policy for reading player stats (allow all authenticated users to read any player's stats)
+-- Creacre politica pentru citirea stats-urilor jucatorilor (permite acces tuturor jucatorilor pentru toate user-ii autentificati)
 CREATE POLICY "Allow users to read all player stats" ON player_stats
     FOR SELECT
     TO authenticated
     USING (true);
 
--- Create policy for system functions to update player stats
+-- Creeaza politica pentru functii sistem pentru actualizarea stats-urilor jucatorilor
 CREATE POLICY "Allow system functions to update player stats" ON player_stats
     FOR ALL
     USING (true)
     WITH CHECK (true);
 
--- Ensure RLS is enabled
+-- Asigura ca RLS este activ
 ALTER TABLE player_stats ENABLE ROW LEVEL SECURITY;
 
--- Grant necessary permissions
+-- Permite acces doar pentru useri autentificati
 GRANT ALL ON player_stats TO postgres, authenticated;
 GRANT USAGE ON SCHEMA public TO postgres, authenticated;
 
--- Ensure the trigger function has the right security context
+-- Asigura ca functia trigger are contextul de securitate corect
 ALTER FUNCTION calculate_player_stats(UUID) SECURITY DEFINER;
 ALTER FUNCTION update_player_stats_on_match_change() SECURITY DEFINER;

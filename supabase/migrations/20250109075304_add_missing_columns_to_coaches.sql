@@ -1,10 +1,10 @@
--- Add missing columns to coaches table
+-- Adaugare coloane lipsa in tabelul coaches
 ALTER TABLE coaches
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true,
 ADD COLUMN IF NOT EXISTS specialization TEXT DEFAULT 'Tennis Coach',
 ADD COLUMN IF NOT EXISTS image_url TEXT;
 
--- Set default values for existing records
+-- Setare valori default pentru randuri existente
 UPDATE coaches
 SET 
   is_active = true,

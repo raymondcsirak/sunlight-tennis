@@ -1,8 +1,8 @@
--- Create a function to check achievements after stats update
+-- Creeaza o functie pentru a verifica achievements dupa update-ul stats
 CREATE OR REPLACE FUNCTION check_achievements_after_stats_update()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Only check achievements if relevant stats have changed
+    -- Verifica achievements doar daca stats relevante au fost schimbate
     IF (
         NEW.total_matches != OLD.total_matches OR
         NEW.won_matches != OLD.won_matches OR
@@ -16,10 +16,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Drop existing trigger if it exists
+-- Sterge trigger-ul existent daca exista
 DROP TRIGGER IF EXISTS check_achievements_on_stats_update ON player_stats;
 
--- Create trigger to check achievements after stats update
+-- Creeaza trigger pentru a verifica achievements dupa update-ul stats
 CREATE TRIGGER check_achievements_on_stats_update
     AFTER UPDATE ON player_stats
     FOR EACH ROW

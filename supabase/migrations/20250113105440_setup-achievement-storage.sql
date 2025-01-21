@@ -1,8 +1,8 @@
--- Drop any existing achievement functions
+-- Sterge orice functii de premii existente
 DROP FUNCTION IF EXISTS retroactively_award_achievements(UUID) CASCADE;
 DROP FUNCTION IF EXISTS award_achievement(UUID, achievement_type, TEXT, TEXT, achievement_tier, TEXT, JSONB) CASCADE;
 
--- Achievement types
+-- Tipuri de premii
 DROP TYPE IF EXISTS achievement_type CASCADE;
 CREATE TYPE achievement_type AS ENUM (
   'first_match_win',          -- First match won (Gold)
@@ -18,7 +18,7 @@ CREATE TYPE achievement_type AS ENUM (
   'season_champion'          -- Highest win rate in a season (Platinum)
 );
 
--- Achievement tiers
+-- Nivelele de premii
 DROP TYPE IF EXISTS achievement_tier CASCADE;
 CREATE TYPE achievement_tier AS ENUM (
   'bronze',
@@ -27,7 +27,7 @@ CREATE TYPE achievement_tier AS ENUM (
   'platinum'
 );
 
--- Achievements table
+-- Tabelul de premii
 DROP TABLE IF EXISTS achievements CASCADE;
 CREATE TABLE achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -42,7 +42,7 @@ CREATE TABLE achievements (
   UNIQUE(user_id, type)
 );
 
--- Simple atomic function to award achievement and create notification
+-- Functie simpla pentru a acorda premii si a crea notificari
 CREATE OR REPLACE FUNCTION award_achievement_with_notification(
   p_user_id UUID,
   p_type achievement_type,
@@ -53,7 +53,7 @@ CREATE OR REPLACE FUNCTION award_achievement_with_notification(
   p_metadata JSONB DEFAULT '{}'::JSONB
 ) RETURNS void AS $$
 BEGIN
-  -- Insert achievement if it doesn't exist
+  -- Insereaza premia daca nu exista deja
   INSERT INTO achievements (
     user_id,
     type,
@@ -73,7 +73,7 @@ BEGIN
   )
   ON CONFLICT (user_id, type) DO NOTHING;
 
-  -- Only create notification if achievement was inserted
+  -- Creeaza notificare doar daca premia a fost insereata
   IF FOUND THEN
     INSERT INTO notifications (
       user_id,
@@ -104,10 +104,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Enable RLS
+-- Activeaza RLS
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 
--- RLS policies
+-- Politici RLS
 CREATE POLICY "Users can view their own achievements"
 ON achievements FOR SELECT
 TO authenticated

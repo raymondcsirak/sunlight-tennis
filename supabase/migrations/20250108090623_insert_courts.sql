@@ -1,4 +1,4 @@
--- Insert initial court data
+-- Inserare date initiale tabel courts
 INSERT INTO courts (name, surface, hourly_rate, is_active, created_at, updated_at, image_url)
 VALUES 
     ('Court 1', 'clay', 50, true, NOW(), NOW(), 'court-1.jpg'),

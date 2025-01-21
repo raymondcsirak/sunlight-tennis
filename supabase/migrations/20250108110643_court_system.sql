@@ -1,4 +1,11 @@
--- Drop existing objects if they exist
+-- Sistem de rezervare terenuri de tenis
+-- Implementeaza:
+-- - Tabelul pentru terenuri cu detalii (suprafata, disponibilitate)
+-- - Sistem de rezervari cu validare de disponibilitate
+-- - Politici de securitate pentru rezervari
+-- - Notificari pentru confirmari si anulari
+
+-- Sterge obiectele existente daca exista
 DROP FUNCTION IF EXISTS create_court_booking;
 DROP TABLE IF EXISTS court_bookings CASCADE;
 DROP TYPE IF EXISTS booking_status CASCADE;
@@ -10,7 +17,7 @@ CREATE TYPE surface_type AS ENUM ('clay', 'hard', 'grass', 'artificial');
 CREATE TYPE booking_status AS ENUM ('pending', 'confirmed', 'cancelled');
 CREATE TYPE payment_status AS ENUM ('pending', 'paid', 'refunded', 'failed');
 
--- Create courts table if it doesn't exist
+-- Creeaza tabelul courts daca nu exista
 CREATE TABLE IF NOT EXISTS courts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL,
@@ -23,7 +30,7 @@ CREATE TABLE IF NOT EXISTS courts (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create court_bookings table
+-- Creeaza tabelul court_bookings
 CREATE TABLE court_bookings (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     court_id UUID REFERENCES courts(id) ON DELETE CASCADE,
@@ -37,22 +44,22 @@ CREATE TABLE court_bookings (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW(),
     
-    -- Changed constraint name to be more unique
+    -- Schimb constraint name pentru a fi mai unica
     CONSTRAINT court_bookings_no_overlap EXCLUDE USING gist (
         court_id WITH =,
         tstzrange(start_time, end_time, '[)') WITH &&
     )
 );
 
--- Enable RLS
+-- Activeaza RLS
 ALTER TABLE courts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE court_bookings ENABLE ROW LEVEL SECURITY;
--- First drop existing policies
+-- Sterge politici existente
 DROP POLICY IF EXISTS "Courts are viewable by everyone" ON courts;
 DROP POLICY IF EXISTS "Users can view their own bookings" ON court_bookings;
 DROP POLICY IF EXISTS "Users can create their own bookings" ON court_bookings;
 DROP POLICY IF EXISTS "Users can update their own bookings" ON court_bookings;
--- Then create the policies
+-- Creeaza politici
 CREATE POLICY "Courts are viewable by everyone"
     ON courts FOR SELECT
     USING (true);
@@ -70,7 +77,7 @@ CREATE POLICY "Users can update their own bookings"
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
--- Add updated_at triggers
+-- Adauga trigger-uri pentru updated_at
 DROP TRIGGER IF EXISTS update_courts_updated_at ON courts;
 CREATE TRIGGER update_courts_updated_at
     BEFORE UPDATE ON courts
@@ -83,7 +90,7 @@ CREATE TRIGGER update_court_bookings_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Create the booking procedure
+-- Creeaza procedura de rezervare
 CREATE OR REPLACE FUNCTION create_court_booking(
     p_user_id UUID,
     p_court_id UUID,
@@ -101,17 +108,17 @@ DECLARE
     v_duration_hours FLOAT;
     v_total_price INTEGER;
     v_booking_id UUID;
-    v_xp_amount INTEGER := 50; -- Base XP for court booking
+    v_xp_amount INTEGER := 50;
     v_start_time TIMESTAMPTZ;
     v_end_time TIMESTAMPTZ;
 BEGIN
-    -- Convert text timestamps to timestamptz
+    -- Converteste timestamp-urile text in timestamptz
     v_start_time := p_start_time::TIMESTAMPTZ;
     v_end_time := p_end_time::TIMESTAMPTZ;
 
-    -- Start transaction
+    -- Incepe transactia
     BEGIN
-        -- Get court details
+        -- Obtine detalii despre teren
         SELECT name, hourly_rate INTO v_court_name, v_hourly_rate
         FROM courts
         WHERE id = p_court_id;
@@ -120,11 +127,11 @@ BEGIN
             RAISE EXCEPTION 'Court not found';
         END IF;
 
-        -- Calculate duration and price
+        -- Calculeaza durata si pretul
         v_duration_hours := EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600;
         v_total_price := v_hourly_rate * v_duration_hours;
 
-        -- Create booking
+        -- Creeaza rezervare
         INSERT INTO court_bookings (
             court_id,
             user_id,
@@ -145,7 +152,7 @@ BEGIN
             'pending'
         ) RETURNING id INTO v_booking_id;
 
-        -- Award XP
+        -- Acordare XP
         INSERT INTO xp_history (
             user_id,
             xp_amount,
@@ -158,12 +165,12 @@ BEGIN
             format('Booked court %s for %s hours', v_court_name, v_duration_hours)
         );
 
-        -- Update total XP
+        -- Actualizeaza total XP
         UPDATE player_xp
         SET current_xp = current_xp + v_xp_amount
         WHERE user_id = p_user_id;
 
-        -- Create notification
+        -- Creeaza notificare
         INSERT INTO notifications (
             user_id,
             type,
@@ -187,14 +194,14 @@ BEGIN
             )
         );
 
-        -- Return success
+        -- Returneaza succes
         RETURN jsonb_build_object(
             'success', true,
             'booking_id', v_booking_id
         );
 
     EXCEPTION WHEN OTHERS THEN
-        -- Rollback transaction on error
+        -- Rollback transactie in caz de eroare
         RAISE;
     END;
 END;

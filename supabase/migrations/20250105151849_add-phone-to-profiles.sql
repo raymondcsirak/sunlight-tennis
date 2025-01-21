@@ -1,2 +1,2 @@
--- Add phone field to profiles table
+-- Adaugare camp phone la tabelul profiles
 ALTER TABLE profiles ADD COLUMN phone TEXT;

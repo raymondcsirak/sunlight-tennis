@@ -1,16 +1,18 @@
--- Drop existing foreign key if it exists
+-- Stergere constrangeri de foreign key existente
 ALTER TABLE match_request_responses
 DROP CONSTRAINT IF EXISTS match_request_responses_responder_id_fkey;
 
--- Add the foreign key constraint
+-- Adaugare constrangeri de foreign key
 ALTER TABLE match_request_responses
 ADD CONSTRAINT match_request_responses_responder_id_fkey
 FOREIGN KEY (responder_id)
 REFERENCES profiles(id)
 ON DELETE CASCADE;
 
--- Update RLS policies to include profile joins
+-- Stergere politici RLS existente
 DROP POLICY IF EXISTS "Users can view responses for their requests" ON match_request_responses;
+
+-- Creare politici RLS
 CREATE POLICY "Users can view responses for their requests"
     ON match_request_responses FOR SELECT
     USING (

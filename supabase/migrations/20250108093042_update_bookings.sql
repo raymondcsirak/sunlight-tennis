@@ -1,4 +1,4 @@
--- Create enum types if they don't exist
+-- Creare tipuri enum daca nu exista
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'booking_status') THEN
@@ -12,7 +12,7 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;
 
--- Safely drop constraints if they exist
+-- Stergere constrangeri daca exista
 DO $$
 BEGIN
     IF EXISTS (
@@ -26,12 +26,12 @@ EXCEPTION
     WHEN undefined_table THEN NULL;
 END $$;
 
--- Alter existing table or create new one
+-- Alterare tabel existant sau creare nou
 DO $$
 BEGIN
-    -- Try to alter existing table
+    -- Incercare de alterare tabel existant
     IF EXISTS (SELECT 1 FROM pg_tables WHERE tablename = 'court_bookings') THEN
-        -- Add missing columns if they don't exist
+        -- Adaugare coloane lipsa daca nu exista
         BEGIN
             ALTER TABLE court_bookings 
             ADD COLUMN IF NOT EXISTS players INTEGER NOT NULL DEFAULT 1 CHECK (players >= 1 AND players <= 4),
@@ -41,11 +41,11 @@ BEGIN
             ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
             ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
         EXCEPTION WHEN duplicate_column THEN
-            -- Column already exists, ignore
+            -- Column deja exista, ignorare
             NULL;
         END;
     ELSE
-        -- Create new table if it doesn't exist
+        -- Creare tabel nou daca nu exista
         CREATE TABLE court_bookings (
             id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
             court_id UUID REFERENCES courts(id) ON DELETE CASCADE,
@@ -61,7 +61,7 @@ BEGIN
         );
     END IF;
 
-    -- Add the overlapping bookings constraint
+    -- Adaugare constrangeri overlapping bookings
     IF NOT EXISTS (
         SELECT 1
         FROM pg_constraint
@@ -77,7 +77,7 @@ BEGIN
 
 EXCEPTION
     WHEN undefined_table THEN
-        -- Table doesn't exist, create it
+        -- Tabel nu exista, creare
         CREATE TABLE court_bookings (
             id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
             court_id BIGINT REFERENCES courts(id) ON DELETE CASCADE,
@@ -92,7 +92,7 @@ EXCEPTION
             updated_at TIMESTAMPTZ DEFAULT NOW()
         );
         
-        -- Add the overlapping bookings constraint
+        -- Adaugare constrangeri overlapping bookings
         ALTER TABLE court_bookings
         ADD CONSTRAINT no_overlapping_bookings 
         EXCLUDE USING gist (
@@ -101,7 +101,7 @@ EXCEPTION
         );
 END $$;
 
--- Enable RLS if not already enabled
+-- Activare RLS daca nu este deja activat
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -116,7 +116,7 @@ BEGIN
     END IF;
 END $$;
 
--- Add RLS policies if they don't exist
+-- Adaugare politici RLS daca nu exista
 DO $$ 
 BEGIN
     BEGIN
@@ -142,7 +142,7 @@ BEGIN
     END;
 END $$;
 
--- Add updated_at trigger if it doesn't exist
+-- Adaugare trigger updated_at daca nu exista
 DO $$
 BEGIN
     IF NOT EXISTS (

@@ -1,7 +1,7 @@
--- Drop existing type if exists
+-- Sterge tipul existent daca exista
 DROP TYPE IF EXISTS achievement_tier CASCADE;
 
--- Create achievement tier type
+-- Creeaza tipul de premii
 CREATE TYPE achievement_tier AS ENUM (
   'bronze',
   'silver',
@@ -9,19 +9,19 @@ CREATE TYPE achievement_tier AS ENUM (
   'platinum'
 );
 
--- Add tier column if it doesn't exist
+-- Adauga coloana tier daca nu exista deja
 ALTER TABLE achievements 
   ADD COLUMN IF NOT EXISTS tier TEXT;
 
--- Update achievements table to use achievement_tier
+-- Actualizeaza tabelul de premii pentru a folosi achievement_tier
 ALTER TABLE achievements 
   ALTER COLUMN tier TYPE achievement_tier 
   USING tier::achievement_tier;
 
--- Drop existing function to recreate with proper type
+-- Sterge functia existenta pentru a o recrea cu tipul corect
 DROP FUNCTION IF EXISTS award_achievement(UUID, achievement_type, TEXT, TEXT, achievement_tier, TEXT, JSONB);
 
--- Recreate the award_achievement function with proper type
+-- Recreeaza functia award_achievement cu tipul corect
 CREATE OR REPLACE FUNCTION award_achievement(
   p_user_id UUID,
   p_type achievement_type,
@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION award_achievement(
   p_metadata JSONB DEFAULT '{}'::JSONB
 ) RETURNS void AS $$
 BEGIN
-  -- Insert achievement if it doesn't exist
+  -- Insereaza premia daca nu exista deja
   INSERT INTO achievements (
     user_id,
     type,
@@ -52,7 +52,7 @@ BEGIN
   )
   ON CONFLICT (user_id, type) DO NOTHING;
 
-  -- Only create notification if achievement was inserted
+  -- Creeaza notificare doar daca premia a fost insereata
   IF FOUND THEN
     INSERT INTO notifications (
       user_id,
@@ -83,5 +83,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant execute permission to authenticated users
+-- Permite executie doar pentru useri autentificati
 GRANT EXECUTE ON FUNCTION award_achievement(UUID, achievement_type, TEXT, TEXT, achievement_tier, TEXT, JSONB) TO authenticated;

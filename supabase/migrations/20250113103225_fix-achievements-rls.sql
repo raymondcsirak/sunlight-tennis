@@ -1,27 +1,27 @@
--- Drop existing policies first
+-- Sterge politici existente
 DROP POLICY IF EXISTS "Users can view their own achievements" ON achievements;
 DROP POLICY IF EXISTS "System can insert achievements" ON achievements;
 DROP POLICY IF EXISTS "Users can insert their own achievements" ON achievements;
 
--- Enable RLS for achievements table
+-- Activeaza RLS pentru tabelul achievements
 ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
 
--- Policy for users to view their own achievements
+-- Politica pentru useri pentru a vizualiza propriile premii
 CREATE POLICY "Users can view their own achievements"
 ON achievements FOR SELECT
 TO authenticated
 USING (auth.uid() = user_id);
 
--- Policy for the system to insert achievements
+-- Politica pentru sistem pentru a insereaza premii
 CREATE POLICY "System can insert achievements"
 ON achievements FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
--- Grant necessary permissions
+-- Permite acces doar pentru useri autentificati
 GRANT ALL ON TABLE achievements TO authenticated;
 
--- Ensure notification type exists
+-- Asigura ca tipul de notificare exista
 DO $$
 BEGIN
   IF NOT EXISTS (

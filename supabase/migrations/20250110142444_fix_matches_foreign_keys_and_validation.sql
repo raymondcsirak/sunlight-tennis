@@ -1,9 +1,9 @@
--- Drop existing foreign keys if they exist
+-- Stergere constrangeri de foreign key existente
 ALTER TABLE matches
 DROP CONSTRAINT IF EXISTS matches_player1_id_fkey,
 DROP CONSTRAINT IF EXISTS matches_player2_id_fkey;
 
--- Add explicit foreign key constraints
+-- Adaugare constrangeri de foreign key explicite
 ALTER TABLE matches
 ADD CONSTRAINT matches_player1_id_fkey
 FOREIGN KEY (player1_id) 
@@ -16,15 +16,15 @@ FOREIGN KEY (player2_id)
 REFERENCES profiles(id)
 ON DELETE CASCADE;
 
--- Drop existing trigger and function if they exist
+-- Stergere trigger si functie daca exista
 DROP TRIGGER IF EXISTS validate_match_selection_trigger ON match_winner_selections;
 DROP FUNCTION IF EXISTS validate_match_selection();
 
--- Function to validate selector and winner
+-- Functie pentru validare selector si castigator
 CREATE OR REPLACE FUNCTION validate_match_selection()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Check if selector is a player in the match
+    -- Verifica daca selector este un jucator in meci
     IF NOT EXISTS (
         SELECT 1 FROM matches 
         WHERE id = NEW.match_id 
@@ -33,7 +33,7 @@ BEGIN
         RAISE EXCEPTION 'Selector must be a player in the match';
     END IF;
 
-    -- Check if selected winner is a player in the match
+    -- Verifica daca castigatorul ales este un jucator in meci
     IF NOT EXISTS (
         SELECT 1 FROM matches 
         WHERE id = NEW.match_id 
@@ -46,7 +46,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for validation
+-- Stergere trigger daca exista
+DROP TRIGGER IF EXISTS validate_match_selection_trigger ON match_winner_selections;
+
+-- Creare trigger
 CREATE TRIGGER validate_match_selection_trigger
     BEFORE INSERT OR UPDATE ON match_winner_selections
     FOR EACH ROW

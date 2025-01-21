@@ -1,7 +1,7 @@
--- Drop existing table if it exists
+-- Stergere tabel daca exista
 DROP TABLE IF EXISTS player_skills CASCADE;
 
--- Create player_skills table
+-- Creare tabel player_skills
 CREATE TABLE player_skills (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -12,7 +12,7 @@ CREATE TABLE player_skills (
     UNIQUE(user_id, skill_type)
 );
 
--- Add RLS policies
+-- Activare RLS
 ALTER TABLE player_skills ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own skills"
@@ -31,13 +31,13 @@ CREATE POLICY "Users can update their own skills"
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
--- Add updated_at trigger
+-- Creare trigger pentru actualizare updated_at
 CREATE TRIGGER update_player_skills_updated_at
     BEFORE UPDATE ON player_skills
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Insert default skill types
+-- Inserare tipuri de abilitati default
 INSERT INTO player_skills (user_id, skill_type, level)
 SELECT 
     auth.uid(),

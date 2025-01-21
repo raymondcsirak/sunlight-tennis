@@ -1,8 +1,15 @@
--- Drop existing functions first
+-- Sistem de trofee si realizari
+-- Implementeaza:
+-- - Tabelul pentru realizari cu tipuri si nivele
+-- - Sistem de acordare automata realizari
+-- - Notificari pentru deblocarea realizarilor
+-- - Istoric realizari cu timestamp
+
+-- Sterge functii existente
 DROP FUNCTION IF EXISTS retroactively_award_achievements(UUID);
 DROP FUNCTION IF EXISTS award_achievements_with_notifications(UUID, JSONB);
 
--- Drop existing achievement_type enum and recreate with all trophy types
+-- Sterge tipul de enum existent achievement_type si recreaza cu toate tipurile de trofee
 DROP TYPE IF EXISTS achievement_type CASCADE;
 CREATE TYPE achievement_type AS ENUM (
   -- Match Achievements (Gold)
@@ -25,7 +32,7 @@ CREATE TYPE achievement_type AS ENUM (
   'season_champion'          -- Highest win rate in a season (Platinum)
 );
 
--- Add tier type for visual representation
+-- Creeaza tipul de enum pentru reprezentare vizuala
 CREATE TYPE achievement_tier AS ENUM (
   'bronze',
   'silver',
@@ -33,7 +40,7 @@ CREATE TYPE achievement_tier AS ENUM (
   'platinum'
 );
 
--- Recreate achievements table with tier and visual info
+-- Recreeaza tabelul achievements cu tier si informații vizuale
 DROP TABLE IF EXISTS achievements CASCADE;
 CREATE TABLE achievements (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -48,7 +55,7 @@ CREATE TABLE achievements (
   UNIQUE(user_id, type)
 );
 
--- Function to award achievements with proper tiers and icons
+-- Functie pentru acordare realizari cu nivele si iconițe corespunzatoare
 CREATE OR REPLACE FUNCTION award_achievement(
   p_user_id UUID,
   p_type achievement_type,
@@ -78,7 +85,7 @@ BEGIN
   )
   ON CONFLICT (user_id, type) DO NOTHING;
 
-  -- Only create notification if achievement was inserted
+  -- Creeaza notificare doar daca realizarea a fost inserata
   IF FOUND THEN
     INSERT INTO notifications (
       user_id,
@@ -109,7 +116,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Updated function to check and award achievements
+-- Functie actualizata pentru verificare si acordare realizari
 CREATE OR REPLACE FUNCTION retroactively_award_achievements(p_user_id UUID)
 RETURNS TABLE (debug_info JSONB) AS $$
 DECLARE
@@ -120,7 +127,7 @@ DECLARE
   total_trainings INT;
   debug_data JSONB;
 BEGIN
-  -- Get user stats
+  -- Obtine statistici pentru user
   SELECT COUNT(*) INTO total_matches FROM matches WHERE player1_id = p_user_id OR player2_id = p_user_id;
   SELECT COUNT(*) INTO total_wins FROM matches WHERE winner_id = p_user_id;
   SELECT COALESCE(MAX(current_streak), 0) INTO max_streak FROM player_stats WHERE user_id = p_user_id;

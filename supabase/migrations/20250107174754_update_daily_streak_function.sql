@@ -1,4 +1,4 @@
--- Function to update user's daily streak and grant XP
+-- Functie de actualizare streak-ului zilnic si acordare XP
 CREATE OR REPLACE FUNCTION update_daily_streak(user_id UUID)
 RETURNS TABLE (
     streak_days INTEGER,
@@ -8,22 +8,22 @@ RETURNS TABLE (
 DECLARE
     last_date DATE;
     current_date DATE := CURRENT_DATE;
-    base_streak_xp INTEGER := 20; -- Base XP for daily login as per PRD
+    base_streak_xp INTEGER := 20; -- XP de baza pentru login zilnic conform PRD
     bonus_xp INTEGER := 0;
     v_streak_broken BOOLEAN := false;
 BEGIN
-    -- Get user's last activity date
+    -- Obtinere data ultimei activitati a user-ului
     SELECT last_activity_date 
     INTO last_date
     FROM player_xp
     WHERE player_xp.user_id = update_daily_streak.user_id;
 
-    -- If no record exists, create one
+    -- Daca nu exista record, creare unul
     IF last_date IS NULL THEN
         INSERT INTO player_xp (user_id, current_streak_days, last_activity_date)
         VALUES (user_id, 1, current_date);
         
-        -- Return initial values
+        -- Return valori initiale
         RETURN QUERY SELECT 
             1::INTEGER,
             base_streak_xp::INTEGER,
@@ -31,27 +31,27 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Calculate days difference
+    -- Calculare diferenta de zile
     IF current_date - last_date = 1 THEN
-        -- Consecutive day, increase streak
+        -- Zi consecutiva, creste streak
         UPDATE player_xp
         SET 
             current_streak_days = current_streak_days + 1,
             last_activity_date = current_date
         WHERE player_xp.user_id = update_daily_streak.user_id;
         
-        -- Calculate bonus XP for milestone streaks
+        -- Calculare XP bonus pentru streak-uri de mile
         SELECT 
             CASE 
-                WHEN current_streak_days = 7 THEN 100  -- Weekly streak bonus
-                WHEN current_streak_days = 30 THEN 500 -- Monthly streak bonus
+                WHEN current_streak_days = 7 THEN 100  -- XP bonus saptamanal
+                WHEN current_streak_days = 30 THEN 500 -- XP bonus lunar
                 ELSE 0
             END INTO bonus_xp
         FROM player_xp
         WHERE player_xp.user_id = update_daily_streak.user_id;
 
     ELSIF current_date = last_date THEN
-        -- Already logged in today, no streak update needed
+        -- Logat deja azi, nu e nevoie de update
         RETURN QUERY SELECT 
             current_streak_days::INTEGER,
             0::INTEGER,
@@ -60,7 +60,7 @@ BEGIN
         WHERE player_xp.user_id = update_daily_streak.user_id;
         RETURN;
     ELSE
-        -- Streak broken
+        -- Streak rupt
         UPDATE player_xp
         SET 
             current_streak_days = 1,
@@ -69,7 +69,7 @@ BEGIN
         v_streak_broken := true;
     END IF;
 
-    -- Record XP gain in history if there is XP to be gained
+    -- Recordare XP obtinut in istoric daca exista XP de obtinut
     IF base_streak_xp + bonus_xp > 0 THEN
         INSERT INTO xp_history (
             user_id,
@@ -86,13 +86,13 @@ BEGIN
             END
         );
         
-        -- Update total XP
+        -- Actualizare total XP
         UPDATE player_xp
         SET current_xp = current_xp + base_streak_xp + bonus_xp
         WHERE player_xp.user_id = update_daily_streak.user_id;
     END IF;
 
-    -- Return updated values
+    -- Return valori actualizate
     RETURN QUERY 
     SELECT 
         current_streak_days::INTEGER,

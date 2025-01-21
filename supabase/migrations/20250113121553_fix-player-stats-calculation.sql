@@ -1,9 +1,9 @@
--- Recalculate stats for all users
+-- Recalculeaza stats pentru toate user-ii
 DO $$
 DECLARE
     user_record RECORD;
 BEGIN
-    -- Get all users who have played matches
+    -- Obtine toate user-ii care au jucat meciuri
     FOR user_record IN 
         SELECT DISTINCT 
             CASE 
@@ -14,13 +14,13 @@ BEGIN
         FROM matches
         WHERE winner_id IS NOT NULL
     LOOP
-        -- Calculate stats for each user
+        -- Calculeaza stats pentru fiecare user
         PERFORM calculate_player_stats(user_record.user_id);
     END LOOP;
 END;
 $$ LANGUAGE plpgsql;
 
--- Drop and recreate the trigger to ensure it's working
+-- Sterge si recreeaza triggerul pentru a asigura ca functioneaza
 DROP TRIGGER IF EXISTS match_stats_update ON matches;
 CREATE TRIGGER match_stats_update
     AFTER INSERT OR UPDATE OF winner_id
@@ -28,5 +28,5 @@ CREATE TRIGGER match_stats_update
     FOR EACH ROW
     EXECUTE FUNCTION update_player_stats_on_match_change();
 
--- Grant execute permission on calculate_player_stats
+-- Permite executie doar pentru useri autentificati
 GRANT EXECUTE ON FUNCTION calculate_player_stats(UUID) TO authenticated;

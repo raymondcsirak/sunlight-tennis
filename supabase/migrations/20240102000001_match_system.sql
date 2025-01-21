@@ -1,4 +1,4 @@
--- Drop existing tables and types if they exist
+-- Stergere tabele si tipuri existente
 DROP TABLE IF EXISTS match_statistics CASCADE;
 DROP TABLE IF EXISTS matches CASCADE;
 DROP TABLE IF EXISTS match_request_responses CASCADE;
@@ -7,11 +7,11 @@ DROP TYPE IF EXISTS match_status CASCADE;
 DROP TYPE IF EXISTS request_status CASCADE;
 DROP TYPE IF EXISTS request_visibility CASCADE;
 
--- Match Request System
+-- Sistem de cereri de meciuri
 CREATE TYPE request_status AS ENUM ('open', 'pending', 'confirmed', 'cancelled');
 CREATE TYPE request_visibility AS ENUM ('public', 'skill_level', 'private');
 
--- Helper function to convert skill_level enum to integer
+-- Functie de convertire a nivelului de skill la un numar intreg
 CREATE OR REPLACE FUNCTION skill_level_to_int(s skill_level)
 RETURNS INTEGER AS $$
 BEGIN
@@ -56,7 +56,7 @@ CREATE TABLE match_request_responses (
   CONSTRAINT unique_response UNIQUE(request_id, responder_id)
 );
 
--- Match History
+-- Tipuri de statusuri pentru meciuri
 CREATE TYPE match_status AS ENUM ('scheduled', 'in_progress', 'completed', 'cancelled');
 
 CREATE TABLE matches (
@@ -78,7 +78,7 @@ CREATE TABLE matches (
   )
 );
 
--- Match Statistics
+-- Statistici de meciuri
 CREATE TABLE match_statistics (
   id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
   match_id UUID REFERENCES matches(id) NOT NULL,
@@ -100,13 +100,13 @@ CREATE TABLE match_statistics (
   )
 );
 
--- Enable RLS
+-- Activare RLS
 ALTER TABLE match_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE match_request_responses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE match_statistics ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
+-- Politici RLS
 CREATE POLICY "Users can view public and skill level match requests"
   ON match_requests FOR SELECT
   USING (

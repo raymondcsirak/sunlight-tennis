@@ -1,14 +1,14 @@
--- Enable RLS on tables
+-- Activare RLS pe tabele
 ALTER TABLE matches ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
--- Drop existing policies if any
+-- Stergere politici existente daca sunt
 DROP POLICY IF EXISTS "Players can view their matches" ON matches;
 DROP POLICY IF EXISTS "Players can view their notifications" ON notifications;
 DROP POLICY IF EXISTS "System can update matches" ON matches;
 DROP POLICY IF EXISTS "System can insert notifications" ON notifications;
 
--- Create basic policies for matches
+-- Creeaza politici de baza pentru matches si notifications
 CREATE POLICY "Players can view their matches"
 ON matches FOR SELECT
 TO authenticated
@@ -22,7 +22,7 @@ ON matches FOR UPDATE
 USING (true)
 WITH CHECK (true);
 
--- Create basic policies for notifications
+-- Creeaza politici de baza pentru notifications
 CREATE POLICY "Players can view their notifications"
 ON notifications FOR SELECT
 TO authenticated

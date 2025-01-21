@@ -1,4 +1,4 @@
--- Enable RLS on match_requests table if not already enabled
+-- Activare RLS pe tabelul match_requests daca nu este deja activat
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -13,10 +13,10 @@ BEGIN
     END IF;
 END $$;
 
--- Add RLS policies
+-- Adaugare politici RLS
 DO $$ 
 BEGIN
-    -- Policy for viewing match requests
+    -- Politica pentru vizualizare cereri de match
     BEGIN
         CREATE POLICY "Users can view all match requests"
             ON match_requests FOR SELECT
@@ -24,7 +24,7 @@ BEGIN
     EXCEPTION WHEN duplicate_object THEN NULL;
     END;
 
-    -- Policy for creating match requests
+    -- Politica pentru creare cereri de match
     BEGIN
         CREATE POLICY "Users can create their own requests"
             ON match_requests FOR INSERT
@@ -32,7 +32,7 @@ BEGIN
     EXCEPTION WHEN duplicate_object THEN NULL;
     END;
 
-    -- Policy for updating match requests
+    -- Politica pentru actualizare cereri de match
     BEGIN
         CREATE POLICY "Users can update their own requests"
             ON match_requests FOR UPDATE
@@ -41,7 +41,7 @@ BEGIN
     EXCEPTION WHEN duplicate_object THEN NULL;
     END;
 
-    -- Policy for deleting match requests
+    -- Politica pentru stergere cereri de match
     BEGIN
         CREATE POLICY "Users can delete their own requests"
             ON match_requests FOR DELETE

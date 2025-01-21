@@ -1,4 +1,4 @@
--- Add new achievement types to the enum
+-- Adauga noi tipuri de achievements in enum
 ALTER TYPE achievement_type ADD VALUE IF NOT EXISTS 'matches_won_10';
 ALTER TYPE achievement_type ADD VALUE IF NOT EXISTS 'matches_won_25';
 ALTER TYPE achievement_type ADD VALUE IF NOT EXISTS 'streak_3';
@@ -7,19 +7,19 @@ ALTER TYPE achievement_type ADD VALUE IF NOT EXISTS 'court_bookings_10';
 ALTER TYPE achievement_type ADD VALUE IF NOT EXISTS 'court_bookings_25';
 ALTER TYPE achievement_type ADD VALUE IF NOT EXISTS 'training_sessions_10';
 
--- Drop and recreate the retroactive check function to include minor achievements
+-- Sterge si recreeaza functia de verificare retroactiva pentru a include achievements minore
 CREATE OR REPLACE FUNCTION retroactively_award_achievements(p_user_id UUID)
 RETURNS TABLE (debug_info JSONB) AS $$
 DECLARE
   stats RECORD;
   debug_data JSONB;
 BEGIN
-  -- Get all stats at once
+  -- Obtine toate stats-urile in acelasi timp
   SELECT * INTO stats
   FROM player_stats
   WHERE user_id = p_user_id;
 
-  -- Store debug info
+  -- Stocheaza info-ul de debug
   debug_data := jsonb_build_object(
     'user_id', p_user_id,
     'total_matches', stats.total_matches,
@@ -28,7 +28,7 @@ BEGIN
     'total_trainings', stats.total_trainings
   );
 
-  -- Match Achievements (Major)
+  -- Achievements de meciuri (Major)
   IF stats.won_matches >= 1 THEN
     PERFORM award_achievement(
       p_user_id, 'first_match_win',
@@ -53,7 +53,7 @@ BEGIN
     );
   END IF;
 
-  -- Match Achievements (Minor)
+  -- Achievements de meciuri (Minor)
   IF stats.won_matches >= 10 THEN
     PERFORM award_achievement(
       p_user_id, 'matches_won_10',
@@ -70,7 +70,7 @@ BEGIN
     );
   END IF;
 
-  -- Court Booking Achievements (Major)
+  -- Achievements de rezervari (Major)
   IF stats.total_bookings >= 50 THEN
     PERFORM award_achievement(
       p_user_id, 'court_veteran_50',
@@ -87,7 +87,7 @@ BEGIN
     );
   END IF;
 
-  -- Court Booking Achievements (Minor)
+  -- Achievements de rezervari (Minor)
   IF stats.total_bookings >= 10 THEN
     PERFORM award_achievement(
       p_user_id, 'court_bookings_10',
@@ -104,7 +104,7 @@ BEGIN
     );
   END IF;
 
-  -- Training Achievements (Major)
+  -- Achievements de antrenamente (Major)
   IF stats.total_trainings >= 25 THEN
     PERFORM award_achievement(
       p_user_id, 'training_expert_25',
@@ -129,7 +129,7 @@ BEGIN
     );
   END IF;
 
-  -- Training Achievements (Minor)
+  -- Achievements de antrenamente (Minor)
   IF stats.total_trainings >= 10 THEN
     PERFORM award_achievement(
       p_user_id, 'training_sessions_10',

@@ -1,4 +1,4 @@
--- Enable RLS on match_request_responses table if not already enabled
+-- Activare RLS pe tabelul match_request_responses daca nu este deja activat
 do $$ 
 begin
   if not exists (
@@ -11,13 +11,13 @@ begin
   end if;
 end $$;
 
--- Drop existing policies if they exist
+-- Stergere politici existente daca exista
 drop policy if exists "Users can view responses for their requests" on "public"."match_request_responses";
 drop policy if exists "Users can view their own responses" on "public"."match_request_responses";
 drop policy if exists "Users can create responses" on "public"."match_request_responses";
 drop policy if exists "Users can update their own responses" on "public"."match_request_responses";
 
--- Policy to allow users to view responses for their requests
+-- Politica pentru vizualizare raspunsuri pentru cererile proprii
 create policy "Users can view responses for their requests"
 on "public"."match_request_responses"
 for select
@@ -30,21 +30,21 @@ using (
   )
 );
 
--- Policy to allow users to view their own responses
+-- Politica pentru vizualizare raspunsuri proprii
 create policy "Users can view their own responses"
 on "public"."match_request_responses"
 for select
 to authenticated
 using (auth.uid() = responder_id);
 
--- Policy to allow users to create responses
+-- Politica pentru creare raspunsuri
 create policy "Users can create responses"
 on "public"."match_request_responses"
 for insert
 to authenticated
 with check (auth.uid() = responder_id);
 
--- Policy to allow users to update their own responses or responses to their requests
+-- Politica pentru actualizare raspunsuri proprii sau raspunsuri catre cererile proprii
 create policy "Users can update their own responses"
 on "public"."match_request_responses"
 for update

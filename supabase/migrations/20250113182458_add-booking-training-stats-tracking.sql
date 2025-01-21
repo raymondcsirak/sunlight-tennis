@@ -1,4 +1,4 @@
--- Update calculate_player_stats function to include bookings and trainings
+-- Actualizeaza functia calculate_player_stats pentru a include rezervari si antrenamente
 CREATE OR REPLACE FUNCTION calculate_player_stats(player_uuid UUID)
 RETURNS void AS $$
 DECLARE
@@ -10,7 +10,7 @@ DECLARE
     booking_count INTEGER;
     training_count INTEGER;
 BEGIN
-    -- Get total matches and wins (existing code)
+    -- Obtine totalul de meciuri si castiguri (codul existent)
     SELECT 
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE winner_id = player_uuid) as wins
@@ -19,17 +19,17 @@ BEGIN
     WHERE (player1_id = player_uuid OR player2_id = player_uuid)
         AND status = 'completed';
 
-    -- Get booking count
+    -- Obtine numarul de rezervari
     SELECT COUNT(*) INTO booking_count
     FROM court_bookings
     WHERE user_id = player_uuid;
 
-    -- Get training count
+    -- Obtine numarul de antrenamente
     SELECT COUNT(*) INTO training_count
     FROM training_sessions
     WHERE user_id = player_uuid;
 
-    -- Calculate current streak (existing code)
+    -- Calculeaza streak-ul curent (codul existent)
     WITH ordered_matches AS (
         SELECT 
             winner_id = player_uuid as is_win,
@@ -52,24 +52,24 @@ BEGIN
         )
     ) streak;
 
-    -- Get current level (existing code)
+    -- Obtine nivelul curent (codul existent)
     SELECT current_level INTO player_level
     FROM player_xp
     WHERE user_id = player_uuid;
 
-    -- If no level found, default to 1
+    -- Daca nu se gaseste nivel, seteaza la 1
     IF player_level IS NULL THEN
         player_level := 1;
     END IF;
 
-    -- Calculate win rate (existing code)
+    -- Calculeaza procentul de castiguri (codul existent)
     IF total_count > 0 THEN
         win_rate_calc := ROUND((wins_count::NUMERIC / total_count::NUMERIC * 100)::NUMERIC, 2);
     ELSE
         win_rate_calc := 0;
     END IF;
 
-    -- Insert or update player stats
+    -- Insereaza sau actualizeaza stats-urile player-ului
     INSERT INTO player_stats (
         user_id,
         current_level,
@@ -104,7 +104,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create trigger functions for bookings and trainings
+-- Creeaza functii de trigger pentru rezervari si antrenamente
 CREATE OR REPLACE FUNCTION update_player_stats_on_booking_change()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -121,7 +121,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Create triggers
+-- Creeaza trigger-uri
 DROP TRIGGER IF EXISTS booking_stats_update ON court_bookings;
 CREATE TRIGGER booking_stats_update
     AFTER INSERT OR DELETE
@@ -136,7 +136,7 @@ CREATE TRIGGER training_stats_update
     FOR EACH ROW
     EXECUTE FUNCTION update_player_stats_on_training_change();
 
--- Recalculate stats for all users
+-- Recalculeaza stats pentru toate user-ii
 DO $$
 DECLARE
     user_record RECORD;

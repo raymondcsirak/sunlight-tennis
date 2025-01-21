@@ -1,9 +1,9 @@
--- Drop existing policies
+-- Sterge politici existente
 DROP POLICY IF EXISTS "Users can view their own training sessions" ON training_sessions;
 DROP POLICY IF EXISTS "Users can create their own training sessions" ON training_sessions;
 DROP POLICY IF EXISTS "Users can update their own training sessions" ON training_sessions;
 
--- Create new policies
+-- Creeaza noile politici
 CREATE POLICY "Anyone can view confirmed training sessions"
     ON training_sessions FOR SELECT
     USING (true);

@@ -1,4 +1,4 @@
--- Create enum type for notification types if it doesn't exist
+-- Creare tip enum pentru tipuri de notificari daca nu exista
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
@@ -17,7 +17,7 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;
 
--- Safely create notifications table if it doesn't exist
+-- Creare tabel notificari daca nu exista
 CREATE TABLE IF NOT EXISTS notifications (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS notifications (
     CONSTRAINT notifications_user_id_type_key UNIQUE(user_id, id)
 );
 
--- Enable RLS
+-- Activare RLS
 DO $$ 
 BEGIN
     IF NOT EXISTS (
@@ -46,7 +46,7 @@ BEGIN
     END IF;
 END $$;
 
--- Add RLS policies
+-- Creare politici RLS
 DO $$ 
 BEGIN
     BEGIN
@@ -67,7 +67,7 @@ BEGIN
     END;
 END $$;
 
--- Add updated_at trigger
+-- Creare trigger pentru actualizare updated_at
 DO $$
 BEGIN
     CREATE TRIGGER update_notifications_updated_at
@@ -78,7 +78,7 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;
 
--- Helper function to create a notification
+-- Functie de creare notificare
 CREATE OR REPLACE FUNCTION create_notification(
     p_user_id UUID,
     p_type notification_type,

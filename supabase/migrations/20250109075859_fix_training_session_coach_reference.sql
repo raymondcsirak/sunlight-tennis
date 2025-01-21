@@ -1,16 +1,16 @@
--- First, drop the existing foreign key constraint
+-- Intai, stergere constrangerile de foreign key existente
 ALTER TABLE training_sessions
 DROP CONSTRAINT IF EXISTS training_sessions_coach_id_fkey;
 
--- Add the new foreign key constraint to reference coaches table
+-- Adaugare noua constrangeri de foreign key pentru a face referire la tabelul coaches
 ALTER TABLE training_sessions
 ADD CONSTRAINT training_sessions_coach_id_fkey
 FOREIGN KEY (coach_id) REFERENCES coaches(id);
 
--- Drop the existing function
+-- Stergere functie existenta
 DROP FUNCTION IF EXISTS create_training_session;
 
--- Create the updated function
+-- Creare functie actualizata
 CREATE OR REPLACE FUNCTION create_training_session(
     p_student_id UUID,
     p_coach_id UUID,
@@ -32,13 +32,12 @@ DECLARE
     v_start_time TIMESTAMPTZ;
     v_end_time TIMESTAMPTZ;
 BEGIN
-    -- Convert text timestamps to timestamptz
+    -- Convertire text in timestamptz
     v_start_time := p_start_time::TIMESTAMPTZ;
     v_end_time := p_end_time::TIMESTAMPTZ;
 
-    -- Start transaction
+    -- Start transactie
     BEGIN
-        -- Get coach details from coaches table
         SELECT name, hourly_rate INTO v_coach_name, v_hourly_rate
         FROM coaches
         WHERE id = p_coach_id;
@@ -47,11 +46,11 @@ BEGIN
             RAISE EXCEPTION 'Coach not found';
         END IF;
 
-        -- Calculate duration and price
+        -- Calculare durata si pret
         v_duration_hours := EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600;
         v_total_price := v_hourly_rate * v_duration_hours;
 
-        -- Create training session
+        -- Creare sesiune de antrenament
         INSERT INTO training_sessions (
             coach_id,
             student_id,
@@ -72,7 +71,7 @@ BEGIN
             'pending'
         ) RETURNING id INTO v_session_id;
 
-        -- Award XP
+        -- Adaugare XP
         INSERT INTO xp_history (
             user_id,
             xp_amount,
@@ -85,12 +84,12 @@ BEGIN
             format('Booked training session with %s for %s hours', v_coach_name, v_duration_hours)
         );
 
-        -- Update total XP
+        -- Actualizare total XP
         UPDATE player_xp
         SET current_xp = current_xp + v_xp_amount
         WHERE user_id = p_student_id;
 
-        -- Create notification for student
+        -- Creare notificare pentru student
         INSERT INTO notifications (
             user_id,
             type,
@@ -114,7 +113,7 @@ BEGIN
             )
         );
 
-        -- Create notification for coach (using coach_id as user_id)
+        -- Creare notificare pentru antrenor (folosind coach_id ca user_id)
         INSERT INTO notifications (
             user_id,
             type,
@@ -144,7 +143,7 @@ BEGIN
         );
 
     EXCEPTION WHEN OTHERS THEN
-        -- Rollback transaction on error
+        -- Rollback transactie in caz de eroare
         RAISE;
     END;
 END;

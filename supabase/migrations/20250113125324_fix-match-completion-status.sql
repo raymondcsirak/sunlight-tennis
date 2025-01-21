@@ -1,9 +1,9 @@
--- Update existing matches with winners to completed status
+-- Actualizeaza meciurile existente cu winneri la statusul completat
 UPDATE matches 
 SET status = 'completed'
 WHERE winner_id IS NOT NULL;
 
--- Drop and recreate the handle_winner_selection function
+-- Sterge si recreeaza functia handle_winner_selection
 CREATE OR REPLACE FUNCTION handle_winner_selection()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -14,7 +14,7 @@ DECLARE
   winner_total_matches INT;
   achievements JSONB;
 BEGIN
-  -- Get the match details
+  -- Obtine detaliile meciului
   SELECT * INTO match_record
   FROM matches
   WHERE id = NEW.match_id;
@@ -23,35 +23,35 @@ BEGIN
     RAISE EXCEPTION 'Match not found';
   END IF;
 
-  -- Get the other player's selection if it exists
+  -- Obtine alegerea altui player daca exista
   SELECT * INTO other_selection
   FROM match_winner_selections
   WHERE match_id = NEW.match_id
   AND selector_id != NEW.selector_id;
 
-  -- If both players have selected and agree
+  -- Daca ambii player-i au ales si sunt de acord
   IF other_selection IS NOT NULL AND other_selection.selected_winner_id = NEW.selected_winner_id THEN
-    -- Update match winner and status
+    -- Actualizeaza winner-ul meciului si statusul
     UPDATE matches
     SET winner_id = NEW.selected_winner_id,
         xp_awarded = false,
         status = 'completed'
     WHERE id = NEW.match_id;
 
-    -- Get winner's stats
+    -- Obtine stats-urile winner-ului
     SELECT * INTO winner_stats
     FROM player_stats
     WHERE user_id = NEW.selected_winner_id;
 
-    -- Calculate total matches won for winner
+    -- Calculeaza totalul de meciuri castigate pentru winner
     SELECT COUNT(*) INTO winner_total_matches
     FROM matches
     WHERE winner_id = NEW.selected_winner_id;
 
-    -- Initialize achievements as a JSONB array
+    -- Initializeaza achievements ca un array JSONB
     achievements := '[]'::JSONB;
 
-    -- Check for first match win achievement
+    -- Verifica daca a castigat primul meci
     IF winner_total_matches = 1 THEN
       achievements := achievements || jsonb_build_object(
         'type', 'first_match_win',
@@ -60,7 +60,7 @@ BEGIN
       );
     END IF;
 
-    -- Check for match milestones (10, 25, 50, 100 matches)
+    -- Verifica daca a castigat un anumit numar de meciuri
     IF winner_total_matches IN (10, 25, 50, 100) THEN
       achievements := achievements || jsonb_build_object(
         'type', 'matches_won_' || winner_total_matches::TEXT,
@@ -69,7 +69,7 @@ BEGIN
       );
     END IF;
 
-    -- Award achievements if any were earned
+    -- Incheie achievements daca au fost castigate
     IF jsonb_array_length(achievements) > 0 THEN
       PERFORM award_achievements_with_notifications(
         NEW.selected_winner_id,
@@ -77,7 +77,7 @@ BEGIN
       );
     END IF;
 
-    -- Create notifications for both players
+    -- Creeaza notificari pentru ambii player-i
     INSERT INTO notifications (user_id, type, title, message, data)
     VALUES
       (match_record.player1_id, 'match_completed', 'Match Result Confirmed',
@@ -93,9 +93,9 @@ BEGIN
        END,
        jsonb_build_object('match_id', NEW.match_id, 'winner_id', NEW.selected_winner_id));
 
-  -- If both players have selected but disagree
+  -- Daca ambii player-i au ales dar nu sunt de acord
   ELSIF other_selection IS NOT NULL AND other_selection.selected_winner_id != NEW.selected_winner_id THEN
-    -- Create dispute notifications
+    -- Creeaza notificari de dispute
     INSERT INTO notifications (user_id, type, title, message, data)
     VALUES
       (match_record.player1_id, 'match_dispute', 'Match Result Dispute',
@@ -109,7 +109,7 @@ BEGIN
   RETURN NEW;
 EXCEPTION
   WHEN OTHERS THEN
-    -- Log the error and re-raise
+    -- Afiseaza eroarea si re-arunca
     RAISE NOTICE 'Error in handle_winner_selection: %', SQLERRM;
     RAISE;
 END;

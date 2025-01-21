@@ -1,4 +1,12 @@
--- Create a stored procedure for court booking that handles XP and notifications
+-- Procedura de rezervare terenuri
+-- Implementeaza:
+-- - Validare disponibilitate teren
+-- - Calculul pretului total
+-- - Creare rezervare cu status initial
+-- - Notificari pentru confirmare rezervare
+-- - Acordare XP pentru rezervare
+
+-- Creeaza o procedura stocata pentru rezervare teren care gestioneaza XP si notificari
 CREATE OR REPLACE FUNCTION create_court_booking(
     p_user_id UUID,
     p_court_id BIGINT,
@@ -20,13 +28,13 @@ DECLARE
     v_start_time TIMESTAMPTZ;
     v_end_time TIMESTAMPTZ;
 BEGIN
-    -- Convert text timestamps to timestamptz
+    -- Converteste timestamp-uri text in timestamptz
     v_start_time := p_start_time::TIMESTAMPTZ;
     v_end_time := p_end_time::TIMESTAMPTZ;
 
-    -- Start transaction
+    -- Incepe transactia
     BEGIN
-        -- Get court details
+        -- Obtine detalii despre teren
         SELECT name, hourly_rate INTO v_court_name, v_hourly_rate
         FROM courts
         WHERE id = p_court_id;
@@ -35,11 +43,11 @@ BEGIN
             RAISE EXCEPTION 'Court not found';
         END IF;
 
-        -- Calculate duration and price
+        -- Calculeaza durata si pret
         v_duration_hours := EXTRACT(EPOCH FROM (v_end_time - v_start_time)) / 3600;
         v_total_price := v_hourly_rate * v_duration_hours;
 
-        -- Create booking
+        -- Creeaza rezervare
         INSERT INTO court_bookings (
             court_id,
             user_id,
@@ -60,7 +68,7 @@ BEGIN
             'pending'
         ) RETURNING id INTO v_booking_id;
 
-        -- Award XP
+        -- Acordare XP
         INSERT INTO xp_history (
             user_id,
             xp_amount,
@@ -73,12 +81,12 @@ BEGIN
             format('Booked court %s for %s hours', v_court_name, v_duration_hours)
         );
 
-        -- Update total XP
+        -- Actualizeaza total XP
         UPDATE player_xp
         SET current_xp = current_xp + v_xp_amount
         WHERE user_id = p_user_id;
 
-        -- Create notification
+        -- Creeaza notificare
         INSERT INTO notifications (
             user_id,
             type,
@@ -102,14 +110,14 @@ BEGIN
             )
         );
 
-        -- Return success
+        -- Returneaza succes
         RETURN jsonb_build_object(
             'success', true,
             'booking_id', v_booking_id
         );
 
     EXCEPTION WHEN OTHERS THEN
-        -- Rollback transaction on error
+        -- Face rollback la transactie in caz de eroare
         RAISE;
     END;
 END;

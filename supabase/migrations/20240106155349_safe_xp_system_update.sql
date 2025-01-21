@@ -1,4 +1,4 @@
--- Create enum type for activity types if it doesn't exist
+-- Creare tip enum pentru tipuri de activitati daca nu exista
 DO $$
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'activity_type') THEN
@@ -15,7 +15,7 @@ EXCEPTION
     WHEN duplicate_object THEN NULL;
 END $$;
 
--- Safely create player_xp table if it doesn't exist
+-- Creare tabel xp_history daca nu exista
 CREATE TABLE IF NOT EXISTS player_xp (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS player_xp (
     UNIQUE(user_id)
 );
 
--- Safely create xp_history table if it doesn't exist
+-- Creare tabel xp_history daca nu exista
 CREATE TABLE IF NOT EXISTS xp_history (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -38,7 +38,7 @@ CREATE TABLE IF NOT EXISTS xp_history (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Safely create xp_multipliers table if it doesn't exist
+-- Creare tabel xp_multipliers daca nu exista
 CREATE TABLE IF NOT EXISTS xp_multipliers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     activity_type activity_type NOT NULL UNIQUE,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS xp_multipliers (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Only enable RLS if not already enabled
+-- Activare RLS daca nu este deja activata
 DO $$ 
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_catalog.pg_class c JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace WHERE n.nspname = current_schema() AND c.relname = 'player_xp' AND c.relrowsecurity = true) THEN
@@ -63,7 +63,7 @@ BEGIN
     END IF;
 END $$;
 
--- Safely create policies
+-- Creare politici
 DO $$ 
 BEGIN
     BEGIN
@@ -104,7 +104,7 @@ BEGIN
     END;
 END $$;
 
--- Safely create triggers
+-- Creare trigger-uri
 DO $$
 BEGIN
     BEGIN
@@ -124,7 +124,7 @@ BEGIN
     END;
 END $$;
 
--- Create or replace helper function to get XP multiplier details
+-- Creare sau inlocuire functie de obtinere detalii XP
 CREATE OR REPLACE FUNCTION get_xp_multiplier_details(activity activity_type)
 RETURNS TABLE (multiplier FLOAT, base_xp INTEGER, description TEXT) AS $$
 BEGIN
@@ -156,11 +156,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Safely create or replace the XP calculation function
+-- Creare sau inlocuire functie de calcul XP
 CREATE OR REPLACE FUNCTION calculate_xp_for_level(level_number INTEGER)
 RETURNS INTEGER AS $$
 BEGIN
-    -- Base XP: 1000, increases by 5% each level
+    -- XP de baza: 1000, creste cu 5% la fiecare nivel
     RETURN FLOOR(1000 * POWER(1.05, level_number - 1));
 END;
 $$ LANGUAGE plpgsql; 

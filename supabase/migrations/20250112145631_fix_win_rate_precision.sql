@@ -1,8 +1,8 @@
--- Modify win_rate column to use NUMERIC(5,2) for percentages
+-- Modifica coloana win_rate pentru a folosi NUMERIC(5,2) pentru procente
 ALTER TABLE player_stats
 ALTER COLUMN win_rate TYPE NUMERIC(5,2);
 
--- Update the calculate_player_stats function to round win rate to 2 decimal places
+-- Actualizeaza functia calculate_player_stats pentru a rotunji win_rate la 2 zecimale
 CREATE OR REPLACE FUNCTION calculate_player_stats(player_uuid UUID)
 RETURNS void AS $$
 DECLARE
@@ -11,7 +11,7 @@ DECLARE
     win_rate_calc NUMERIC(5,2);
     player_level INTEGER;
 BEGIN
-    -- Get total matches and wins
+    -- Obtine totalul meciurilor si castigurilor
     SELECT 
         COUNT(*) as total,
         COUNT(*) FILTER (WHERE winner_id = player_uuid) as wins
@@ -20,24 +20,24 @@ BEGIN
     WHERE (player1_id = player_uuid OR player2_id = player_uuid)
         AND winner_id IS NOT NULL;
 
-    -- Calculate win rate with 2 decimal places
+    -- Calculeaza win rate cu 2 zecimale
     IF total_count > 0 THEN
         win_rate_calc := ROUND((wins_count::NUMERIC / total_count::NUMERIC * 100)::NUMERIC, 2);
     ELSE
         win_rate_calc := 0;
     END IF;
 
-    -- Get current level
+    -- Obtine nivelul curent
     SELECT px.current_level INTO player_level
     FROM player_xp px
     WHERE px.user_id = player_uuid;
 
-    -- If no level found, default to 1
+    -- Daca nu se gaseste nivel, seteaza la 1
     IF player_level IS NULL THEN
         player_level := 1;
     END IF;
 
-    -- Insert or update player stats
+    -- Insereaza sau actualizeaza stats-urile jucatorului
     INSERT INTO player_stats (
         user_id,
         current_level,

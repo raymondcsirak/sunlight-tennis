@@ -1,9 +1,16 @@
--- Drop existing tables if they exist
+-- Sistem de experienta si progres
+-- Implementeaza:
+-- - Tabelul pentru XP si nivel jucatori
+-- - Sistem de calcul XP pentru diverse activitati
+-- - Istoric XP cu sursa si timestamp
+-- - Actualizare automata nivel bazat pe XP
+
+-- Sterge tabelele existente daca exista
 DROP TABLE IF EXISTS xp_history CASCADE;
 DROP TABLE IF EXISTS xp_multipliers CASCADE;
 DROP TABLE IF EXISTS player_xp CASCADE;
 
--- Create player_xp table
+-- Creeaza tabelul player_xp
 CREATE TABLE player_xp (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -16,7 +23,7 @@ CREATE TABLE player_xp (
     UNIQUE(user_id)
 );
 
--- Create xp_history table for tracking XP gains
+-- Creeaza tabelul xp_history pentru urmarirea castigurilor de XP
 CREATE TABLE xp_history (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -26,7 +33,7 @@ CREATE TABLE xp_history (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Create xp_multipliers table for different activities
+-- Creeaza tabelul xp_multipliers pentru activitati diferite
 CREATE TABLE xp_multipliers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     activity_type TEXT NOT NULL UNIQUE,
@@ -37,12 +44,12 @@ CREATE TABLE xp_multipliers (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Add RLS policies
+-- Adauga politici RLS
 ALTER TABLE player_xp ENABLE ROW LEVEL SECURITY;
 ALTER TABLE xp_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE xp_multipliers ENABLE ROW LEVEL SECURITY;
 
--- Policies for player_xp
+-- Politici pentru player_xp
 CREATE POLICY "Users can view their own XP"
     ON player_xp FOR SELECT
     USING (auth.uid() = user_id);
@@ -52,7 +59,7 @@ CREATE POLICY "Users can update their own XP"
     USING (auth.uid() = user_id)
     WITH CHECK (auth.uid() = user_id);
 
--- Policies for xp_history
+-- Politici pentru xp_history
 CREATE POLICY "Users can view their own XP history"
     ON xp_history FOR SELECT
     USING (auth.uid() = user_id);
@@ -61,13 +68,13 @@ CREATE POLICY "Users can insert their own XP history"
     ON xp_history FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
--- Policies for xp_multipliers (read-only for users)
+-- Politici pentru xp_multipliers (doar pentru citire pentru useri)
 CREATE POLICY "Users can view XP multipliers"
     ON xp_multipliers FOR SELECT
     TO authenticated
     USING (true);
 
--- Add updated_at triggers
+-- Creeaza trigger-uri pentru updated_at
 CREATE TRIGGER update_player_xp_updated_at
     BEFORE UPDATE ON player_xp
     FOR EACH ROW
@@ -78,7 +85,7 @@ CREATE TRIGGER update_xp_multipliers_updated_at
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
--- Insert default XP multipliers
+-- Insereaza multiplicatori de XP default
 INSERT INTO xp_multipliers (activity_type, multiplier, base_xp, description) VALUES
     ('login', 1.0, 50, 'Daily login'),
     ('court_booking', 1.0, 50, 'Court booking'),
@@ -87,11 +94,11 @@ INSERT INTO xp_multipliers (activity_type, multiplier, base_xp, description) VAL
     ('match_played', 1.0, 50, 'Match participation'),
     ('partner_request', 1.0, 50, 'Partner finder request');
 
--- Function to calculate XP needed for next level
+-- Functie pentru calcularea XP necesar pentru urmatorul nivel
 CREATE OR REPLACE FUNCTION calculate_xp_for_level(level_number INTEGER)
 RETURNS INTEGER AS $$
 BEGIN
-    -- Base XP: 1000, increases by 20% each level
+    
     RETURN FLOOR(1000 * POWER(1.2, level_number - 1));
 END;
 $$ LANGUAGE plpgsql; 

@@ -1,4 +1,4 @@
--- Function to award XP for an activity
+-- Functie pentru acordare XP pentru o activitate
 CREATE OR REPLACE FUNCTION award_xp(
     p_user_id UUID,
     p_activity_type TEXT,
@@ -9,15 +9,15 @@ DECLARE
     v_base_xp INTEGER;
     v_xp_amount INTEGER;
 BEGIN
-    -- Get multiplier and base XP for the activity
+    -- Obtine multiplicator si XP de baza pentru activitate
     SELECT multiplier, base_xp INTO v_multiplier, v_base_xp
     FROM xp_multipliers
     WHERE activity_type::TEXT = p_activity_type;
 
-    -- Calculate XP amount
+    -- Calculeaza suma XP
     v_xp_amount := FLOOR(v_base_xp * v_multiplier);
 
-    -- Record XP gain in history
+    -- Inregistreaza castigul XP in istoric
     INSERT INTO xp_history (
         user_id,
         xp_amount,
@@ -30,12 +30,12 @@ BEGIN
         p_description
     );
 
-    -- Update total XP
+    -- Actualizeaza total XP
     UPDATE player_xp
     SET current_xp = current_xp + v_xp_amount
     WHERE user_id = p_user_id;
 
-    -- If player_xp record doesn't exist, create it
+    -- Daca recordul player_xp nu exista, il creeaza
     IF NOT FOUND THEN
         INSERT INTO player_xp (user_id, current_xp)
         VALUES (p_user_id, v_xp_amount);
@@ -43,7 +43,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to handle match completion and XP awards
+-- Functie pentru gestionare finalizare meci si acordare XP
 CREATE OR REPLACE FUNCTION handle_match_completion()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -51,14 +51,14 @@ DECLARE
     v_player2_name TEXT;
     v_match_record RECORD;
 BEGIN
-    -- Only proceed if winner is being set and XP hasn't been awarded yet
+    -- Doar daca castigatorul este setat si XP nu a fost deja acordat
     IF NEW.winner_id IS NOT NULL AND OLD.winner_id IS NULL AND NOT OLD.xp_awarded THEN
-        -- Get player names
+        -- Obtine numele jucatorilor
         SELECT p1.full_name, p2.full_name INTO v_player1_name, v_player2_name
         FROM profiles p1, profiles p2
         WHERE p1.id = NEW.player1_id AND p2.id = NEW.player2_id;
 
-        -- Award XP for winning
+        -- Acorda XP pentru castig
         PERFORM award_xp(
             NEW.winner_id,
             'match_won',
@@ -70,7 +70,7 @@ BEGIN
             )
         );
 
-        -- Award XP for participation to both players
+        -- Acorda XP pentru participare la ambii jucatori
         PERFORM award_xp(
             NEW.player1_id,
             'match_played',
@@ -83,7 +83,7 @@ BEGIN
             format('Played match against %s', v_player1_name)
         );
 
-        -- Mark XP as awarded
+        -- Marcheaza XP ca fiind acordat
         NEW.xp_awarded := true;
     END IF;
 
@@ -91,14 +91,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for match completion
+-- Creeaza trigger pentru finalizare meci
 DROP TRIGGER IF EXISTS handle_match_completion_trigger ON matches;
 CREATE TRIGGER handle_match_completion_trigger
     BEFORE UPDATE OF winner_id ON matches
     FOR EACH ROW
     EXECUTE FUNCTION handle_match_completion();
 
--- Function to award XP for partner request activities
+-- Functie pentru acordare XP pentru activitati de solicitare de partner
 CREATE OR REPLACE FUNCTION handle_partner_request_response()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -106,9 +106,9 @@ DECLARE
     v_creator_name TEXT;
     v_responder_name TEXT;
 BEGIN
-    -- Only proceed if status is changing to 'accepted'
+    -- Doar daca statusul se schimba in 'accepted'
     IF NEW.status = 'accepted' AND (OLD.status IS NULL OR OLD.status != 'accepted') THEN
-        -- Get creator ID and names
+        -- Obtine ID-ul creatorului si numele
         SELECT mr.creator_id, p1.full_name, p2.full_name 
         INTO v_creator_id, v_creator_name, v_responder_name
         FROM match_requests mr
@@ -116,7 +116,7 @@ BEGIN
         JOIN profiles p2 ON p2.id = NEW.responder_id
         WHERE mr.id = NEW.request_id;
 
-        -- Award XP to both creator and responder
+        -- Acorda XP pentru ambii creator si raspunsitor
         PERFORM award_xp(
             v_creator_id,
             'partner_request',
@@ -134,14 +134,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Create trigger for partner request responses
+-- Creeaza trigger pentru raspunsuri la solicitari de partner
 DROP TRIGGER IF EXISTS handle_partner_request_response_trigger ON match_request_responses;
 CREATE TRIGGER handle_partner_request_response_trigger
     BEFORE UPDATE OF status ON match_request_responses
     FOR EACH ROW
     EXECUTE FUNCTION handle_partner_request_response();
 
--- Update existing matches that have winners but no XP awarded
+-- Actualizeaza meciurile existente care au castigator dar nu au XP acordat
 UPDATE matches
 SET xp_awarded = true
 WHERE winner_id IS NOT NULL AND NOT xp_awarded;

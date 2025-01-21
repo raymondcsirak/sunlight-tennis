@@ -1,15 +1,15 @@
--- Drop existing trigger and function
+-- Sterge trigger si functie existente
 DROP TRIGGER IF EXISTS handle_winner_selection_trigger ON match_winner_selections;
 DROP FUNCTION IF EXISTS handle_winner_selection();
 
--- Simplify RLS policies
+-- Simplifica politici RLS
 DROP POLICY IF EXISTS "Players can create and update their own selections" ON match_winner_selections;
 DROP POLICY IF EXISTS "Players can view selections for their matches" ON match_winner_selections;
 DROP POLICY IF EXISTS "Players can create selections for their matches" ON match_winner_selections;
 DROP POLICY IF EXISTS "Players can update their own selections" ON match_winner_selections;
 DROP POLICY IF EXISTS "System can perform all operations" ON match_winner_selections;
 
--- Create simple policies for match_winner_selections
+-- Creeaza politici simple pentru match_winner_selections
 CREATE POLICY "Players can view selections for their matches"
 ON match_winner_selections FOR SELECT
 TO authenticated

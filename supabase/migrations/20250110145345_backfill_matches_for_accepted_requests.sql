@@ -1,4 +1,4 @@
--- Insert matches for accepted requests that don't have a match yet
+-- Inserare meciuri pentru cereri acceptate care nu au un meci
 INSERT INTO matches (player1_id, player2_id, request_id)
 SELECT 
   mr.creator_id as player1_id,

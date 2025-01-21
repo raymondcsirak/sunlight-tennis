@@ -1,7 +1,7 @@
--- Drop existing function if it exists
+-- Sterge functia existenta de premii daca exista
 DROP FUNCTION IF EXISTS award_achievement(UUID, achievement_type, TEXT, TEXT, achievement_tier, TEXT, JSONB);
 
--- Create the award_achievement function
+-- Creeaza functia award_achievement
 CREATE OR REPLACE FUNCTION award_achievement(
   p_user_id UUID,
   p_type achievement_type,
@@ -12,7 +12,7 @@ CREATE OR REPLACE FUNCTION award_achievement(
   p_metadata JSONB DEFAULT '{}'::JSONB
 ) RETURNS void AS $$
 BEGIN
-  -- Insert achievement if it doesn't exist
+  -- Insereaza premia daca nu exista deja
   INSERT INTO achievements (
     user_id,
     type,
@@ -32,7 +32,7 @@ BEGIN
   )
   ON CONFLICT (user_id, type) DO NOTHING;
 
-  -- Only create notification if achievement was inserted
+  -- Creeaza notificare doar daca premia a fost insereata
   IF FOUND THEN
     INSERT INTO notifications (
       user_id,
@@ -63,5 +63,5 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Grant execute permission to authenticated users
+-- Permite executie doar pentru useri autentificati
 GRANT EXECUTE ON FUNCTION award_achievement(UUID, achievement_type, TEXT, TEXT, achievement_tier, TEXT, JSONB) TO authenticated;
