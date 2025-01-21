@@ -21,6 +21,38 @@ import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-car
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 import { useVirtualizer } from '@tanstack/react-virtual'
 
+// Componenta pentru gestionarea meciurilor personale
+// Afiseaza istoricul meciurilor, meciurile active si permite gestionarea acestora
+// Implementeaza sistemul de scor si confirmare a rezultatelor
+
+// Importuri pentru functionalitati si componente
+// ... existing code ...
+
+// Interfete pentru structura datelor despre meciuri
+// Definesc tipurile pentru meciuri, scoruri si participanti
+// ... existing code ...
+
+// Componenta principala pentru tab-ul de meciuri personale
+// Gestioneaza:
+// - Afisarea meciurilor active si istoricul
+// - Sistemul de scor si validare
+// - Confirmarea rezultatelor
+// - Actualizari in timp real
+// ... existing code ...
+
+// Functionalitati pentru gestionarea meciurilor
+// Include logica pentru:
+// - Actualizare scor
+// - Confirmare rezultate
+// - Anulare meciuri
+// - Notificari pentru participanti
+// ... existing code ...
+
+// Sistem de validare pentru scoruri
+// Verifica corectitudinea scorurilor introduse
+// Asigura consistenta datelor
+// ... existing code ...
+
 // Helper function to get the full avatar URL
 function getAvatarUrl(path: string | null) {
   if (!path) return null
@@ -1667,19 +1699,19 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       onRejectResponse={handleRejectResponse}
                       onDeleteMatch={handleDeleteMatch}
                     />
-                        </div>
-                      ))}
-                    </div>
+                  </div>
+                ))}
+              </div>
             )
           })}
-                  </div>
-                </div>
+        </div>
+      </div>
 
-        {sortedAndFilteredRequests.length === 0 && (
-          <div className="col-span-full text-center py-8 text-muted-foreground">
-            No match requests found for the selected filter.
-          </div>
-        )}
+      {sortedAndFilteredRequests.length === 0 && (
+        <div className="col-span-full text-center py-8 text-muted-foreground">
+          No match requests found for the selected filter.
+        </div>
+      )}
     </div>
   )
 } 

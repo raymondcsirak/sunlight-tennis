@@ -5,6 +5,10 @@ import { MyMatchesTab } from "./my-matches-tab"
 import { CurrentRequestsTab } from "./current-requests-tab"
 import { LeaderboardTab } from "./leaderboard-tab"
 
+// Componenta pentru navigarea intre sectiunile sistemului de cautare parteneri
+// Gestioneaza tab-urile pentru cereri, meciuri si clasament
+// Implementeaza un sistem de navigare fluid si responsive
+
 interface PartnerFinderTabsProps {
   userId: string
 }
@@ -28,4 +32,11 @@ export function PartnerFinderTabs({ userId }: PartnerFinderTabsProps) {
       </TabsContent>
     </Tabs>
   )
-} 
+}
+
+// Componenta principala pentru tab-uri
+// Gestioneaza:
+// - Afisarea si navigarea intre sectiuni
+// - Starea activa a tab-urilor
+// - Tranzitii animate intre sectiuni
+// ... existing code ... 

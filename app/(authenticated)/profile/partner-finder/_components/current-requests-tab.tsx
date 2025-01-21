@@ -12,6 +12,12 @@ import { Clock, MapPin, Trophy } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 
+// Componenta pentru afisarea si gestionarea cererilor curente de parteneriat
+// Permite utilizatorilor sa vada si sa gestioneze cererile active pentru meciuri
+// Implementeaza functionalitati de filtrare si sortare a cererilor
+
+// Interfete pentru tipurile de date folosite in cereri
+// Definesc structura pentru cereri si raspunsuri
 interface CurrentRequestsTabProps {
   userId: string
 }
@@ -61,6 +67,12 @@ function getAvatarUrl(path: string | null) {
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
 }
 
+// Componenta principala pentru tab-ul de cereri curente
+// Gestioneaza:
+// - Afisarea listei de cereri active
+// - Filtrarea dupa data si nivel
+// - Actiuni pentru cereri (acceptare/respingere)
+// - Notificari pentru actualizari
 export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
   const [requests, setRequests] = useState<MatchRequest[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -350,4 +362,11 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
       </div>
     </div>
   )
-} 
+}
+
+// Functionalitati pentru gestionarea cererilor
+// Include logica pentru:
+// - Creare cereri noi
+// - Actualizare status
+// - Stergere cereri
+// ... existing code ... 

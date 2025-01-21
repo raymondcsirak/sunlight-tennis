@@ -6,6 +6,10 @@ import { MessageView } from "./_components/message-view"
 import { ProfileLayout } from "../_components/profile-layout"
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 
+// Pagina principala pentru sistemul de mesagerie
+// Implementeaza un sistem de chat in timp real folosind Supabase Realtime
+// Permite comunicarea intre jucatori si gestionarea conversatiilor legate de meciuri
+
 interface PageProps {
   searchParams: Promise<{ thread?: string }>
 }

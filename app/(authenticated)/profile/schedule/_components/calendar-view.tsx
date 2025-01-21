@@ -1,3 +1,7 @@
+// Componenta pentru vizualizarea calendarului cu toate activitatile
+// Afiseaza o vedere saptamanala cu toate evenimentele programate
+// Implementeaza navigare intre zile si indicator pentru timpul curent
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -7,6 +11,8 @@ import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+// Interfete pentru tipurile de date folosite in calendar
+// Definesc structura pentru evenimente si proprietatile componentei
 interface ScheduleItem {
   id: string
   type: 'court_booking' | 'training_session' | 'match'
@@ -22,10 +28,17 @@ interface CalendarViewProps {
   userId: string
 }
 
+// Constante pentru configurarea calendarului
+// Definesc intervalul orar si dimensiunile vizuale
 const HOURS = Array.from({ length: 13 }, (_, i) => i + 8) // 8 AM to 8 PM
 const DAYS_TO_SHOW = 5
 const HOUR_HEIGHT = 80 // height of each hour slot in pixels
 
+// Componenta principala pentru vizualizarea calendarului
+// Gestioneaza:
+// - Afisarea evenimentelor pe zile si ore
+// - Navigarea intre perioade
+// - Indicatorul de timp curent
 export function CalendarView({ scheduleItems, userId }: CalendarViewProps) {
   const [startDate, setStartDate] = useState(startOfDay(new Date()))
   const [currentTime, setCurrentTime] = useState(new Date())

@@ -1,3 +1,7 @@
+// Pagina principala pentru sistemul de cautare parteneri de tenis
+// Permite jucatorilor sa gaseasca alti jucatori pentru meciuri si antrenamente
+// Integreaza sistemul de potrivire bazat pe nivel de experienta si disponibilitate
+
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'

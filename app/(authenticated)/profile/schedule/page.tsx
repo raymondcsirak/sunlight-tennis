@@ -1,3 +1,7 @@
+// Pagina principala pentru gestionarea programului si activitatilor
+// Integreaza rezervari terenuri, sesiuni de antrenament si meciuri intr-un singur calendar
+// Permite vizualizarea si gestionarea tuturor activitatilor programate
+
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { ProfileLayout } from '../_components/profile-layout'
@@ -5,6 +9,8 @@ import { getPlayerStats } from "@/app/_components/player-stats/actions"
 import { CalendarView } from './_components/calendar-view'
 import { redirect } from 'next/navigation'
 
+// Interfete pentru tipurile de date folosite in calendar
+// Definesc structura pentru diferite tipuri de evenimente
 interface ScheduleItem {
   id: string
   type: 'court_booking' | 'training_session' | 'match'
@@ -80,6 +86,12 @@ interface AcceptedRequest {
   }
 }
 
+// Functie pentru obtinerea tuturor evenimentelor programate
+// Colecteaza si unifica date despre:
+// - Rezervari terenuri
+// - Sesiuni de antrenament
+// - Meciuri programate
+// - Cereri de meci acceptate
 async function getScheduleItems(userId: string): Promise<ScheduleItem[]> {
   const cookieStore = cookies()
   const supabase = await createClient()
@@ -231,9 +243,14 @@ async function getScheduleItems(userId: string): Promise<ScheduleItem[]> {
   return scheduleItems
 }
 
-// Force dynamic rendering since we need auth data
+// Fortam randarea dinamica pentru a asigura datele de autentificare actualizate
 export const dynamic = 'force-dynamic'
 
+// Componenta principala pentru pagina de program
+// Gestioneaza:
+// - Autentificarea utilizatorului
+// - Obtinerea datelor pentru calendar
+// - Afisarea calendarului cu toate evenimentele
 export default async function SchedulePage() {
   const cookieStore = cookies()
   const supabase = await createClient()

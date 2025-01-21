@@ -1,9 +1,18 @@
+// Pagina principala pentru gestionarea antrenamentelor
+// Permite programarea si gestionarea sesiunilor de antrenament cu antrenori
+// Integreaza sistemul de rezervari si verificare a disponibilitatii
+
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { ProfileLayout } from '../_components/profile-layout'
 import { TrainingTab } from '../_components/tabs/training-tab'
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 
+// Componenta principala pentru pagina de antrenamente
+// Gestioneaza:
+// - Autentificarea utilizatorului
+// - Incarcarea profilului si a datelor despre experienta
+// - Afisarea interfetei pentru programarea antrenamentelor
 export default async function TrainingPage() {
   const cookieStore = cookies()
   const supabase = await createClient()

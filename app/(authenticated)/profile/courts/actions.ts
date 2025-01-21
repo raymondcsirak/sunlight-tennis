@@ -5,6 +5,9 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 
+// Actiuni server pentru gestionarea rezervarilor de terenuri de tenis
+// Acest fisier contine logica pentru rezervari, verificari de disponibilitate si integrare cu serviciul meteo
+
 export type CourtWithAvailability = {
   id: string
   name: string
@@ -21,6 +24,8 @@ const createBookingSchema = z.object({
   players: z.number().min(1).max(4),
 })
 
+// Functie pentru verificarea disponibilitatii unui teren la o anumita data si ora
+// Returneaza true daca terenul este disponibil, false in caz contrar
 export async function getAvailableCourts(
   date: string,
   startTime: string,
@@ -88,6 +93,8 @@ export async function getAvailableCourts(
   }
 }
 
+// Functie pentru crearea unei noi rezervari de teren
+// Verifica disponibilitatea, creeaza rezervarea si notifica utilizatorul
 export async function createBooking(data: z.infer<typeof createBookingSchema>) {
   try {
     const supabase = await createClient()

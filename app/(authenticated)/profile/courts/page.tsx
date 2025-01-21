@@ -1,3 +1,6 @@
+// Pagina principala pentru gestionarea terenurilor de tenis
+// Afiseaza lista de terenuri disponibile si permite rezervarea acestora
+
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { ProfileLayout } from '../_components/profile-layout'

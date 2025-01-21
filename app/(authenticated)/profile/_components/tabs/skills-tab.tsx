@@ -10,19 +10,24 @@ import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
 
 // Interfata pentru structura unei abilitati
+// Defineste tipul si nivelul pentru fiecare abilitate
 interface Skill {
   skill_type: string
   level: number
 }
 
-// Interfata pentru proprietatile componentei SkillsTab
+// Interfata pentru proprietatile componentei
+// Defineste datele necesare pentru initializare
 interface SkillsTabProps {
   userId: string
 }
 
 // Tipuri de abilitati si descrierile lor
+// Defineste nivelurile minime si maxime pentru fiecare abilitate
 type SkillType = 'Forehand' | 'Backhand' | 'Serve' | 'Volley' | 'Footwork' | 'Mental Game'
 
+// Descrieri pentru fiecare nivel de abilitate
+// [Nivel Incepator, Nivel Avansat]
 const SKILL_DESCRIPTIONS: Record<SkillType, [string, string]> = {
   'Forehand': ['Basic forehand technique', 'Tournament-level forehand'],
   'Backhand': ['Basic backhand technique', 'Tournament-level backhand'],
@@ -32,7 +37,11 @@ const SKILL_DESCRIPTIONS: Record<SkillType, [string, string]> = {
   'Mental Game': ['Basic match temperament', 'Elite mental strength']
 }
 
-// Componenta principala pentru tab-ul de abilitati
+// Componenta principala pentru evaluarea abilitatilor
+// Gestioneaza:
+// - Incarcarea si salvarea abilitatilor
+// - Actualizarea nivelurilor
+// - Afisarea grafica a progresului
 export function SkillsTab({ userId }: SkillsTabProps) {
   const [skills, setSkills] = useState<Skill[]>([])
   const [loading, setLoading] = useState(true)
@@ -44,7 +53,8 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Hook pentru incarcarea abilitatilor utilizatorului
+  // Hook pentru incarcarea abilitatilor din baza de date
+  // Creeaza abilitati implicite pentru utilizatorii noi
   useEffect(() => {
     async function loadSkills() {
       const { data, error } = await supabase
@@ -95,7 +105,8 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     loadSkills()
   }, [userId, supabase])
 
-  // Functie pentru actualizarea unei abilitati
+  // Functie pentru actualizarea nivelului unei abilitati
+  // Actualizeaza starea locala si pregateste salvarea
   const handleSkillUpdate = async (skillType: string, level: number) => {
     const updatedSkills = skills.map(skill => 
       skill.skill_type === skillType ? { ...skill, level } : skill
@@ -103,7 +114,8 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     setSkills(updatedSkills)
   }
 
-  // Functie pentru salvarea abilitatilor
+  // Functie pentru salvarea abilitatilor in baza de date
+  // Actualizeaza toate abilitatile si afiseaza notificari
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -140,20 +152,10 @@ export function SkillsTab({ userId }: SkillsTabProps) {
     }
   }
 
-  // Afisare mesaj de incarcare
-  if (loading) {
-    return <div>Loading skills...</div>
-  }
-
-  // Date pentru graficul de abilitati
-  const chartData = skills.map(skill => ({
-    skill: skill.skill_type,
-    value: skill.level * 20 // Convert 1-5 scale to 0-100 for the chart
-  }))
-
-  // Afisare grafic de abilitati
+  // Afisare interfata de evaluare a abilitatilor
   return (
     <div className="grid grid-cols-2 gap-6">
+      {/* Grafic radar pentru vizualizarea abilitatilor */}
       <Card>
         <CardHeader>
           <CardTitle>Skill Breakdown</CardTitle>
@@ -161,6 +163,8 @@ export function SkillsTab({ userId }: SkillsTabProps) {
         <CardContent>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
+              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skills.map(skill => ({
+                skill: skill.skill_type,
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="skill" />

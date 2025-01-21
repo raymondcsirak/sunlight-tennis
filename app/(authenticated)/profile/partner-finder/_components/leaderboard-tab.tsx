@@ -9,6 +9,8 @@ import { getLeaderboard } from "@/app/_components/player-stats/actions"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 
+// Interfete pentru datele jucatorilor din clasament
+// Definesc structura pentru statistici si informatii despre jucatori
 interface LeaderboardPlayer {
   user_id: string
   current_level: number
@@ -25,11 +27,22 @@ interface LeaderboardTabProps {
   userId: string
 }
 
+// Functionalitati pentru calculul pozitiilor
+// Include logica pentru:
+// - Calculul scorului total
+// - Determinarea pozitiei in clasament
+// - Actualizari ale clasamentului
 function getAvatarUrl(path: string | null) {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
 }
 
+// Componenta principala pentru tab-ul de clasament
+// Gestioneaza:
+// - Afisarea clasamentului cu statistici
+// - Sistemul de filtrare si sortare
+// - Actualizari periodice ale datelor
+// - Paginare si performanta
 export function LeaderboardTab({ userId }: LeaderboardTabProps) {
   const [players, setPlayers] = useState<LeaderboardPlayer[]>([])
   const [isLoading, setIsLoading] = useState(true)

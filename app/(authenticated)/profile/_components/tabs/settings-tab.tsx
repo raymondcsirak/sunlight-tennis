@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select"
 
 // Interfata pentru setarile utilizatorului
+// Defineste toate optiunile configurabile
 interface UserSettings {
   email_notifications: boolean
   push_notifications: boolean
@@ -27,13 +28,18 @@ interface UserSettings {
   language: "en" | "ro"
 }
 
-// Interfata pentru proprietatile componentei SettingsTab
+// Interfata pentru proprietatile componentei
+// Defineste datele necesare pentru initializare
 interface SettingsTabProps {
   userId: string
   initialSettings?: UserSettings
 }
 
-// Componenta principala pentru tab-ul de setari
+// Componenta principala pentru setari
+// Gestioneaza:
+// - Starea setarilor si sincronizarea
+// - Salvarea automata a modificarilor
+// - Notificari pentru actualizari
 export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
   const [settings, setSettings] = useState<UserSettings>(initialSettings || {
     email_notifications: true,
@@ -54,7 +60,8 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Hook pentru incarcarea setarilor utilizatorului
+  // Hook pentru incarcarea setarilor din baza de date
+  // Se executa la initializare si actualizeaza starea locala
   useEffect(() => {
     async function loadSettings() {
       const { data, error } = await supabase
@@ -79,7 +86,8 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
     }
   }, [userId, initialSettings, supabase])
 
-  // Functie pentru salvarea setarilor
+  // Functie pentru salvarea setarilor in baza de date
+  // Actualizeaza setarile si afiseaza notificari de succes/eroare
   const handleSaveSettings = async () => {
     setSaving(true)
     try {
@@ -130,7 +138,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
 
   return (
     <div className="space-y-8">
-      {/* Afisare setari de notificari */}
+      {/* Sectiunea de setari pentru notificari */}
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Notification Preferences</h2>
         <div className="space-y-4">
@@ -177,7 +185,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
         </div>
       </div>
 
-      {/* Afisare setari de confidentialitate */}
+      {/* Sectiunea de setari pentru confidentialitate */}
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Privacy Settings</h2>
         <div className="space-y-4">
@@ -214,7 +222,7 @@ export function SettingsTab({ userId, initialSettings }: SettingsTabProps) {
         </div>
       </div>
 
-      {/* Afisare preferinte */}
+      {/* Sectiunea de preferinte generale */}
       <div className="space-y-4">
         <h2 className="text-lg font-medium">Preferences</h2>
         <div className="space-y-4">

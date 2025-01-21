@@ -1,3 +1,7 @@
+// Actiuni server pentru gestionarea antrenamentelor
+// Include functionalitati pentru verificarea disponibilitatii antrenorilor
+// si crearea sesiunilor de antrenament
+
 'use server'
 
 import { createClient } from '@/utils/supabase/server'
@@ -5,6 +9,7 @@ import { revalidatePath } from 'next/cache'
 import { cookies } from 'next/headers'
 import { z } from 'zod'
 
+// Interfata pentru datele unui antrenor cu informatii despre disponibilitate
 export type CoachWithAvailability = {
   id: string
   name: string
@@ -15,6 +20,7 @@ export type CoachWithAvailability = {
   available: boolean
 }
 
+// Schema de validare pentru crearea unei sesiuni de antrenament
 const createTrainingSessionSchema = z.object({
   coachId: z.string(),
   startTime: z.string(),
@@ -22,6 +28,8 @@ const createTrainingSessionSchema = z.object({
   notes: z.string().optional()
 })
 
+// Functie pentru obtinerea listei de antrenori disponibili
+// Verifica disponibilitatea in functie de data si interval orar specificat
 export async function getAvailableCoaches(
   date: string,
   startTime: string,
@@ -95,6 +103,8 @@ export async function getAvailableCoaches(
   }
 }
 
+// Functie pentru crearea unei noi sesiuni de antrenament
+// Valideaza datele si actualizeaza baza de date prin procedura stocata
 export async function createTrainingSession(data: z.infer<typeof createTrainingSessionSchema>) {
   try {
     const supabase = await createClient()

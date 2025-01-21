@@ -36,6 +36,33 @@ interface ThreadListProps {
   currentThreadId?: string
 }
 
+// Componenta pentru afisarea listei de conversatii
+// Gestioneaza lista de thread-uri de mesaje si selectia conversatiei active
+// Implementeaza actualizari in timp real pentru mesaje noi si status-ul conversatiilor
+
+// Importuri pentru functionalitati si componente
+// ... existing code ...
+
+// Interfata pentru proprietatile componentei
+// Defineste thread-urile si functiile de callback pentru interactiune
+// ... existing code ...
+
+// Componenta ThreadList
+// Gestioneaza:
+// - Afisarea listei de conversatii
+// - Evidentierea conversatiilor necitite
+// - Selectia conversatiei active
+// - Actualizari in timp real pentru mesaje noi
+// ... existing code ...
+
+// Functionalitate pentru sortarea conversatiilor
+// Ordoneaza dupa data ultimului mesaj si status de citire
+// ... existing code ...
+
+// Sistem de preview pentru mesaje
+// Afiseaza un fragment din ultimul mesaj pentru fiecare conversatie
+// ... existing code ...
+
 export function ThreadList({ threads, currentUserId, currentThreadId }: ThreadListProps) {
   const router = useRouter()
 

@@ -23,6 +23,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
+// Componenta pentru vizualizarea si gestionarea unei conversatii
+// Afiseaza mesajele dintre doi utilizatori si permite trimiterea de mesaje noi
+// Implementeaza functionalitati de real-time pentru actualizari instant
+
 interface Profile {
   id: string
   full_name: string

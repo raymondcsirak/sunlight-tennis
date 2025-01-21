@@ -9,6 +9,10 @@ import { cn } from "@/lib/utils"
 import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
 import { createBrowserClient } from "@supabase/ssr"
 
+// Componenta pentru gestionarea raspunsurilor la cererile de meci
+// Permite utilizatorilor sa vada si sa gestioneze raspunsurile primite
+// Implementeaza sistemul de acceptare/respingere a raspunsurilor
+
 // Helper function to get the full avatar URL
 function getAvatarUrl(path: string | null) {
   if (!path) return null
