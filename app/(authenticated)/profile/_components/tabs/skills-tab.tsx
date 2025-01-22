@@ -151,6 +151,16 @@ export function SkillsTab({ userId }: SkillsTabProps) {
       setSaving(false)
     }
   }
+  // Afisare mesaj de incarcare
+  if (loading) {
+    return <div>Loading skills...</div>
+  }
+
+  // Date pentru graficul de abilitati
+  const chartData = skills.map(skill => ({
+    skill: skill.skill_type,
+    value: skill.level * 20 // Convert 1-5 scale to 0-100 for the chart
+  }))
 
   // Afisare interfata de evaluare a abilitatilor
   return (
@@ -163,8 +173,6 @@ export function SkillsTab({ userId }: SkillsTabProps) {
         <CardContent>
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={skills.map(skill => ({
-                skill: skill.skill_type,
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
                 <PolarGrid />
                 <PolarAngleAxis dataKey="skill" />
