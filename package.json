@@ -2,8 +2,8 @@
   "private": true,
   "scripts": {
     "dev": "NODE_NO_WARNINGS=1 next dev",
-    "build": "next build",
-    "start": "next start"
+    "build": "NODE_NO_WARNINGS=1 next build",
+    "start": "NODE_NO_WARNINGS=1 next start"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.1.4",
