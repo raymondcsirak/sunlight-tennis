@@ -159,8 +159,24 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (error) throw error
 
+      // Filter out requests that:
+      // 1. Have any responses (pending or accepted)
+      // 2. Are not in 'open' status
+      const filteredRequests = requestsData?.filter(request => {
+        // Double check status is open
+        if (request.status !== 'open') return false;
+        
+        // Check if there are any responses
+        if (!request.responses) return true;
+        
+        // Filter out if there are any pending or accepted responses
+        return !request.responses.some((response: MatchRequestResponse) => 
+          response.status === 'pending' || response.status === 'accepted'
+        );
+      }) || [];
+
       // Fetch player stats for creators
-      const creatorIds = requestsData?.map(request => request.creator_id) || []
+      const creatorIds = filteredRequests.map(request => request.creator_id)
       const { data: statsData } = await supabase
         .from('player_stats')
         .select('user_id, current_level, won_matches')
@@ -172,7 +188,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
       )
 
       // Process requests
-      const processedRequests = (requestsData || []).map(request => ({
+      const processedRequests = filteredRequests.map(request => ({
         ...request,
         creator: {
           ...request.creator,
@@ -185,12 +201,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
         }
       }))
 
-      // Filter out requests that have any accepted responses
-      const filteredRequests = processedRequests.filter(request => 
-        !request.responses?.some((response: MatchRequestResponse) => response.status === 'accepted')
-      )
-
-      setRequests(filteredRequests)
+      setRequests(processedRequests)
     } catch (error) {
       console.error('Error fetching requests:', error)
       toast({
@@ -214,43 +225,13 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (profileError) throw profileError
 
-      // Check if a response already exists
-      const { data: existingResponse, error: existingResponseError } = await supabase
-        .from('match_request_responses')
-        .select('id')
-        .eq('request_id', requestId)
-        .eq('responder_id', userId)
-        .single()
+      // Start a transaction by updating both the request and creating/updating the response
+      const { data: responseData, error: responseError } = await supabase.rpc('handle_match_request_acceptance', {
+        p_request_id: requestId,
+        p_responder_id: userId
+      })
 
-      if (existingResponseError && existingResponseError.code !== 'PGRST116') throw existingResponseError
-
-      let responseData
-      if (existingResponse) {
-        // Update existing response
-        const { data, error: updateError } = await supabase
-          .from('match_request_responses')
-          .update({ status: 'pending' })
-          .eq('id', existingResponse.id)
-          .select()
-          .single()
-
-        if (updateError) throw updateError
-        responseData = data
-      } else {
-        // Create new response
-        const { data, error: responseError } = await supabase
-          .from('match_request_responses')
-          .insert({
-            request_id: requestId,
-            responder_id: userId,
-            status: 'pending'
-          })
-          .select()
-          .single()
-
-        if (responseError) throw responseError
-        responseData = data
-      }
+      if (responseError) throw responseError
 
       // Create a notification for the request creator
       const request = requests.find(r => r.id === requestId)
