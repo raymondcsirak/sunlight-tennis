@@ -39,7 +39,7 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
       }
     }
 
-    // Coordonatele pentru Baia Mare
+    // Coordonatele pentru Satu Mare
     const lat = 47.75
     const lon = 23
     const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
