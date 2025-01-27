@@ -1,2 +1,2 @@
--- Add match_dispute to notification_type enum
+-- Adaugam tipul de notificare pentru dispute de meci
 ALTER TYPE notification_type ADD VALUE IF NOT EXISTS 'match_dispute';
