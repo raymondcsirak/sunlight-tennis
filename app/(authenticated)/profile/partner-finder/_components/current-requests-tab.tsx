@@ -61,7 +61,7 @@ interface MatchRequest {
   responses?: MatchRequestResponse[]
 }
 
-// Helper function to get the full avatar URL
+// Functie pentru a obtine URL-ul complet pentru avatar
 function getAvatarUrl(path: string | null) {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
@@ -86,7 +86,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
     fetchRequests()
   }, [])
 
-  // Add real-time subscription for match requests
+  // Subscriere real-time pentru cererile de meciuri
   useEffect(() => {
     const requestsChannel = supabase
       .channel('open-requests-changes')
@@ -99,7 +99,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
           filter: `creator_id=neq.${userId}`,
         },
         () => {
-          // Refetch requests when there are changes
+          // Refetch requests
           void fetchRequests()
         }
       )
@@ -115,13 +115,13 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
           table: 'match_request_responses',
         },
         () => {
-          // Refetch requests when responses change
+          // Refetch requests
           void fetchRequests()
         }
       )
       .subscribe()
 
-    // Cleanup subscriptions on unmount
+    // Curatare subscrieri la unmount
     return () => {
       void supabase.removeChannel(requestsChannel)
       void supabase.removeChannel(responsesChannel)
@@ -159,35 +159,35 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (error) throw error
 
-      // Filter out requests that:
-      // 1. Have any responses (pending or accepted)
-      // 2. Are not in 'open' status
+      // Filtrare cereri:
+      // 1. Au orice raspunsuri (pending sau acceptat)
+      // 2. Nu sunt in status 'open'
       const filteredRequests = requestsData?.filter(request => {
-        // Double check status is open
+        // Verifica daca statusul este 'open'
         if (request.status !== 'open') return false;
         
-        // Check if there are any responses
+        // Verifica daca exista orice raspunsuri
         if (!request.responses) return true;
         
-        // Filter out if there are any pending or accepted responses
+        // Filtreaza daca exista orice raspunsuri (pending sau acceptat)
         return !request.responses.some((response: MatchRequestResponse) => 
           response.status === 'pending' || response.status === 'accepted'
         );
       }) || [];
 
-      // Fetch player stats for creators
+      // Obtine ID-urile userilor care au creat cererile  
       const creatorIds = filteredRequests.map(request => request.creator_id)
       const { data: statsData } = await supabase
         .from('player_stats')
         .select('user_id, current_level, won_matches')
         .in('user_id', creatorIds)
 
-      // Create a map of stats by user_id
+      // Creeaza un map de stats pentru useri
       const statsMap = Object.fromEntries(
         (statsData || []).map(stat => [stat.user_id, stat])
       )
 
-      // Process requests
+      // Proceseaza cererile
       const processedRequests = filteredRequests.map(request => ({
         ...request,
         creator: {
@@ -216,7 +216,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
   const handleAcceptRequest = async (requestId: string) => {
     try {
-      // Get current user's profile first
+      // Obtine profilul userului curent
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('full_name')
@@ -225,7 +225,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (profileError) throw profileError
 
-      // Start a transaction by updating both the request and creating/updating the response
+      // Start o tranzactie pentru a actualiza cererea si a crea/actualiza raspunsul
       const { data: responseData, error: responseError } = await supabase.rpc('handle_match_request_acceptance', {
         p_request_id: requestId,
         p_responder_id: userId
@@ -233,7 +233,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
 
       if (responseError) throw responseError
 
-      // Create a notification for the request creator
+      // Creeaza o notificare pentru creatorul cererii
       const request = requests.find(r => r.id === requestId)
       if (!request) throw new Error('Request not found')
 
@@ -258,7 +258,7 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
         className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
       })
 
-      // Refresh the requests list
+      // Actualizeaza lista de cereri
       fetchRequests()
     } catch (error) {
       console.error('Error accepting request:', error)
@@ -344,10 +344,3 @@ export function CurrentRequestsTab({ userId }: CurrentRequestsTabProps) {
     </div>
   )
 }
-
-// Functionalitati pentru gestionarea cererilor
-// Include logica pentru:
-// - Creare cereri noi
-// - Actualizare status
-// - Stergere cereri
-// ... existing code ... 
