@@ -30,6 +30,7 @@ interface ProfileLayoutProps {
   profile: any
   playerXp?: {
     current_xp: number
+    current_level: number
   }
   playerStats: {
     totalMatches: number
@@ -153,7 +154,10 @@ export function ProfileLayout({
   }, [supabase, user.id])
 
   // Calculate level progress
-  const progress = calculateLevelProgress(playerXp?.current_xp || 0)
+  const progress = calculateLevelProgress(
+    playerXp?.current_xp || 0,
+    playerXp?.current_level || 1
+  )
 
   console.log("Player Stats in Layout:", playerStats)
 
