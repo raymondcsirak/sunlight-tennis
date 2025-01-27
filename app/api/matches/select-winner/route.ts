@@ -214,29 +214,34 @@ export async function POST(req: Request) {
       } else {
         // Creeaza notificari de disputa
         console.log('Creating dispute notifications...')
-        const { error: notificationError } = await supabase
-          .from('notifications')
-          .insert([
-            {
-              user_id: match.player1_id,
-              type: 'match_dispute',
-              title: 'Match Result Dispute',
-              message: 'There is a disagreement about the match result. Both players selected different winners. Please discuss and update your selections.',
-              data: { match_id: matchId }
-            },
-            {
-              user_id: match.player2_id,
-              type: 'match_dispute',
-              title: 'Match Result Dispute',
-              message: 'There is a disagreement about the match result. Both players selected different winners. Please discuss and update your selections.',
-              data: { match_id: matchId }
-            }
-          ])
+        try {
+          const { error: notificationError } = await supabase
+            .from('notifications')
+            .insert([
+              {
+                user_id: match.player1_id,
+                type: 'match_dispute',
+                title: 'Match Result Dispute',
+                message: 'There is a disagreement about the match result. Both players selected different winners. Please discuss and update your selections.',
+                data: { match_id: matchId }
+              },
+              {
+                user_id: match.player2_id,
+                type: 'match_dispute',
+                title: 'Match Result Dispute',
+                message: 'There is a disagreement about the match result. Both players selected different winners. Please discuss and update your selections.',
+                data: { match_id: matchId }
+              }
+            ])
 
-        if (notificationError) {
-          console.error('Dispute notification error:', notificationError)
+          if (notificationError) {
+            console.error('Dispute notification error:', notificationError)
+          }
+        } catch (error) {
+          console.error('Failed to create dispute notifications:', error)
         }
 
+        // Always return disputed status, even if notifications fail
         return NextResponse.json({
           status: 'disputed',
           message: 'Players selected different winners'
