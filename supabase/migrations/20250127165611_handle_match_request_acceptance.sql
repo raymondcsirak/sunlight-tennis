@@ -1,5 +1,5 @@
-CREATE OR REPLACE FUNCTION public.handle_match_request_acceptance(
-  p_request_id uuid, 
+CREATE OR REPLACE FUNCTION handle_match_request_acceptance(
+  p_request_id uuid,
   p_responder_id uuid
 )
 RETURNS json
@@ -20,23 +20,27 @@ BEGIN
     RAISE EXCEPTION 'Request is no longer open for responses';
   END IF;
 
-  -- Create new response with pending status
-  INSERT INTO match_request_responses (
-    request_id,
-    responder_id,
-    status
-  )
-  VALUES (
-    p_request_id,
-    p_responder_id,
-    'pending'
-  )
+  -- First try to update existing response if it exists
+  UPDATE match_request_responses
+  SET status = 'pending'
+  WHERE request_id = p_request_id 
+  AND responder_id = p_responder_id
   RETURNING id INTO v_response_id;
 
-  -- Update request status to pending
-  UPDATE match_requests 
-  SET status = 'pending'
-  WHERE id = p_request_id;
+  -- If no existing response was found, create a new one
+  IF v_response_id IS NULL THEN
+    INSERT INTO match_request_responses (
+      request_id,
+      responder_id,
+      status
+    )
+    VALUES (
+      p_request_id,
+      p_responder_id,
+      'pending'
+    )
+    RETURNING id INTO v_response_id;
+  END IF;
 
   -- Return the response id
   RETURN json_build_object('id', v_response_id);

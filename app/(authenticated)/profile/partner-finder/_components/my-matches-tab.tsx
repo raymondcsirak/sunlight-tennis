@@ -1161,43 +1161,18 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
   const handleRejectResponse = async (responseId: string) => {
     try {
-      // Get the response details first
-      const { data: responseData, error: responseError } = await supabase
-        .from('match_request_responses')
-        .select('*, request:match_requests(*)')
-        .eq('id', responseId)
-        .single()
+      // Call the stored procedure to handle rejection
+      const { error: responseError } = await supabase
+        .rpc('handle_match_request_rejection', {
+          p_response_id: responseId
+        })
 
       if (responseError) throw responseError
 
-      // Update the response status
-      const { error: updateError } = await supabase
-        .from('match_request_responses')
-        .update({ status: 'rejected' })
-        .eq('id', responseId)
-
-      if (updateError) throw updateError
-
-      // Create a notification for the responder
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: responseData.responder_id,
-          type: 'match_request_rejected',
-          title: 'Match Request Response',
-          message: 'Unfortunately, your match request was not accepted.',
-          data: {
-            request_id: responseData.request_id,
-            response_id: responseId
-          }
-        })
-
-      if (notificationError) throw notificationError
-
       toast({
         title: "Response Rejected",
-        description: "The player has been notified.",
-        className: "bg-gradient-to-br from-blue-500/90 to-blue-600/90 text-white border-none",
+        description: "The match request is now available for other players.",
+        className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
       })
 
       // Refresh the requests list
