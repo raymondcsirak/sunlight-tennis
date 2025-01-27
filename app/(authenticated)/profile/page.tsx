@@ -62,8 +62,11 @@ export default async function ProfilePage() {
     getPlayerStats(user.id)
   ])
 
-  // Calculeaza progresul nivelului curent folosind utilitarul de calcul XP
-  const progress = calculateLevelProgress(playerXp?.current_xp || 0)
+  // Calculate level progress using both XP and level from database
+  const progress = calculateLevelProgress(
+    playerXp?.current_xp || 0,
+    playerXp?.current_level || 1
+  )
 
   // Randeaza interfata profilului cu toate componentele:
   // - Layout-ul de profil cu informatii de baza
