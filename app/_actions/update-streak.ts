@@ -68,13 +68,15 @@ export async function updateStreak() {
     // Daca streak-ul a fost intrerupt, creeaza o notificare pentru utilizator
     if (streakData[0].streak_broken) {
       console.log('Creating streak broken notification')
-      const { error: streakNotifError } = await supabase.rpc('create_notification', {
-        p_user_id: user.id,
-        p_type: 'streak_broken',
-        p_title: 'Streak Reset',
-        p_message: 'Your daily streak has been reset. Log in daily to maintain your streak!',
-        p_data: JSON.stringify({})
-      })
+      const { error: streakNotifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: user.id,
+          type: 'streak_broken',
+          title: 'Streak Reset',
+          message: 'Your daily streak has been reset. Log in daily to maintain your streak!',
+          data: {}
+        })
 
       if (streakNotifError) {
         console.error('Streak broken notification error:', streakNotifError)
