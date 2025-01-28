@@ -34,7 +34,7 @@ export default async function MessagesPage({
 
   const { data: playerXp } = await supabase
     .from('player_xp')
-    .select('current_xp')
+    .select('current_xp, current_level')
     .eq('user_id', user.id)
     .single()
 
@@ -80,6 +80,7 @@ export default async function MessagesPage({
       )
     `)
     .eq('id', currentThreadId)
+    .order('messages.created_at', { foreignTable: 'messages', ascending: true })
     .single() : { data: null }
 
   // Transform avatar URLs to full URLs
@@ -103,7 +104,10 @@ export default async function MessagesPage({
     <ProfileLayout
       user={user}
       profile={profile}
-      playerXp={playerXp ? { current_xp: playerXp.current_xp } : undefined}
+      playerXp={playerXp ? { 
+        current_xp: playerXp.current_xp,
+        current_level: playerXp.current_level 
+      } : undefined}
       playerStats={playerStats}
       hideFooter={true}
     >
