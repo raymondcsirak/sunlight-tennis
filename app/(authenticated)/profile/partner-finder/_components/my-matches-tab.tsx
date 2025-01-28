@@ -21,39 +21,7 @@ import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-car
 import { getPlayerStats } from "@/app/_components/player-stats/actions"
 import { useVirtualizer } from '@tanstack/react-virtual'
 
-// Componenta pentru gestionarea meciurilor personale
-// Afiseaza istoricul meciurilor, meciurile active si permite gestionarea acestora
-// Implementeaza sistemul de scor si confirmare a rezultatelor
-
-// Importuri pentru functionalitati si componente
-// ... existing code ...
-
-// Interfete pentru structura datelor despre meciuri
-// Definesc tipurile pentru meciuri, scoruri si participanti
-// ... existing code ...
-
-// Componenta principala pentru tab-ul de meciuri personale
-// Gestioneaza:
-// - Afisarea meciurilor active si istoricul
-// - Sistemul de scor si validare
-// - Confirmarea rezultatelor
-// - Actualizari in timp real
-// ... existing code ...
-
-// Functionalitati pentru gestionarea meciurilor
-// Include logica pentru:
-// - Actualizare scor
-// - Confirmare rezultate
-// - Anulare meciuri
-// - Notificari pentru participanti
-// ... existing code ...
-
-// Sistem de validare pentru scoruri
-// Verifica corectitudinea scorurilor introduse
-// Asigura consistenta datelor
-// ... existing code ...
-
-// Helper function to get the full avatar URL
+// Functie pentru a obtine URL-ul complet pentru avatar
 function getAvatarUrl(path: string | null) {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
@@ -146,7 +114,7 @@ interface ExtendedMatchRequest extends DatabaseMatchRequest {
   }>
 }
 
-// Update the MatchRequest type to use the new interface
+// Actualizeaza tipul MatchRequest pentru a folosi noua interfata
 type MatchRequest = ExtendedMatchRequest
 
 interface Court {
@@ -193,7 +161,7 @@ function WinnerSelectionDialog({ match, onSelect, open, onOpenChange }: WinnerSe
     try {
       setIsLoading(true)
       await onSelect(winnerId)
-      // Only close if there's no other selection or if both agree
+      // Inchide doar daca nu exista alt raspuns sau daca ambii sunt de acord
       if (!match.other_player_selection || match.other_player_selection.selected_winner_id === winnerId) {
         onOpenChange(false)
       }
@@ -206,7 +174,7 @@ function WinnerSelectionDialog({ match, onSelect, open, onOpenChange }: WinnerSe
 
   const currentSelection = match.current_selection?.selected_winner_id
   const otherPlayerSelection = match.other_player_selection?.selected_winner_id
-
+  // Selecteaza castigatorul meciului
   return (
     <DialogContent className="max-w-2xl">
       <DialogHeader>
@@ -223,7 +191,7 @@ function WinnerSelectionDialog({ match, onSelect, open, onOpenChange }: WinnerSe
         </div>
       </DialogHeader>
 
-      {/* Match Details */}
+      {/* Detalii meci */}
       <div className="bg-muted/50 rounded-lg p-4 mb-4">
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2">
@@ -237,7 +205,7 @@ function WinnerSelectionDialog({ match, onSelect, open, onOpenChange }: WinnerSe
         </div>
       </div>
 
-      {/* Player Selection */}
+      {/* Selectie jucator */}
       <div className="grid grid-cols-2 gap-6">
         {[match.player1, match.player2].map((player) => (
           <Button
@@ -282,7 +250,7 @@ function WinnerSelectionDialog({ match, onSelect, open, onOpenChange }: WinnerSe
     </DialogContent>
   )
 }
-
+// Tip pentru meciuri cu jucatori
 interface MatchWithPlayers {
   id: string
   player1: {
@@ -307,7 +275,7 @@ interface MatchWithPlayers {
     selected_winner_id: string
   }
 }
-
+// Tip pentru baza de date
 interface Database {
   public: {
     Tables: {
@@ -330,7 +298,7 @@ interface Database {
     }
   }
 }
-
+// Tip pentru meciuri cu jucatori
 interface PlayerMatch {
   id: string
   winner_id: string | null
@@ -340,7 +308,7 @@ interface PlayerMatch {
   status: string
   match_request: MatchRequest
 }
-
+// Tip pentru meciuri cu baza de date
 interface DatabaseMatch {
   id: string
   winner_id: string | null
@@ -365,7 +333,7 @@ interface DatabaseMatch {
     current_level: number
   }>
 }
-
+// Tip pentru cardurile de meci
 interface MatchCardProps {
   request: MatchRequest
   userId: string
@@ -458,7 +426,7 @@ const MatchCard = memo(function MatchCard({
             </div>
           </div>
 
-          {/* Show responses if there are any */}
+          {/* Afiseaza raspunsuri daca sunt */}
           {request.responses && request.responses.length > 0 && (
             <div className="space-y-3 pt-2 border-t">
               {request.responses.map((response) => (
@@ -582,7 +550,7 @@ const MatchCard = memo(function MatchCard({
     </Card>
   )
 })
-
+// Componenta pentru tab-ul de meciuri mele
 export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const [matchRequests, setMatchRequests] = useState<MatchRequest[]>([])
   const [courts, setCourts] = useState<Court[]>([])
@@ -604,7 +572,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const parentRef = useRef<HTMLDivElement>(null)
   const [parentWidth, setParentWidth] = useState(0)
 
-  // Update parent width on mount and resize
+  // Actualizeaza latimea parintelui la montare si la redimensionare
   useEffect(() => {
     const updateWidth = () => {
       if (parentRef.current) {
@@ -616,58 +584,58 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     return () => window.removeEventListener('resize', updateWidth)
   }, [])
 
-  // Calculate number of columns based on parent width
+  // Calculeaza numarul de coloane in functie de latimea parintelui
   const numColumns = useMemo(() => {
     if (parentWidth < 640) return 1 // mobile
     if (parentWidth < 1024) return 2 // tablet
     return 3 // desktop
   }, [parentWidth])
 
-  // Sort match requests
+  // Sorteaza cererile de meciuri
   const sortedAndFilteredRequests = useMemo(() => {
     let filtered = [...matchRequests]
 
-    // Sort by match date and status
+    // Sorteaza dupa data si statusul meciului
     return filtered.sort((a, b) => {
-      // Helper function to get priority
+      // Functie pentru a obtine prioritate
       const getPriority = (request: MatchRequest) => {
-        // Requests waiting for acceptance first
+        // Cererile asteptand confirmare intai
         if (request.responses?.some(r => r.status === 'pending')) return 0
         
-        // Then completed matches
+        // Apoi meciurile completate
         if (request.matches?.some(match => 
           match.winner_id !== null && 
           (match.player1_id === userId || match.player2_id === userId)
         )) return 1
         
-        // Then matches that are accepted but not played
+        // Apoi meciurile acceptate dar nu jucate
         if (request.responses?.some(r => r.status === 'accepted')) return 2
         
-        // Then open requests with no responses
+        // Apoi cererile deschise cu niciun raspuns
         if (!request.responses || request.responses.length === 0) return 3
         
-        // Finally rejected requests
+        // In sfarsit cererile respinse
         if (request.responses?.every(r => r.status === 'rejected')) return 4
         
-        return 3 // Default case
+        return 3
       }
 
       const priorityA = getPriority(a)
       const priorityB = getPriority(b)
 
-      // If priorities are different, sort by priority
+      // Daca prioritatile sunt diferite, sorteaza dupa prioritate
       if (priorityA !== priorityB) {
         return priorityA - priorityB
       }
 
-      // If priorities are the same, sort by date (ascending)
+      // Daca prioritatile sunt aceleasi, sorteaza dupa data (in ordine ascendenta)
       const aDateTime = new Date(a.preferred_date + ' ' + a.preferred_time).getTime()
       const bDateTime = new Date(b.preferred_date + ' ' + b.preferred_time).getTime()
       return aDateTime - bDateTime
     })
   }, [matchRequests, userId])
 
-  // Calculate rows for virtualization
+  // Calculeaza numarul de randuri pentru virtualizare
   const rows = useMemo(() => {
     return Math.ceil(sortedAndFilteredRequests.length / numColumns)
   }, [sortedAndFilteredRequests.length, numColumns])
@@ -683,8 +651,8 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
   const rowVirtualizer = useVirtualizer({
     count: rows,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 300, // Estimated height of a row
-    overscan: 5, // Number of items to render outside of the visible area
+    estimateSize: () => 300, // Inaltimea estimata a unui rand
+    overscan: 5, // Numarul de randuri pentru a fi renderizate in afara zonei vizibile
   })
 
   useEffect(() => {
@@ -718,7 +686,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     )
 
     try {
-      // First, get creator requests with all related data in a single query
+      // Primul, obtine cererile creatorilor cu toate datele in cauza intr-o singura cerere
       const { data: creatorRequests, error: creatorError } = await supabase
         .from("match_requests")
         .select(`
@@ -759,7 +727,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (creatorError) throw creatorError
 
-      // Then, get player matches with all related data in a single query
+      // Apoi, obtine meciurile jucatorilor cu toate datele in cauza intr-o singura cerere
       const { data: playerMatches, error: matchError } = await supabase
         .from("matches")
         .select(`
@@ -811,7 +779,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (matchError) throw matchError
 
-      // Get all unique responder IDs
+      // Obtine toate ID-urile raspunsurilor unice
       const responderIds = new Set<string>()
       creatorRequests?.forEach(request => {
         request.match_request_responses?.forEach(response => {
@@ -819,27 +787,27 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         })
       })
 
-      // Add all unique player IDs from matches
+      // Adauga toate ID-urile jucatorilor unice din meciuri
       playerMatches?.forEach(match => {
         responderIds.add(match.player1_id)
         responderIds.add(match.player2_id)
       })
 
-      // Fetch player stats for all players
+      // Obtine statistici pentru toate jucatorii
       const { data: statsData } = await supabase
         .from('player_stats')
         .select('user_id, current_level, won_matches')
         .in('user_id', Array.from(responderIds))
 
-      // Create a map of stats by user_id
+      // Creeaza un map de statistici dupa ID-ul jucatorului
       const statsMap = Object.fromEntries(
         (statsData || []).map(stat => [stat.user_id, stat])
       )
 
-      // Create a Set to track processed request IDs
+      // Creeaza un Set pentru a urmari ID-urile cererilor procesate
       const processedRequestIds = new Set<string>()
 
-      // Process creator requests with stats
+      // Proceseaza cererile creatorilor cu statistici
       const processedCreatorRequests: ExtendedMatchRequest[] = (creatorRequests || []).map(request => {
         const processedResponses = request.match_request_responses?.map(response => ({
           id: response.id,
@@ -865,7 +833,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         }
       })
 
-      // Process player matches into requests format
+      // Proceseaza meciurile jucatorilor in formatul cererilor
       const processedPlayerRequests: ExtendedMatchRequest[] = (playerMatches || [])
         .map(match => {
         if (!match.match_request || processedRequestIds.has(match.match_request.id)) {
@@ -875,12 +843,12 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         processedRequestIds.add(match.match_request.id)
           const request = match.match_request
 
-          // Determine if the current user is player1 or player2
-        const isPlayer1 = match.player1_id === userId
+          // Determina daca jucatorul curent este player1 sau player2
+          const isPlayer1 = match.player1_id === userId
           const opponent = isPlayer1 ? match.player2 : match.player1
           const opponentId = isPlayer1 ? match.player2_id : match.player1_id
 
-          // Create a response that represents the accepted match
+          // Creeaza un raspuns care reprezinta meciul acceptat
           const processedResponses = [{
             id: `${match.id}-response`,
             status: 'accepted' as const,
@@ -906,7 +874,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         })
         .filter((request): request is ExtendedMatchRequest => request !== null)
 
-      // Combine and deduplicate requests
+      // Combineaza si elimina duplicatele cererilor
       const allRequests = [
         ...processedCreatorRequests,
         ...processedPlayerRequests
@@ -914,7 +882,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         index === self.findIndex((r) => r.id === request.id)
       )
 
-      // Update the state with all requests
+      // Actualizeaza starea cu toate cererile
       setMatchRequests(allRequests)
       setIsLoading(false)
     } catch (error) {
@@ -923,7 +891,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
-  // Fetch weather when date or time changes
+  // Obtine vremea cand data sau timpul se schimba
   useEffect(() => {
     async function fetchWeather() {
       if (!date || !time) {
@@ -1018,7 +986,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         .from('match_requests')
         .delete()
         .eq('id', requestId)
-        .eq('creator_id', userId) // Extra safety check
+        .eq('creator_id', userId)
 
       if (error) throw error
 
@@ -1028,7 +996,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         className: "bg-gradient-to-br from-blue-500/90 to-blue-600/90 text-white border-none",
       })
       
-      // Update the local state by removing the cancelled request
+      // Actualizeaza starea locala prin eliminarea cererii anulate
       setMatchRequests(prev => prev.filter(request => request.id !== requestId))
     } catch (error) {
       console.error('Error cancelling match request:', error)
@@ -1042,7 +1010,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
   const handleAcceptResponse = async (responseId: string) => {
     try {
-      // Get the response details first
+      // Obtine detaliile raspunsului intai
       const { data: responseData, error: responseError } = await supabase
         .from('match_request_responses')
         .select(`
@@ -1055,7 +1023,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (responseError) throw responseError
 
-      // Update the response status
+      // Actualizeaza statusul raspunsului
       const { error: updateError } = await supabase
         .from('match_request_responses')
         .update({ status: 'accepted' })
@@ -1063,7 +1031,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (updateError) throw updateError
 
-      // Create a match record
+      // Creeaza un record de meci
       const { data: matchData, error: matchError } = await supabase
         .from('matches')
         .insert({
@@ -1077,7 +1045,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (matchError) throw matchError
 
-      // Use the find_or_create_thread function to get or create a thread
+      // Foloseste functia find_or_create_thread pentru a obtine sau a crea un thread
       const { data: threadData, error: threadError } = await supabase
         .rpc('find_or_create_thread', {
           user1_id: responseData.request.creator_id,
@@ -1086,7 +1054,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (threadError) throw threadError
 
-      // Update thread with the new match ID
+      // Actualizeaza thread-ul cu ID-ul nou de meci
       const { data: currentThread, error: fetchError } = await supabase
         .from('message_threads')
         .select('match_ids')
@@ -1105,7 +1073,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (threadUpdateError) throw threadUpdateError
 
-      // Create a system message in the thread
+      // Creeaza un mesaj de sistem in thread
       const { error: messageError } = await supabase
         .from('messages')
         .insert({
@@ -1123,7 +1091,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (messageError) throw messageError
 
-      // Create a notification for the responder
+      // Creeaza o notificare pentru raspunsului
       const { error: notificationError } = await supabase
         .from('notifications')
         .insert({
@@ -1145,9 +1113,9 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
       })
 
-      // Refresh the requests list
+      // Actualizeaza lista cererilor
       fetchMatchRequests()
-      // Also refresh matches needing winner selection
+      // De asemenea, actualizeaza meciurile care au nevoie de selectie de câștigător
       fetchMatchesNeedingWinner()
     } catch (error) {
       console.error('Error accepting response:', error)
@@ -1161,7 +1129,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
   const handleRejectResponse = async (responseId: string) => {
     try {
-      // Call the stored procedure to handle rejection
+      // Apela procedura stocata pentru a gestiona respingerea
       const { error: responseError } = await supabase
         .rpc('handle_match_request_rejection', {
           p_response_id: responseId
@@ -1175,7 +1143,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         className: "bg-gradient-to-br from-green-500/90 to-green-600/90 text-white border-none",
       })
 
-      // Refresh the requests list
+      // Actualizeaza lista cererilor
       fetchMatchRequests()
     } catch (error) {
       console.error('Error rejecting response:', error)
@@ -1187,7 +1155,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
-  // Function to fetch matches that need winner selection
+  // Functie pentru a obtine meciurile care au nevoie de selectie de câștigător
   const fetchMatchesNeedingWinner = async () => {
     try {
       type MatchResponse = {
@@ -1230,7 +1198,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (error) throw error
 
-      // Get all winner selections for these matches
+      // Obtine toate selectiile de câștigător pentru aceste meciuri
       const { data: selections, error: selectionsError } = await supabase
         .from('match_winner_selections')
         .select('match_id, selector_id, selected_winner_id')
@@ -1238,7 +1206,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
       if (selectionsError) throw selectionsError
 
-      // Process matches with selections
+      // Proceseaza meciurile cu selectii
       const processedMatches: MatchResponse[] = (matchesData || []).map(match => {
         const matchSelections = selections?.filter(s => s.match_id === match.id) || []
         const userSelection = matchSelections.find(s => s.selector_id === userId)
@@ -1255,7 +1223,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         }
       })
 
-      // Filter matches that have ended
+      // Filtreaza meciurile care au incheiat
       const currentTime = new Date();
       const needSelection = processedMatches.filter(match => {
         if (!match.match_request) return false;
@@ -1320,7 +1288,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         variant: data.status === 'disputed' ? 'destructive' : 'default',
       })
 
-      // Refresh the list of matches needing winner selection
+      // Actualizeaza lista meciurilor care au nevoie de selectie de câștigător
       fetchMatchesNeedingWinner()
     } catch (error) {
       console.error('Error selecting winner:', error)
@@ -1332,7 +1300,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
     }
   }
 
-  // Subscribe to match updates
+  // Subscrie la meciuri
   useEffect(() => {
     const channel = supabase
       .channel('match-updates')
@@ -1351,7 +1319,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
             setMatchesNeedingWinner(prev => 
               prev.filter(match => match.id !== payload.new.id)
             )
-            // Close the dialog if it's open
+            // Inchide dialogul daca este deschis
             setOpenDialogs(prev => ({
               ...prev,
               [payload.new.id]: false
@@ -1361,13 +1329,13 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
       )
       .subscribe()
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription
     return () => {
       void supabase.removeChannel(channel)
     }
   }, [userId])
 
-  // Also subscribe to match_winner_selections updates
+  // Subscrie la meciuri
   useEffect(() => {
     const channel = supabase
       .channel('winner-selection-updates')
@@ -1379,19 +1347,19 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
           table: 'match_winner_selections',
         },
         () => {
-          // Refetch matches needing winner when selections change
+          // Actualizeaza lista meciurilor care au nevoie de selectie de câștigător cand selectiile se schimbă
           void fetchMatchesNeedingWinner()
         }
       )
       .subscribe()
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription
     return () => {
       void supabase.removeChannel(channel)
     }
   }, [userId])
 
-  // Subscribe to match request response updates
+  // Subscrie la raspunsurile la cereri de meci
   useEffect(() => {
     const channel = supabase
       .channel('match-response-updates')
@@ -1404,13 +1372,13 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
           filter: `request_id=in.(${matchRequests.map(r => r.id).join(',')})`,
         },
         () => {
-          // Refetch match requests when responses change
+          // Actualizeaza lista cererilor de meci cand raspunsurile se schimbă
           void fetchMatchRequests()
         }
       )
       .subscribe()
 
-    // Cleanup subscription on unmount
+    // Cleanup subscription
     return () => {
       void supabase.removeChannel(channel)
     }
@@ -1418,7 +1386,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
   const handleDeleteMatch = async (requestId: string) => {
     try {
-      // First, mark the match request as deleted
+      // Marcheaza cererea de meci ca fiind anulata
       const { error: updateError } = await supabase
         .from('match_requests')
         .update({ status: 'deleted' })
@@ -1432,7 +1400,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
         className: "bg-gradient-to-br from-blue-500/90 to-blue-600/90 text-white border-none",
       })
 
-      // Refresh the requests list
+      // Actualizeaza lista cererilor de meci
       fetchMatchRequests()
     } catch (error) {
       console.error('Error deleting match:', error)
@@ -1446,7 +1414,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Winner Selection Dialogs */}
+      {/* Dialoguri de selectie de câștigător */}
       {matchesNeedingWinner.length > 0 && (
         <div className="bg-card border rounded-lg p-4 space-y-4">
           <div className="flex items-center justify-between">
@@ -1535,7 +1503,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                 />
               </Card>
 
-              {/* Time, Weather, and Court Selection */}
+              {/* Selectie de timp, vreme, si teren */}
               <Card className="p-4">
                 {date && (
                   <div className="space-y-4">
@@ -1550,7 +1518,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       </h3>
                     </div>
 
-                    {/* Weather Information */}
+                    {/* Informatii despre vreme */}
                     {weatherData && (
                       <div className="flex items-center space-x-4 p-4 rounded-lg bg-background/50 border border-border/50">
                         <div className="p-2 rounded-full bg-primary/10">
@@ -1566,7 +1534,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       </div>
                     )}
 
-                    {/* Time Selection */}
+                    {/* Selectie de timp */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium flex items-center gap-2">
                         <Clock className="h-4 w-4" /> Select Time
@@ -1585,7 +1553,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       </Select>
                     </div>
 
-                    {/* Duration Selection */}
+                    {/* Selectie de durata */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Duration</label>
                       <Select value={duration} onValueChange={setDuration}>
@@ -1602,7 +1570,7 @@ export function MyMatchesTab({ userId }: MyMatchesTabProps) {
                       </Select>
                     </div>
 
-                    {/* Court Selection */}
+                    {/* Selectie de teren */}
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Preferred Court</label>
                       <Select value={selectedCourt} onValueChange={setSelectedCourt}>

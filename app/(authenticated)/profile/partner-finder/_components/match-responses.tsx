@@ -13,7 +13,7 @@ import { createBrowserClient } from "@supabase/ssr"
 // Permite utilizatorilor sa vada si sa gestioneze raspunsurile primite
 // Implementeaza sistemul de acceptare/respingere a raspunsurilor
 
-// Helper function to get the full avatar URL
+// Functie pentru a obtine URL-ul complet pentru avatar
 function getAvatarUrl(path: string | null) {
   if (!path) return null
   return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/avatars/${path}`
@@ -62,7 +62,7 @@ interface MatchResponsesProps {
 }
 
 export function MatchResponses({ responses, onAccept, onReject }: MatchResponsesProps) {
-  // Group responses by status
+  // Grupa raspunsurile dupa status
   const acceptedResponses = responses.filter(r => r.status === 'accepted')
   const pendingResponses = responses.filter(r => r.status === 'pending')
   const rejectedResponses = responses.filter(r => r.status === 'rejected')
@@ -127,7 +127,7 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
     .join('')
     .toUpperCase()
 
-  // Create default stats if none are provided
+  // Creeaza statisitici default daca nu sunt furnizate
   const stats = {
     totalMatches: response.responder.stats?.totalMatches ?? 0,
     wonMatches: response.responder.stats?.wonMatches ?? 0,
@@ -177,7 +177,7 @@ function ResponseCard({ response, showActions, onAccept, onReject }: ResponseCar
           </div>
         )}
 
-        {/* Player Info Section */}
+        {/* Informatii despre jucator */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <Avatar>
@@ -229,7 +229,7 @@ async function fetchMatchResponses(requestId: string) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
 
-  // Get the responses with all necessary data in a single query
+  // Obtine raspunsurile cu toate datele necesare intr-o singura cerere
   const { data: responseData, error: responseError } = await supabase
     .from('match_request_responses')
     .select(`
@@ -261,21 +261,21 @@ async function fetchMatchResponses(requestId: string) {
     return [];
   }
 
-  // Process the responses to calculate stats
+  // Proceseaza raspunsurile pentru a calcula statisitici
   const responsesWithStats = responseData.map((response) => {
-    // Get all matches where the responder was a player
+    // Obtine toate meciurile unde jucatorul a fost un participant
     const matches = (response.responder.matches || []) as Match[];
     const playerMatches = matches.filter((match: Match) => 
       match.player1_id === response.responder.id || 
       match.player2_id === response.responder.id
     );
     
-    // Calculate stats
+    // Calculeaza statisitici
     const totalMatches = playerMatches.length;
     const wonMatches = playerMatches.filter((match: Match) => match.winner_id === response.responder.id).length;
     const winRate = totalMatches > 0 ? Math.round((wonMatches / totalMatches) * 100) : 0;
     
-    // Get the level from player_xp or fallback to profile level
+    // Obtine nivelul din player_xp sau fallback la nivelul din profil
     const playerStats = response.responder.player_stats?.[0];
     const level = playerStats?.current_level || response.responder.level || 1;
 

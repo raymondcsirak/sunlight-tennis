@@ -33,10 +33,3 @@ export function PartnerFinderTabs({ userId }: PartnerFinderTabsProps) {
     </Tabs>
   )
 }
-
-// Componenta principala pentru tab-uri
-// Gestioneaza:
-// - Afisarea si navigarea intre sectiuni
-// - Starea activa a tab-urilor
-// - Tranzitii animate intre sectiuni
-// ... existing code ... 
