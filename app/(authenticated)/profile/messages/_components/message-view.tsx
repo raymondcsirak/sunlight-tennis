@@ -63,6 +63,13 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   
+  // Add debug logging
+  console.log('Thread data:', {
+    threadId: thread.id,
+    messageCount: thread.messages?.length || 0,
+    messages: thread.messages
+  })
+
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -78,14 +85,19 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
       if (scrollContainer) {
-        scrollContainer.scrollTop = 0
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
       }
     }
   }, [thread.id])
 
   // Scroll to bottom when messages change
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    if (scrollAreaRef.current) {
+      const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight
+      }
+    }
   }, [thread.messages])
 
   // Mark messages as read
@@ -248,7 +260,7 @@ export function MessageView({ thread, currentUserId }: MessageViewProps) {
       {/* Messages */}
       <ScrollArea ref={scrollAreaRef} className="flex-1 px-4">
         <div className="py-4 space-y-4">
-          {[...thread.messages].reverse().map((message) => {
+          {thread.messages.map((message) => {
             const isCurrentUser = message.sender_id === currentUserId
             const sender = isCurrentUser 
               ? (thread.participant1.id === currentUserId ? thread.participant1 : thread.participant2)

@@ -69,7 +69,7 @@ export default async function MessagesPage({
       *,
       participant1:participant1_id(id, full_name, avatar_url),
       participant2:participant2_id(id, full_name, avatar_url),
-      messages(
+      messages!thread_id(
         id,
         content,
         sender_id,
@@ -80,8 +80,15 @@ export default async function MessagesPage({
       )
     `)
     .eq('id', currentThreadId)
-    .order('messages.created_at', { foreignTable: 'messages', ascending: true })
+    .order('created_at', { referencedTable: 'messages', ascending: true })
     .single() : { data: null }
+
+  // Add debug logging
+  console.log('Current thread query result:', {
+    threadId: currentThreadId,
+    thread: currentThread,
+    messageCount: currentThread?.messages?.length || 0
+  })
 
   // Transform avatar URLs to full URLs
   const transformAvatarUrls = (data: any) => {
