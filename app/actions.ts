@@ -59,7 +59,10 @@ export const signInAction = async (formData: FormData) => {
 export const forgotPasswordAction = async (formData: FormData) => {
   const email = formData.get("email")?.toString();
   const supabase = await createClient();
-  const origin = process.env.NEXT_PUBLIC_SITE_URL || (await headers()).get("origin");
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  const redirectTo = siteUrl 
+    ? `${siteUrl}/auth/callback?redirect_to=/protected/reset-password`
+    : `${(await headers()).get("origin")}/auth/callback?redirect_to=/protected/reset-password`;
   const callbackUrl = formData.get("callbackUrl")?.toString();
 
   if (!email) {
@@ -67,7 +70,7 @@ export const forgotPasswordAction = async (formData: FormData) => {
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${origin}/auth/callback?redirect_to=/protected/reset-password`,
+    redirectTo
   });
 
   if (error) {
