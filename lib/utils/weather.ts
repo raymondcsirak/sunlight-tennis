@@ -42,7 +42,12 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
     // Coordonatele pentru Satu Mare
     const lat = 47.75
     const lon = 23
-    const API_KEY = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY
+    const API_KEY = process.env.OPENWEATHER_API_KEY
+
+    console.log('Environment variables:', {
+      OPENWEATHER_API_KEY: process.env.OPENWEATHER_API_KEY,
+      NODE_ENV: process.env.NODE_ENV,
+    })
 
     console.log('Weather fetch started:', { date, time, hasApiKey: !!API_KEY })
 

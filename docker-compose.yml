@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  app:
+    image: ghcr.io/your-username/sunlight-tennis:latest
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
+      - OPENWEATHER_API_KEY=${OPENWEATHER_API_KEY}
+    command: >
+      sh -c "
+        echo 'Checking environment variables:' &&
+        echo 'OPENWEATHER_API_KEY=' &&
+        echo $$OPENWEATHER_API_KEY &&
+        node server.js
+      "
+    networks:
+      - proxy
+
+  static-files:
+    image: nginx:alpine
+    restart: unless-stopped
+    volumes:
+      - /DATA/AppData/sunlight-tennis:/usr/share/nginx/html
+    networks:
+      - proxy
+
+  nginx-proxy-manager:
+    image: 'jc21/nginx-proxy-manager:latest'
+    restart: unless-stopped
+    ports:
+      - '80:80'
+      - '81:81'
+      - '443:443'
+    volumes:
+      - ./data:/data
+      - ./letsencrypt:/etc/letsencrypt
+    networks:
+      - proxy
+
+networks:
+  proxy:
+    driver: bridge 

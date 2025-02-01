@@ -114,20 +114,17 @@ export function CourtsTab() {
       
       setIsLoadingWeather(true)
       try {
-        const forecast = await fetchWeatherForecast(
-          format(date, 'yyyy-MM-dd'),
-          time
+        const formattedDate = format(date, 'yyyy-MM-dd')
+        const response = await fetch(
+          `/api/weather?date=${formattedDate}&time=${time}`
         )
-
-        if (forecast) {
-          setWeatherData(forecast)
-        } else {
-          toast({
-            title: "Weather Data Unavailable",
-            description: "Could not fetch weather data for the selected time.",
-            variant: "destructive",
-          })
+        
+        if (!response.ok) {
+          throw new Error('Weather fetch failed')
         }
+
+        const forecast = await response.json()
+        setWeatherData(forecast)
       } catch (error) {
         console.error('Error fetching weather:', error)
         toast({
