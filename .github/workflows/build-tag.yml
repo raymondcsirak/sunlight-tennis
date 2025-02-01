@@ -9,11 +9,15 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
+      contents: read     # Required for checkout
       packages: write    # Required for pushing to GHCR
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all tags and branches
+          token: ${{ secrets.GITHUB_TOKEN }}  # Use the automatic GITHUB_TOKEN
 
       - name: Debug - Check Secrets Availability
         run: |
