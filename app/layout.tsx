@@ -27,6 +27,15 @@ export const metadata: Metadata = {
   keywords: ['tennis', 'court booking', 'tennis club', 'tennis community', 'tennis lessons', 'tennis partner'],
   authors: [{ name: 'SunlightTennis' }],
   creator: 'SunlightTennis',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+    other: {
+      rel: 'apple-touch-icon-precomposed',
+      url: '/favicon.ico',
+    },
+  },
   // Configurare pentru Open Graph (sharing pe retelele sociale)
   openGraph: {
     type: 'website',
@@ -101,6 +110,9 @@ export default async function RootLayout({
   // Structura HTML principala a aplicatiei
   return (
     <html lang="en" className={geist.className} suppressHydrationWarning>
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>
           <ThemeProvider
