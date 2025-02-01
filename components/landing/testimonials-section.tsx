@@ -48,7 +48,7 @@ export function TestimonialsSection() {
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Alătură-te comunității noastre de pasionați de tenis și experimentează diferența
-            care ne face cel mai important club de tenis din București.
+            care ne face cel mai important club de tenis din Satu Mare.
           </p>
         </div>
 

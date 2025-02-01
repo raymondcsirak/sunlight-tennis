@@ -11,7 +11,7 @@ export const dynamic = 'force-static'
 
 // Configurarea metadatelor specifice pentru pagina principala
 export const metadata = {
-  title: 'SunlightTennis - Tennis Club Management Platform',
+  title: 'Sunlight Tennis Club - Tennis Club Management Platform',
   description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
 }
 

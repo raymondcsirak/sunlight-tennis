@@ -33,7 +33,7 @@ export function HeroSection() {
           {/* Descriere principala */}
           <p className="mt-6 text-lg md:text-xl text-gray-300 max-w-lg">
             Cu o listă diversă de membri, echipamente profesionale și numeroase terenuri îngrijite,
-            SunlightTennis este destinația perfectă pentru sport și recreere!
+            Sunlight Tennis Club este destinația perfectă pentru sport și recreere!
           </p>
           {/* Buton de actiune principal */}
           <div className="mt-8">

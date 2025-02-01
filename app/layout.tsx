@@ -20,13 +20,13 @@ const geist = Geist({
 // Configurarea metadatelor pentru SEO si social media sharing
 export const metadata: Metadata = {
   title: {
-    default: 'SunlightTennis.ro - Tennis Club Management Platform',
-    template: '%s | SunlightTennis.ro'
+    default: 'Sunlight Tennis Club - Tennis Club Management Platform',
+    template: '%s | Sunlight Tennis Club'
   },
   description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
   keywords: ['tennis', 'court booking', 'tennis club', 'tennis community', 'tennis lessons', 'tennis partner'],
-  authors: [{ name: 'SunlightTennis' }],
-  creator: 'SunlightTennis',
+  authors: [{ name: 'Sunlight Tennis Club' }],
+  creator: 'Sunlight Tennis Club',
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon.ico',
@@ -41,14 +41,14 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://sunlighttennis.ro',
-    title: 'SunlightTennis.ro - Tennis Club Management Platform',
+    title: 'Sunlight Tennis Club - Tennis Club Management Platform',
     description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
-    siteName: 'SunlightTennis.ro'
+    siteName: 'Sunlight Tennis Club'
   },
   // Configurare pentru Twitter Cards
   twitter: {
     card: 'summary_large_image',
-    title: 'SunlightTennis.ro - Tennis Club Management Platform',
+    title: 'Sunlight Tennis Club - Tennis Club Management Platform',
     description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
     creator: '@sunlighttennis'
   },
@@ -126,7 +126,7 @@ export default async function RootLayout({
               <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
                 <div className="flex justify-between items-center h-full">
                   <Link href="/" className="text-xl font-bold">
-                    SunlightTennis
+                    Sunlight Tennis Club
                   </Link>
                   <div className="flex items-center gap-4">
                     <HeaderAuth email={user?.email} />
@@ -182,7 +182,7 @@ export default async function RootLayout({
                 </div>
                 {/* Copyright si drepturi de autor */}
                 <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
-                  <p>© {new Date().getFullYear()} SunlightTennis. All rights reserved.</p>
+                  <p>© {new Date().getFullYear()} Sunlight Tennis Club. All rights reserved.</p>
                 </div>
               </div>
             </footer>
