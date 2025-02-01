@@ -14,6 +14,17 @@ RUN npm ci --legacy-peer-deps
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
+
+# Define build arguments in builder stage
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SITE_URL
+
+# Set environment variables for build time
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -21,13 +32,17 @@ RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
-
 WORKDIR /app
+
+# Define arguments again for runtime
 ARG NEXT_PUBLIC_SUPABASE_URL
 ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
 ARG NEXT_PUBLIC_SITE_URL
 
+# Set environment variables for runtime
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
 RUN addgroup --system --gid 1001 nodejs
