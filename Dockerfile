@@ -21,9 +21,14 @@ RUN npm run build
 
 # Production image, copy all the files and run next
 FROM base AS runner
+
 WORKDIR /app
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+ARG NEXT_PUBLIC_SITE_URL
 
 ENV NODE_ENV=production
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
