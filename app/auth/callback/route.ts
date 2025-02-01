@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   // https://supabase.com/docs/guides/auth/server-side/nextjs
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
-  const origin = requestUrl.origin;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   const redirectTo = requestUrl.searchParams.get("redirect_to")?.toString();
 
   if (code) {
@@ -31,10 +31,13 @@ export async function GET(request: Request) {
     }
   }
 
+  // Use the site URL for redirects in production
+  const baseUrl = siteUrl || requestUrl.origin;
+
   if (redirectTo) {
-    return NextResponse.redirect(`${origin}${redirectTo}`);
+    return NextResponse.redirect(`${baseUrl}${redirectTo}`);
   }
 
   // URL to redirect to after sign up process completes
-  return NextResponse.redirect(`${origin}/profile`);
+  return NextResponse.redirect(`${baseUrl}/profile`);
 }
