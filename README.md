@@ -1,96 +1,160 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# Sunlight Tennis Club Platform
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+A modern, full-stack tennis club management platform built with Next.js, Supabase, and TypeScript.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+## 🎾 Features
 
-## Features
+### Court Management
+- Real-time court availability tracking
+- Easy booking system with calendar integration
+- Indoor and outdoor court distinction
+- Court maintenance schedule tracking
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Middleware
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+### Player Experience
+- **Match Finding System**
+  - Create and respond to match requests
+  - Skill-based matchmaking
+  - Flexible scheduling options
+  - Real-time match status updates
 
-## Demo
+- **Experience Points (XP) System**
+  - Progressive level system (Level 1-10)
+  - Multiple XP earning activities
+  - Activity streaks and multipliers
+  - Special event bonuses
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+- **Achievement System**
+  - Tiered achievements (Bronze to Platinum)
+  - Match-based accomplishments
+  - Training milestones
+  - Special event achievements
 
-## Deploy to Vercel
+### Social Features
+- Player profiles with stats and history
+- Real-time messaging system
+- Match history tracking
+- Achievement showcase
+- Community engagement features
 
-Vercel deployment will guide you through creating a Supabase account and project.
+## 🛠 Technology Stack
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+- **Frontend**
+  - Next.js 14 (App Router)
+  - TypeScript
+  - Tailwind CSS
+  - Shadcn UI Components
+  - React Query (TanStack)
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+- **Backend**
+  - Supabase (Database & Authentication)
+  - PostgreSQL with RLS policies
+  - Real-time subscriptions
+  - Edge Functions
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+- **State Management**
+  - Zustand
+  - React Query
+  - Server Components
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+## 📦 Installation
 
-## Clone and run locally
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/sunlight-tennis.git
+cd sunlight-tennis
+```
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+2. Install dependencies:
+```bash
+npm install
+```
 
-2. Create a Next.js app using the Supabase Starter template npx command
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
 
-   ```bash
-   npx create-next-app -e with-supabase
-   ```
+4. Update the following variables in `.env.local`:
+```
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+NEXT_PUBLIC_SITE_URL=your_site_url
+```
 
-3. Use `cd` to change into the app's directory
+5. Run the development server:
+```bash
+npm run dev
+```
 
-   ```bash
-   cd name-of-new-app
-   ```
+## 🚀 Deployment
 
-4. Rename `.env.example` to `.env.local` and update the following:
+The application can be deployed using Vercel:
 
-   ```
-   NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=[INSERT SUPABASE PROJECT API ANON KEY]
-   ```
+```bash
+npm run build
+```
 
-   Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` can be found in [your Supabase project's API settings](https://app.supabase.com/project/_/settings/api)
+For production deployment, make sure to:
+1. Set up all environment variables in your hosting platform
+2. Configure the Supabase project for production
+3. Set up proper security rules and RLS policies
 
-5. You can now run the Next.js local development server:
+## 🔒 Security
 
-   ```bash
-   npm run dev
-   ```
+- Row Level Security (RLS) policies for data protection
+- Secure authentication flow
+- Protected API routes
+- Environment variable management
+- Data validation with Zod
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+## 🌍 Internationalization
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+- Multi-language support using i18next
+- Romanian and English languages supported
+- Easy addition of new languages
+- Locale-based formatting
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+## 📱 Mobile Support
 
-## Feedback and issues
+- Responsive design
+- Progressive Web App (PWA) capabilities
+- Mobile-optimized interfaces
+- Touch-friendly interactions
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+## 🧪 Testing
 
-## More Supabase examples
+Run the test suite:
+```bash
+npm test
+```
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+## 📖 Documentation
+
+Additional documentation can be found in the `docs` directory:
+- [General Documentation](docs/general.md)
+- [API Documentation](docs/api.md)
+- [Database Schema](docs/database.md)
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/)
+- [Supabase](https://supabase.io/)
+- [Tailwind CSS](https://tailwindcss.com/)
+- [Shadcn UI](https://ui.shadcn.com/)
+- All contributors and community members
+
+## 📞 Contact
+
+For any queries or support open a pull request or an issue.
