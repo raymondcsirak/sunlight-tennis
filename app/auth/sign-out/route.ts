@@ -31,7 +31,11 @@ export async function POST(req: NextRequest) {
     }
   )
   await supabase.auth.signOut()
-  return NextResponse.redirect(new URL('/', req.url), {
+  
+  // Get the origin from headers or fallback to the request URL origin
+  const origin = req.headers.get('origin') || new URL(req.url).origin
+  
+  return NextResponse.redirect(`${origin}/`, {
     status: 302,
   })
 } 
