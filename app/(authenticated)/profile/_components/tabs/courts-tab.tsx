@@ -169,13 +169,15 @@ export function CourtsTab() {
 
   // Functie pentru resetarea formularului de rezervare
   const resetForm = () => {
-    setDate(new Date())
+    setDate(undefined)
     setTime(undefined)
     setDuration(undefined)
     setPlayers(undefined)
     setSelectedCourt(undefined)
     setIsTimeConfigConfirmed(false)
     setShowBookingConfirmation(false)
+    setWeatherData(null)
+    setCourts([])
   }
 
   // Functie pentru gestionarea rezervarii
@@ -231,8 +233,12 @@ export function CourtsTab() {
 
   // Functie pentru confirmarea rezervarii
   const handleBookingConfirm = async () => {
-    setShowBookingConfirmation(false)
-    await handleBooking()
+    try {
+      await handleBooking()
+      setShowBookingConfirmation(false)
+    } catch (error) {
+      console.error('Error during booking confirmation:', error)
+    }
   }
 
   // Functie pentru selectarea terenului

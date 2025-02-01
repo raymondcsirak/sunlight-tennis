@@ -110,20 +110,17 @@ export function TrainingTab() {
       
       setIsLoadingWeather(true)
       try {
-        const forecast = await fetchWeatherForecast(
-          format(date, 'yyyy-MM-dd'),
-          time
+        const formattedDate = format(date, 'yyyy-MM-dd')
+        const response = await fetch(
+          `/api/weather?date=${formattedDate}&time=${time}`
         )
-
-        if (forecast) {
-          setWeatherData(forecast)
-        } else {
-          toast({
-            title: "Weather Data Unavailable",
-            description: "Could not fetch weather data for the selected time.",
-            variant: "destructive",
-          })
+        
+        if (!response.ok) {
+          throw new Error('Weather fetch failed')
         }
+
+        const forecast = await response.json()
+        setWeatherData(forecast)
       } catch (error) {
         console.error('Error fetching weather:', error)
         toast({
@@ -166,12 +163,14 @@ export function TrainingTab() {
 
   // Functie pentru resetarea formularului de rezervare
   const resetForm = () => {
-    setDate(new Date())
+    setDate(undefined)
     setTime(undefined)
     setDuration(undefined)
     setSelectedCoach(undefined)
     setIsTimeConfigConfirmed(false)
     setShowBookingConfirmation(false)
+    setWeatherData(null)
+    setCoaches([])
   }
 
   // Functie pentru gestionarea rezervarii
@@ -226,8 +225,12 @@ export function TrainingTab() {
 
   // Functie pentru confirmarea rezervarii
   const handleBookingConfirm = async () => {
-    setShowBookingConfirmation(false)
-    await handleBooking()
+    try {
+      await handleBooking()
+      setShowBookingConfirmation(false)
+    } catch (error) {
+      console.error('Error during booking confirmation:', error)
+    }
   }
 
   // Functie pentru selectarea antrenorului
