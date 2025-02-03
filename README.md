@@ -39,28 +39,21 @@ A modern, full-stack tennis club management platform built with Next.js, Supabas
 ## 🛠 Technology Stack
 
 - **Frontend**
-  - Next.js 14 (App Router)
+  - Next.js 15 (App Router)
   - TypeScript
   - Tailwind CSS
   - Shadcn UI Components
-  - React Query (TanStack)
 
 - **Backend**
   - Supabase (Database & Authentication)
   - PostgreSQL with RLS policies
   - Real-time subscriptions
-  - Edge Functions
-
-- **State Management**
-  - Zustand
-  - React Query
-  - Server Components
 
 ## 📦 Installation
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/sunlight-tennis.git
+git clone https://github.com/raymondcsirak/sunlight-tennis.git
 cd sunlight-tennis
 ```
 
@@ -85,6 +78,11 @@ NEXT_PUBLIC_SITE_URL=your_site_url
 ```bash
 npm run dev
 ```
+6. Run the migrations:
+```bash
+npx supabase migration up
+npx supabase db push
+```
 
 ## 🚀 Deployment
 
@@ -107,33 +105,12 @@ For production deployment, make sure to:
 - Environment variable management
 - Data validation with Zod
 
-## 🌍 Internationalization
-
-- Multi-language support using i18next
-- Romanian and English languages supported
-- Easy addition of new languages
-- Locale-based formatting
-
 ## 📱 Mobile Support
 
 - Responsive design
 - Progressive Web App (PWA) capabilities
 - Mobile-optimized interfaces
 - Touch-friendly interactions
-
-## 🧪 Testing
-
-Run the test suite:
-```bash
-npm test
-```
-
-## 📖 Documentation
-
-Additional documentation can be found in the `docs` directory:
-- [General Documentation](docs/general.md)
-- [API Documentation](docs/api.md)
-- [Database Schema](docs/database.md)
 
 ## 🤝 Contributing
 
