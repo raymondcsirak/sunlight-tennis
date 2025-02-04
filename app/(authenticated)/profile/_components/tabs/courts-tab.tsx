@@ -46,9 +46,9 @@ export function CourtsTab() {
   const [isTimeConfigConfirmed, setIsTimeConfigConfirmed] = useState(false)
   const [showBookingConfirmation, setShowBookingConfirmation] = useState(false)
 
-  // Efect pentru incarcarea initiala a terenurilor disponibile
+  // Incarcarea initiala a terenurilor disponibile
   useEffect(() => {
-    // Initial fetch of all courts
+    // Incarcarea initiala a tuturor terenurilor
     async function fetchInitialCourts() {
       setIsFetchingCourts(true)
       try {
@@ -71,6 +71,7 @@ export function CourtsTab() {
     fetchInitialCourts()
   }, [])
 
+  // Incarcarea terenurilor disponibile in functie de data si ora selectata
   useEffect(() => {
     async function fetchAvailableCourts() {
       if (!date || !time || !duration) return
@@ -105,7 +106,7 @@ export function CourtsTab() {
     fetchAvailableCourts()
   }, [date, time, duration, toast])
 
-  // Fetch weather when date or time changes
+  // Incarcarea datelor meteo in functie de data si ora selectata
   useEffect(() => {
     async function fetchWeather() {
       if (!date || !time) {
@@ -137,13 +138,13 @@ export function CourtsTab() {
       }
     }
 
-    // Only fetch if both date and time are selected
+    // Se incarca doar daca sunt selectate data si ora
     if (date && time) {
       fetchWeather()
     }
   }, [date, time, toast])
 
-  // Functie pentru a obtine iconita corespunzatoare conditiilor meteo
+  // Se obtine iconita corespunzatoare conditiilor meteo
   const getWeatherIcon = (condition: string) => {
     console.log('Getting icon for condition:', condition)
     switch (condition.toLowerCase()) {
@@ -298,7 +299,7 @@ export function CourtsTab() {
           />
         </Card>
 
-        {/* Weather and Booking Panel */}
+        {/* Sectiunea de meteo si rezervare */}
         <Card 
           className="p-6 bg-gradient-to-br from-background to-muted/30 border border-border/50 shadow-lg backdrop-blur-sm"
         >
@@ -315,7 +316,7 @@ export function CourtsTab() {
                 </h2>
               </div>
 
-              {/* Weather Information */}
+              {/* Sectiunea de meteo */}
               <div className="flex items-center space-x-4 p-4 rounded-lg bg-background/50 border border-border/50 backdrop-blur-sm">
                 <div className="p-3 rounded-full bg-primary/10 text-primary">
                   {isLoadingWeather ? (
@@ -359,7 +360,7 @@ export function CourtsTab() {
                 </div>
               </div>
 
-              {/* Time Selection */}
+              {/* Sectiunea de selectare a orarii */}
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <Clock className="h-4 w-4" /> Select Time
@@ -378,7 +379,7 @@ export function CourtsTab() {
                 </Select>
               </div>
 
-              {/* Duration Selection */}
+              {/* Sectiunea de selectare a duratei meciului */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Match Duration</label>
                 <Select value={duration} onValueChange={setDuration}>
@@ -395,7 +396,7 @@ export function CourtsTab() {
                 </Select>
               </div>
 
-              {/* Players Selection */}
+              {/* Sectiunea de selectare a numarului de jucatori */}
               <div className="space-y-2">
                 <label className="text-sm font-medium flex items-center gap-2">
                   <Users className="h-4 w-4" /> Number of Players
@@ -414,7 +415,7 @@ export function CourtsTab() {
                 </Select>
               </div>
 
-              {/* Confirm Button - Only show when not confirmed */}
+              {/* Butonul de confirmare */}
               {!isTimeConfigConfirmed && (
                 <Button 
                   className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
@@ -429,7 +430,7 @@ export function CourtsTab() {
         </Card>
       </div>
 
-      {/* Court Selection Grid - Only show after time config is confirmed */}
+      {/* Gridul de selectie a terenurilor - Doar se afiseaza dupa confirmarea configurarii timpului */}
       {isTimeConfigConfirmed && (
         <div className="mt-4">
           <div className="flex justify-between items-center mb-4">
@@ -473,7 +474,7 @@ export function CourtsTab() {
                         <CalendarIcon className="h-12 w-12 text-muted-foreground/50" />
                       </div>
                     )}
-                    {/* Hover overlay with quick info */}
+                    {/* Overlay cu informatii rapide */}
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
                       <p className="text-sm font-medium">Surface: {court.surface}</p>
                       <p className="text-sm">{court.hourly_rate} Lei/hour</p>
@@ -497,7 +498,7 @@ export function CourtsTab() {
                 </Card>
               ))
             ) : (
-              // Loading state or empty state
+              // Stare de incarcare sau stare goala
               Array.from({ length: 4 }).map((_, index) => (
                 <Card
                   key={index}
@@ -519,7 +520,7 @@ export function CourtsTab() {
         </div>
       )}
 
-      {/* Booking Button - Only show when a court is selected */}
+      {/* Butonul de rezervare - Doar se afiseaza daca un teren este selectat */}
       {selectedCourt && (
         <div className="mt-4 flex justify-end">
           <Button 
@@ -533,7 +534,7 @@ export function CourtsTab() {
         </div>
       )}
 
-      {/* Booking Confirmation Dialog */}
+      {/* Dialogul de confirmare a rezervarii */}
       <Dialog open={showBookingConfirmation} onOpenChange={setShowBookingConfirmation}>
         <DialogContent>
           <DialogHeader>

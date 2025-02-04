@@ -16,7 +16,7 @@ export type CourtWithAvailability = {
   image_url: string | null
   available: boolean
 }
-
+// Schema pentru crearea unei rezervari
 const createBookingSchema = z.object({
   courtId: z.string(),
   startTime: z.string(),
@@ -34,7 +34,7 @@ export async function getAvailableCourts(
   try {
     const supabase = await createClient()
 
-    // First, get all active courts
+    // Se obtine toate terenurile active
     const { data: courts, error: courtsError } = await supabase
       .from('courts')
       .select('*')
@@ -42,7 +42,7 @@ export async function getAvailableCourts(
 
     if (courtsError) throw courtsError
 
-    // If startTime equals endTime, it's an initial fetch - return all courts as available
+    // Daca ora de start este egala cu ora de sfarsit, se returneaza toate terenurile ca disponibile
     if (startTime === endTime) {
       const courtsWithAvailability: CourtWithAvailability[] = courts.map(court => ({
         ...court,
@@ -55,7 +55,7 @@ export async function getAvailableCourts(
       }
     }
 
-    // Get all bookings that overlap with the requested time period
+    // Se obtin toate rezervarile care se suprapun cu perioada solicitata
     const { data: bookings, error: bookingsError } = await supabase
       .from('court_bookings')
       .select('court_id')
@@ -71,10 +71,10 @@ export async function getAvailableCourts(
 
     console.log('Found bookings:', bookings)
 
-    // Create a Set of booked court IDs for quick lookup
+    // Creeaza un Set de ID-uri ale terenurilor rezervate pentru o cautare rapida
     const bookedCourtIds = new Set(bookings?.map(b => b.court_id) || [])
 
-    // Mark courts as available or not
+    // Creeaza un array de terenuri cu disponibilitatea corespunzatoare
     const courtsWithAvailability: CourtWithAvailability[] = courts.map(court => ({
       ...court,
       available: !bookedCourtIds.has(court.id)

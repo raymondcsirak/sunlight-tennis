@@ -55,12 +55,12 @@ export function HeroSection() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {/* Statistica pentru terenuri */}
             <div className="text-center">
-              <div className="text-5xl font-bold text-primary">10+</div>
+              <div className="text-5xl font-bold text-primary">4+</div>
               <div className="text-sm text-gray-300 mt-1">Terenuri Profesionale</div>
             </div>
             {/* Statistica pentru antrenori */}
             <div className="text-center">
-              <div className="text-5xl font-bold text-primary">15+</div>
+              <div className="text-5xl font-bold text-primary">3</div>
               <div className="text-sm text-gray-300 mt-1">Antrenori Experți</div>
             </div>
             {/* Statistica pentru membri */}
@@ -70,7 +70,7 @@ export function HeroSection() {
             </div>
             {/* Statistica pentru experienta */}
             <div className="text-center">
-              <div className="text-5xl font-bold text-primary">18</div>
+              <div className="text-5xl font-bold text-primary">20+</div>
               <div className="text-sm text-gray-300 mt-1">Ani de Experiență</div>
             </div>
           </div>
