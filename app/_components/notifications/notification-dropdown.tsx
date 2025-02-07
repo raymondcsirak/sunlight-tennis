@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 
-// Tipuri pentru evenimentele realtime din Supabase
 type RealtimePostgresChangesPayloadBase = {
   schema: string
   table: string
@@ -26,44 +25,38 @@ type RealtimePostgresChangesPayloadBase = {
   errors: null | any[]
 }
 
-// Tipul pentru evenimentul de inserare notificare
 interface RealtimePostgresInsertPayload extends RealtimePostgresChangesPayloadBase {
   eventType: 'INSERT'
   new: Notification
 }
 
-// Tipul pentru evenimentul de actualizare notificare
 interface RealtimePostgresUpdatePayload extends RealtimePostgresChangesPayloadBase {
   eventType: 'UPDATE'
   old: Notification
   new: Notification
 }
 
-// Tipurile posibile de notificari in aplicatie
 type NotificationType = 
-  | "match_scheduled"      // Meci programat
-  | "training_reminder"    // Reminder antrenament
-  | "xp_gained"           // XP castigat
-  | "level_up"            // Nivel crescut
-  | "achievement_unlocked" // Realizare deblocata
-  | "court_booked"        // Teren rezervat
-  | "training_booked"     // Antrenament rezervat
-  | "partner_request"     // Cerere partener
+  | "match_scheduled"
+  | "training_reminder"
+  | "xp_gained"
+  | "level_up"
+  | "achievement_unlocked"
+  | "court_booked"
+  | "training_booked"
+  | "partner_request"
 
-// Interfata pentru structura unei notificari
 interface Notification {
-  id: string              // ID-ul notificarii
-  type: NotificationType  // Tipul notificarii
-  title: string          // Titlul notificarii
-  message: string        // Mesajul notificarii
-  read: boolean         // Status citire
-  created_at: string    // Data crearii
-  data?: Record<string, unknown>  // Date aditionale
+  id: string
+  type: NotificationType
+  title: string
+  message: string
+  read: boolean
+  created_at: string
+  data?: Record<string, unknown>
 }
 
-// Componenta principala pentru dropdown-ul de notificari
 export function NotificationDropdown() {
-  // Initializare client Supabase pentru browser si state management
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -71,7 +64,6 @@ export function NotificationDropdown() {
   const queryClient = useQueryClient()
   const [unreadCount, setUnreadCount] = useState(0)
 
-  // Query pentru obtinerea notificarilor
   const { data: notifications = [], error: fetchError } = useQuery({
     queryKey: ["notifications"],
     queryFn: async () => {
@@ -82,7 +74,6 @@ export function NotificationDropdown() {
         return []
       }
 
-      // Obtine ultimele 10 notificari, ordonate descrescator dupa data
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -99,7 +90,6 @@ export function NotificationDropdown() {
     },
   })
 
-  // Mutatie pentru marcarea unei notificari ca citita
   const markAsRead = useMutation({
     mutationFn: async (id: string) => {
       await supabase
@@ -112,7 +102,6 @@ export function NotificationDropdown() {
     },
   })
 
-  // Mutatie pentru marcarea tuturor notificarilor ca citite
   const markAllAsRead = useMutation({
     mutationFn: async () => {
       await supabase
@@ -125,13 +114,11 @@ export function NotificationDropdown() {
     },
   })
 
-  // Actualizeaza numarul de notificari necitite
   useEffect(() => {
     const unread = notifications.filter((n: Notification) => !n.read).length
     setUnreadCount(unread)
   }, [notifications])
 
-  // Abonare la notificari noi prin Supabase Realtime
   useEffect(() => {
     let mounted = true
     let retryCount = 0
@@ -139,7 +126,6 @@ export function NotificationDropdown() {
     const retryDelay = 2000 // 2 seconds
     let cleanupFunction: (() => void) | undefined
 
-    // Configurare canal pentru notificari realtime
     const setupChannel = async () => {
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession()
@@ -153,10 +139,8 @@ export function NotificationDropdown() {
           return () => {}
         }
 
-        // Use a stable channel name based on user ID
         const channelId = `notifications-${userId}`
 
-        // Remove any existing channel with the same name
         const existingChannel = supabase.getChannels().find(
           channel => channel.topic === channelId
         )
@@ -245,7 +229,6 @@ export function NotificationDropdown() {
     }
   }, [supabase, queryClient])
 
-  // Render interfata pentru notificari
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

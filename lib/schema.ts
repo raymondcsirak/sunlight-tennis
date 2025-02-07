@@ -1,80 +1,80 @@
-// Import pentru biblioteca Zod folosita pentru validarea datelor
+// Import for Zod library used for data validation
 import { z } from 'zod'
 
-// Scheme pentru enumerari (valori predefinite)
-// Schema pentru statusul utilizatorului
+// Schemas for enums (predefined values)
+// Schema for user status
 export const UserStatusSchema = z.enum(['online', 'playing', 'away'])
-// Schema pentru statusul rezervarii
+// Schema for booking status
 export const BookingStatusSchema = z.enum(['pending', 'confirmed', 'cancelled'])
-// Schema pentru statusul platii
+// Schema for payment status
 export const PaymentStatusSchema = z.enum(['pending', 'completed', 'failed', 'refunded'])
-// Schema pentru statusul meciului
+// Schema for match status
 export const MatchStatusSchema = z.enum(['scheduled', 'in_progress', 'completed', 'cancelled'])
-// Schema pentru tipul suprafetei de joc
+// Schema for playing surface type
 export const SurfaceTypeSchema = z.enum(['clay', 'hard', 'grass', 'artificial'])
 
-// Schema pentru profilul utilizatorului
+// Schema for user profile
 export const ProfileSchema = z.object({
-  id: z.string().uuid(),                           // ID-ul unic al profilului
-  full_name: z.string().min(2).max(100),          // Numele complet (2-100 caractere)
-  skill_level: z.number().min(1).max(10),         // Nivelul de experienta (1-10)
-  avatar_url: z.string().url().nullable(),        // URL-ul avatarului (optional)
-  status: UserStatusSchema,                       // Statusul curent al utilizatorului
-  last_seen: z.string().datetime(),               // Ultima data cand a fost vazut
-  created_at: z.string().datetime(),              // Data crearii profilului
-  updated_at: z.string().datetime()               // Data ultimei actualizari
+  id: z.string().uuid(),
+  full_name: z.string().min(2).max(100),
+  skill_level: z.number().min(1).max(10),
+  avatar_url: z.string().url().nullable(),
+  status: UserStatusSchema,
+  last_seen: z.string().datetime(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime()
 })
 
-// Schema pentru terenul de tenis
+// Schema for tennis court
 export const CourtSchema = z.object({
-  id: z.string().uuid(),                          // ID-ul unic al terenului
-  name: z.string().min(2).max(100),              // Numele terenului (2-100 caractere)
-  surface: SurfaceTypeSchema,                     // Tipul suprafetei
-  is_indoor: z.boolean(),                         // Daca este teren acoperit
-  hourly_rate: z.number().positive(),             // Tariful pe ora
-  location: z.any(),                              // Locatia (tip PostGIS Point)
-  is_active: z.boolean(),                         // Daca terenul este activ
-  created_at: z.string().datetime(),              // Data crearii
-  updated_at: z.string().datetime()               // Data ultimei actualizari
+  id: z.string().uuid(),
+  name: z.string().min(2).max(100),
+  surface: SurfaceTypeSchema,
+  is_indoor: z.boolean(),
+  hourly_rate: z.number().positive(),
+  location: z.any(),
+  is_active: z.boolean(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime()
 })
 
-// Schema pentru rezervari
+// Schema for bookings
 export const BookingSchema = z.object({
-  id: z.string().uuid(),                          // ID-ul unic al rezervarii
-  court_id: z.string().uuid(),                    // ID-ul terenului rezervat
-  user_id: z.string().uuid(),                     // ID-ul utilizatorului care a facut rezervarea
-  start_time: z.string().datetime(),              // Data si ora de inceput
-  end_time: z.string().datetime(),                // Data si ora de sfarsit
-  status: BookingStatusSchema,                    // Statusul rezervarii
-  payment_status: PaymentStatusSchema,            // Statusul platii
-  amount: z.number().positive(),                  // Suma de plata
-  created_at: z.string().datetime(),              // Data crearii
-  updated_at: z.string().datetime()               // Data ultimei actualizari
+  id: z.string().uuid(),
+  court_id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  start_time: z.string().datetime(),
+  end_time: z.string().datetime(),
+  status: BookingStatusSchema,
+  payment_status: PaymentStatusSchema,
+  amount: z.number().positive(),
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime()
 })
 
-// Schema pentru meciuri
+// Schema for matches
 export const MatchSchema = z.object({
-  id: z.string().uuid(),                          // ID-ul unic al meciului
-  booking_id: z.string().uuid(),                  // ID-ul rezervarii asociate
-  player1_id: z.string().uuid(),                  // ID-ul primului jucator
-  player2_id: z.string().uuid(),                  // ID-ul celui de-al doilea jucator
-  score: z.string().nullable(),                   // Scorul meciului (optional)
-  status: MatchStatusSchema,                      // Statusul meciului
-  created_at: z.string().datetime(),              // Data crearii
-  updated_at: z.string().datetime()               // Data ultimei actualizari
+  id: z.string().uuid(),
+  booking_id: z.string().uuid(),
+  player1_id: z.string().uuid(),
+  player2_id: z.string().uuid(),
+  score: z.string().nullable(),
+  status: MatchStatusSchema,
+  created_at: z.string().datetime(),
+  updated_at: z.string().datetime()
 })
 
-// Schema pentru realizari
+// Schema for achievements
 export const AchievementSchema = z.object({
-  id: z.string().uuid(),                          // ID-ul unic al realizarii
-  user_id: z.string().uuid(),                     // ID-ul utilizatorului
-  type: z.string(),                               // Tipul realizarii
-  metadata: z.record(z.any()),                    // Metadate aditionale
-  earned_at: z.string().datetime(),               // Data obtinerii
-  created_at: z.string().datetime()               // Data crearii
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  type: z.string(),
+  metadata: z.record(z.any()),
+  earned_at: z.string().datetime(),
+  created_at: z.string().datetime()
 })
 
-// Tipuri TypeScript derivate din scheme
+// TypeScript types derived from schemas
 export type UserStatus = z.infer<typeof UserStatusSchema>
 export type BookingStatus = z.infer<typeof BookingStatusSchema>
 export type PaymentStatus = z.infer<typeof PaymentStatusSchema>

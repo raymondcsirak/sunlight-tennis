@@ -1,6 +1,8 @@
 import { fetchWeatherForecast } from '@/lib/utils/weather'
 import { NextResponse } from 'next/server'
 
+// GET route for fetching weather forecast
+// GET /api/weather?date=YYYY-MM-DD&time=HH:mm
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)

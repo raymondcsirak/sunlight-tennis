@@ -1,4 +1,3 @@
-// Importuri necesare pentru functionalitatea paginii de profil
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { redirect } from "next/navigation"
@@ -10,9 +9,7 @@ import { getPlayerStats } from "@/app/_components/player-stats/actions"
 import { PlayerStatsCard } from "@/app/_components/player-stats/player-stats-card"
 import { AchievementsTab } from "./_components/tabs/achievements-tab"
 
-// Componenta server pentru pagina de profil a utilizatorului
 export default async function ProfilePage() {
-  // Initializare client Supabase cu cookie-urile sesiunii
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -26,17 +23,11 @@ export default async function ProfilePage() {
     }
   )
 
-  // Verifica autentificarea utilizatorului si redirectioneaza daca nu este autentificat
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError || !user) {
     redirect("/sign-in")
   }
 
-  // Obtine toate datele necesare in paralel pentru performanta optima:
-  // - Profilul utilizatorului
-  // - Experienta (XP) jucatorului
-  // - Realizarile recente
-  // - Statisticile jucatorului
   const [
     { data: profile },
     { data: playerXp },
@@ -68,12 +59,6 @@ export default async function ProfilePage() {
     playerXp?.current_level || 1
   )
 
-  // Randeaza interfata profilului cu toate componentele:
-  // - Layout-ul de profil cu informatii de baza
-  // - Progresul XP si streak-ul zilnic
-  // - Cardul cu statisticile jucatorului
-  // - Tab-ul cu realizari
-  // - Camera cu trofee (ultimele 4 realizari)
   return (
     <ProfileLayout 
       user={user} 

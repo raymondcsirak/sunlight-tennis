@@ -1,4 +1,4 @@
-// Importuri pentru componentele necesare si utilitare
+// Imports for required components and utilities
 import HeaderAuth from "@/components/header-auth";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Geist } from "next/font/google";
@@ -11,13 +11,13 @@ import { cookies } from "next/headers"
 import { Providers } from "./providers"
 import { updateStreak } from "./_actions/update-streak"
 
-// Configurarea fontului Geist pentru intreaga aplicatie
+// Configure Geist font for the entire application
 const geist = Geist({
   subsets: ["latin"],
   display: 'swap',
 });
 
-// Configurarea metadatelor pentru SEO si social media sharing
+// Configure metadata for SEO and social media sharing
 export const metadata: Metadata = {
   title: {
     default: 'Sunlight Tennis Club - Tennis Club Management Platform',
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
       url: '/favicon.ico',
     },
   },
-  // Configurare pentru Open Graph (sharing pe retelele sociale)
+  // Configuration for Open Graph (social media sharing)
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -45,14 +45,14 @@ export const metadata: Metadata = {
     description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
     siteName: 'Sunlight Tennis Club'
   },
-  // Configurare pentru Twitter Cards
+  // Configuration for Twitter Cards
   twitter: {
     card: 'summary_large_image',
     title: 'Sunlight Tennis Club - Tennis Club Management Platform',
     description: 'Book tennis courts, find partners, track your progress, and join a vibrant tennis community.',
     creator: '@sunlighttennis'
   },
-  // Configurare pentru robotii de indexare
+  // Configuration for indexing robots
   robots: {
     index: true,
     follow: true,
@@ -66,20 +66,20 @@ export const metadata: Metadata = {
   },
 }
 
-// Componenta principala de layout care se aplica tuturor paginilor
+// Main layout component that applies to all pages
 export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  // Initializarea clientului Supabase pentru autentificare
+  // Initialize Supabase client for authentication
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        // Configurare pentru gestionarea cookie-urilor
+        // Configuration for cookie management
         getAll() {
           return cookieStore.getAll().map(cookie => ({
             name: cookie.name,
@@ -92,22 +92,22 @@ export default async function RootLayout({
               cookieStore.set(name, value, options);
             });
           } catch (error) {
-            // Eroarea poate fi ignorata daca exista middleware pentru refresh-ul sesiunii
+            // Error can be ignored if there's middleware for session refresh
           }
         },
       },
     }
   )
 
-  // Obtinerea informatiilor despre utilizatorul curent
+  // Get current user information
   const { data: { user } } = await supabase.auth.getUser()
   
-  // Actualizarea streak-ului pentru utilizatorii autentificati
+  // Update streak for authenticated users
   if (user) {
     await updateStreak()
   }
 
-  // Structura HTML principala a aplicatiei
+  // Main HTML structure of the application
   return (
     <html lang="en" className={geist.className} suppressHydrationWarning>
       <head>
@@ -121,7 +121,7 @@ export default async function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {/* Header-ul aplicatiei cu navigare si autentificare */}
+            {/* Application header with navigation and authentication */}
             <header className="fixed top-0 w-full z-50 bg-background/80 backdrop-blur-sm border-b">
               <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16">
                 <div className="flex justify-between items-center h-full">
@@ -136,12 +136,12 @@ export default async function RootLayout({
               </nav>
             </header>
 
-            {/* Continutul principal al paginii */}
+            {/* Main page content */}
             <main className="flex-1">
               {children}
             </main>
 
-            {/* Footer-ul aplicatiei cu linkuri rapide si informatii de contact */}
+            {/* Application footer with quick links and contact information */}
             <footer className="bg-muted py-12">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -180,7 +180,7 @@ export default async function RootLayout({
                     </address>
                   </div>
                 </div>
-                {/* Copyright si drepturi de autor */}
+                {/* Copyright and attribution */}
                 <div className="mt-8 pt-8 border-t text-center text-muted-foreground">
                   <p>© {new Date().getFullYear()} Sunlight Tennis Club. All rights reserved.</p>
                 </div>

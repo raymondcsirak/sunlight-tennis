@@ -1,14 +1,14 @@
-// Import pentru componenta Image din Next.js pentru optimizarea imaginilor
+// Import for Next.js Image component for image optimization
 import Image from "next/image"
 
-// Componenta pentru sectiunea 'Despre Noi' din pagina de landing
+// Component for 'About Us' section of the landing page
 export function AboutSection() {
   return (
-    // Container principal cu padding vertical si fundal
+    // Main container with vertical padding and background
     <div className="py-24 bg-background">
-      {/* Container pentru continut cu margini responsive */}
+      {/* Content container with responsive margins */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Sectiunea de titlu si descriere centrată */}
+        {/* Centered title and description section */}
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             În tenis, viteza este totul.
@@ -19,18 +19,18 @@ export function AboutSection() {
           </p>
         </div>
 
-        {/* Grid cu doua coloane pentru imagine si continut */}
+        {/* Two-column grid for image and content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Container pentru imagine cu aspect ratio 4:3 */}
+          {/* Image container with 4:3 aspect ratio */}
           <div className="relative aspect-[4/3] w-full">
             <Image
               src="https://jaioqrcuedkbqjwglmnv.supabase.co/storage/v1/object/public/images/tennis-action.jpg"
-              alt="Tenis în acțiune"
+              alt="Tennis in action"
               fill
               className="object-cover rounded-lg"
             />
           </div>
-          {/* Sectiunea de text si statistici */}
+          {/* Text and statistics section */}
           <div className="flex flex-col justify-center">
             <h3 className="text-2xl font-bold mb-4">
               Excelență în fiecare lovitură
@@ -38,14 +38,14 @@ export function AboutSection() {
             <p className="text-muted-foreground text-lg mb-6">
               Cu o tradiție bogată în dezvoltarea jucătorilor de tenis, oferim programe personalizate pentru toate nivelurile de experiență.
             </p>
-            {/* Grid pentru statistici cu doua coloane */}
+            {/* Two-column grid for statistics */}
             <div className="grid grid-cols-2 gap-8">
-              {/* Prima statistica - Ani de experienta */}
+              {/* First statistic - Years of experience */}
               <div>
                 <div className="text-4xl font-bold text-primary mb-2">25+</div>
                 <div className="text-sm text-muted-foreground">Ani de Experiență</div>
               </div>
-              {/* A doua statistica - Numar de cursanti */}
+              {/* Second statistic - Number of students */}
               <div>
                 <div className="text-4xl font-bold text-primary mb-2">1000+</div>
                 <div className="text-sm text-muted-foreground">Cursanți Antrenați</div>

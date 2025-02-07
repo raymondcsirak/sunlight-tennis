@@ -1,22 +1,22 @@
-// Marcam componenta ca fiind client-side
+// Mark component as client-side
 "use client"
 
-// Importuri pentru componentele UI si iconite
+// Imports for UI components and icons
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Mail, Phone } from "lucide-react"
 
-// Componenta pentru sectiunea de contact din pagina de landing
+// Component for contact section of the landing page
 export function ContactSection() {
   return (
-    // Container principal cu fundal semi-transparent
+    // Main container with semi-transparent background
     <div className="bg-muted/50 py-24">
-      {/* Container pentru continut cu latimea maxima limitata */}
+      {/* Content container with limited maximum width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Grid cu doua coloane pentru informatii de contact si formular */}
+        {/* Two-column grid for contact information and form */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-          {/* Sectiunea cu informatii de contact */}
+          {/* Contact information section */}
           <div>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
               Contactează-ne
@@ -25,21 +25,21 @@ export function ContactSection() {
               Ai întrebări despre serviciile noastre? Suntem aici să te ajutăm.
             </p>
 
-            {/* Lista cu detalii de contact si iconite */}
+            {/* List of contact details with icons */}
             <div className="mt-8 space-y-6">
-              {/* Adresa cu iconita */}
+              {/* Address with icon */}
               <div className="flex items-center">
                 <MapPin className="h-6 w-6 text-primary" />
                 <span className="ml-4 text-foreground">
                   Strada Mușcatelor 9, Satu Mare, România
                 </span>
               </div>
-              {/* Telefon cu iconita */}
+              {/* Phone with icon */}
               <div className="flex items-center">
                 <Phone className="h-6 w-6 text-primary" />
                 <span className="ml-4 text-foreground">+40 123 456 789</span>
               </div>
-              {/* Email cu iconita */}
+              {/* Email with icon */}
               <div className="flex items-center">
                 <Mail className="h-6 w-6 text-primary" />
                 <span className="ml-4 text-foreground">
@@ -49,11 +49,11 @@ export function ContactSection() {
             </div>
           </div>
 
-          {/* Formular de contact */}
+          {/* Contact form */}
           <form className="space-y-6">
-            {/* Grid pentru campurile de nume si prenume */}
+            {/* Grid for first and last name fields */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-              {/* Camp pentru prenume */}
+              {/* First name field */}
               <div>
                 <label
                   htmlFor="first-name"
@@ -69,7 +69,7 @@ export function ContactSection() {
                   className="mt-1"
                 />
               </div>
-              {/* Camp pentru nume */}
+              {/* Last name field */}
               <div>
                 <label
                   htmlFor="last-name"
@@ -86,7 +86,7 @@ export function ContactSection() {
                 />
               </div>
             </div>
-            {/* Camp pentru email */}
+            {/* Email field */}
             <div>
               <label
                 htmlFor="email"
@@ -102,7 +102,7 @@ export function ContactSection() {
                 className="mt-1"
               />
             </div>
-            {/* Camp pentru mesaj */}
+            {/* Message field */}
             <div>
               <label
                 htmlFor="message"
@@ -117,7 +117,7 @@ export function ContactSection() {
                 className="mt-1"
               />
             </div>
-            {/* Buton de trimitere cu efect de hover si active */}
+            {/* Submit button with hover and active effects */}
             <Button 
               type="submit" 
               className="w-full transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"

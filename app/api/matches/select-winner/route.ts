@@ -4,18 +4,18 @@ import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { AchievementService } from '@/lib/services/achievement.service'
 
-// Schema pentru validarea datelor de intrare
+// Schema for input data validation
 const SelectWinnerSchema = z.object({
-  matchId: z.string().uuid(),         // ID-ul meciului
-  selectedWinnerId: z.string().uuid() // ID-ul jucatorului selectat ca castigator
+  matchId: z.string().uuid(),         // Match ID
+  selectedWinnerId: z.string().uuid() // ID of the player selected as winner
 })
 
-// Ruta POST pentru selectarea castigatorului unui meci
+// POST route for selecting a match winner
 // POST /api/matches/select-winner
 export async function POST(req: Request) {
   try {
     console.log('Starting winner selection process...')
-    // Initializare client Supabase pentru server
+    // Initialize Supabase client for server
     const cookieStore = await cookies()
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
       }
     )
     
-    // Verifica autentificarea utilizatorului
+    // Check user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       console.error('Auth error:', authError)
@@ -40,7 +40,7 @@ export async function POST(req: Request) {
     }
     console.log('User authenticated:', user.id)
 
-    // Valideaza datele de intrare
+    // Validate input data
     const body = await req.json()
     console.log('Request body:', body)
     const result = SelectWinnerSchema.safeParse(body)
@@ -55,7 +55,7 @@ export async function POST(req: Request) {
     const { matchId, selectedWinnerId } = result.data
     console.log('Validated input:', { matchId, selectedWinnerId })
 
-    // Obtine detaliile meciului
+    // Get match details
     const { data: match, error: matchError } = await supabase
       .from('matches')
       .select('*, player1:player1_id(*), player2:player2_id(*)')
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
     }
     console.log('Match found:', match)
 
-    // Verifica daca utilizatorul este jucator in acest meci
+    // Check if user is a player in this match
     if (match.player1_id !== user.id && match.player2_id !== user.id) {
       console.error('User not in match:', { userId: user.id, match })
       return NextResponse.json(
@@ -80,7 +80,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // Verifica daca castigatorul selectat este jucator in acest meci
+    // Check if selected winner is a player in this match
     if (selectedWinnerId !== match.player1_id && selectedWinnerId !== match.player2_id) {
       console.error('Invalid winner:', { selectedWinnerId, match })
       return NextResponse.json(
@@ -89,7 +89,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // Inregistreaza selectia castigatorului
+    // Record winner selection
     console.log('Recording selection...')
     const { data: selectionData, error: selectionError } = await supabase
       .from('match_winner_selections')
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
     }
     console.log('Selection recorded:', selectionData)
 
-    // Obtine selectiile ambilor jucatori
+    // Get selections from both players
     const { data: selections, error: selectionsError } = await supabase
       .from('match_winner_selections')
       .select('selector_id, selected_winner_id')
@@ -132,14 +132,14 @@ export async function POST(req: Request) {
     }
     console.log('All selections:', selections)
 
-    // Verifica daca ambii jucatori au selectat si sunt de acord
+    // Check if both players have selected and agree
     if (selections.length === 2) {
       const [selection1, selection2] = selections
       const bothAgree = selection1.selected_winner_id === selection2.selected_winner_id
       console.log('Both players selected:', { bothAgree, selection1, selection2 })
 
       if (bothAgree) {
-        // Actualizeaza castigatorul meciului
+        // Update match winner
         console.log('Updating match winner...')
         const { error: updateError } = await supabase
           .from('matches')
@@ -157,7 +157,7 @@ export async function POST(req: Request) {
           )
         }
 
-        // Creeaza notificari pentru ambii jucatori
+        // Create notifications for both players
         console.log('Creating completion notifications...')
         const { error: notificationError } = await supabase
           .from('notifications')
@@ -186,16 +186,16 @@ export async function POST(req: Request) {
           console.error('Notification error:', notificationError)
         }
 
-        // Verifica realizarile pentru ambii jucatori
+        // Check achievements for both players
         const achievementService = new AchievementService()
         
-        // Verifica realizarile pentru castigator
+        // Check achievements for winner
         await achievementService.checkAndAwardAchievements({
           type: 'match_won',
           userId: selection1.selected_winner_id
         })
 
-        // Verifica realizarile pentru ambii jucatori pentru meci jucat
+        // Check achievements for both players for match played
         await Promise.all([
           achievementService.checkAndAwardAchievements({
             type: 'match_played',
@@ -212,7 +212,7 @@ export async function POST(req: Request) {
           winner_id: selection1.selected_winner_id
         })
       } else {
-        // Creeaza notificari de disputa
+        // Create dispute notifications
         console.log('Creating dispute notifications...')
         try {
           const { error: notificationError } = await supabase
@@ -250,15 +250,15 @@ export async function POST(req: Request) {
     }
 
     console.log('Only one selection recorded so far')
-    // Doar un jucator a selectat pana acum
+    // Only one player has selected so far
     return NextResponse.json({
       status: 'pending',
       message: 'Waiting for other player\'s selection'
     })
 
   } catch (error) {
-    // Gestioneaza si logheaza erorile
-    console.error('Error in select winner:', error)
+    // Handle and log errors
+    console.error('Error in winner selection:', error)
     return NextResponse.json(
       { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }

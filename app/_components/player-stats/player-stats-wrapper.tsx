@@ -1,17 +1,17 @@
-// Importuri pentru actiuni si componenta de afisare a statisticilor
+// Imports for actions and statistics display component
 import { getPlayerStats } from "./actions"
 import { PlayerStatsCard } from "./player-stats-card"
 
-// Interfata pentru proprietatile componentei
+// Interface for component properties
 interface PlayerStatsWrapperProps {
-  userId: string           // ID-ul utilizatorului pentru care se afiseaza statisticile
-  variant?: "compact" | "full"  // Varianta de afisare: compacta sau completa
+  userId: string           // User ID for which to display statistics
+  variant?: "compact" | "full"  // Display variant: compact or full
 }
 
-// Componenta server pentru incarcarea si afisarea statisticilor jucatorului
+// Server component for loading and displaying player statistics
 export async function PlayerStatsWrapper({ userId, variant }: PlayerStatsWrapperProps) {
-  // Obtine statisticile jucatorului folosind server action
+  // Get player statistics using server action
   const stats = await getPlayerStats(userId)
-  // Randeaza componenta de afisare cu statisticile obtinute
+  // Render display component with obtained statistics
   return <PlayerStatsCard stats={stats} variant={variant} />
 } 

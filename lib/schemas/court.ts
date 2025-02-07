@@ -1,50 +1,50 @@
-// Import pentru biblioteca Zod folosita pentru validarea datelor
+// Import for Zod library used for data validation
 import { z } from 'zod'
 
-// Scheme pentru enumerari
-// Tipurile de suprafete disponibile pentru terenuri
+// Schemas for enums
+// Available surface types for courts
 export const SurfaceTypeSchema = z.enum(['clay', 'hard', 'grass', 'artificial'])
-// Statusurile posibile pentru o rezervare
+// Possible statuses for a booking
 export const BookingStatusSchema = z.enum(['pending', 'confirmed', 'cancelled'])
-// Statusurile posibile pentru o plata
+// Possible statuses for a payment
 export const PaymentStatusSchema = z.enum(['pending', 'completed', 'failed', 'refunded'])
 
-// Schema pentru datele unui teren de tenis
+// Schema for tennis court data
 export const CourtSchema = z.object({
-  id: z.string().uuid(),                    // ID-ul unic al terenului
-  name: z.string().min(1),                  // Numele terenului (minim 1 caracter)
-  surface: SurfaceTypeSchema,               // Tipul suprafetei
-  is_indoor: z.boolean(),                   // Daca este teren acoperit
-  hourly_rate: z.number().positive(),       // Tariful pe ora
-  image_url: z.string().url().nullable(),   // URL-ul imaginii (optional)
-  is_active: z.boolean(),                   // Daca terenul este activ
-  created_at: z.string().datetime(),        // Data crearii
-  updated_at: z.string().datetime(),        // Data ultimei actualizari
+  id: z.string().uuid(),                    // Unique court ID
+  name: z.string().min(1),                  // Court name (minimum 1 character)
+  surface: SurfaceTypeSchema,               // Surface type
+  is_indoor: z.boolean(),                   // Whether it's an indoor court
+  hourly_rate: z.number().positive(),       // Hourly rate
+  image_url: z.string().url().nullable(),   // Image URL (optional)
+  is_active: z.boolean(),                   // Whether the court is active
+  created_at: z.string().datetime(),        // Creation date
+  updated_at: z.string().datetime(),        // Last update date
 })
 
-// Schema pentru o rezervare de teren
+// Schema for a court booking
 export const CourtBookingSchema = z.object({
-  id: z.string().uuid(),                    // ID-ul unic al rezervarii
-  court_id: z.string().uuid(),              // ID-ul terenului rezervat
-  user_id: z.string().uuid(),               // ID-ul utilizatorului care a facut rezervarea
-  start_time: z.string().datetime(),        // Data si ora de inceput
-  end_time: z.string().datetime(),          // Data si ora de sfarsit
-  players_count: z.number().int().min(1).max(4), // Numarul de jucatori (1-4)
-  status: BookingStatusSchema,              // Statusul rezervarii
-  payment_status: PaymentStatusSchema,      // Statusul platii
-  amount: z.number().positive(),            // Suma de plata
-  created_at: z.string().datetime(),        // Data crearii
-  updated_at: z.string().datetime(),        // Data ultimei actualizari
+  id: z.string().uuid(),                    // Unique booking ID
+  court_id: z.string().uuid(),              // Court ID being booked
+  user_id: z.string().uuid(),               // User ID who made the booking
+  start_time: z.string().datetime(),        // Start date and time
+  end_time: z.string().datetime(),          // End date and time
+  players_count: z.number().int().min(1).max(4), // Number of players (1-4)
+  status: BookingStatusSchema,              // Booking status
+  payment_status: PaymentStatusSchema,      // Payment status
+  amount: z.number().positive(),            // Payment amount
+  created_at: z.string().datetime(),        // Creation date
+  updated_at: z.string().datetime(),        // Last update date
 })
 
-// Schema pentru crearea unei noi rezervari
+// Schema for creating a new booking
 export const CreateBookingSchema = z.object({
-  courtId: z.string().uuid(),               // ID-ul terenului de rezervat
-  startTime: z.string().datetime(),         // Data si ora de inceput dorita
-  endTime: z.string().datetime(),           // Data si ora de sfarsit dorita
-  players: z.number().int().min(1).max(4),  // Numarul de jucatori (1-4)
+  courtId: z.string().uuid(),               // Court ID to book
+  startTime: z.string().datetime(),         // Desired start date and time
+  endTime: z.string().datetime(),           // Desired end date and time
+  players: z.number().int().min(1).max(4),  // Number of players (1-4)
 }).refine(
-  // Validare: ora de sfarsit trebuie sa fie dupa ora de inceput
+  // Validation: end time must be after start time
   (data) => {
     const start = new Date(data.startTime);
     const end = new Date(data.endTime);
@@ -55,7 +55,7 @@ export const CreateBookingSchema = z.object({
     path: ["endTime"],
   }
 ).refine(
-  // Validare: durata rezervarii nu poate depasi 2 ore
+  // Validation: booking duration cannot exceed 2 hours
   (data) => {
     const start = new Date(data.startTime);
     const end = new Date(data.endTime);
@@ -68,7 +68,7 @@ export const CreateBookingSchema = z.object({
   }
 );
 
-// Tipuri TypeScript derivate din scheme
+// TypeScript types derived from schemas
 export type Court = z.infer<typeof CourtSchema>
 export type CourtBooking = z.infer<typeof CourtBookingSchema>
 export type CreateBooking = z.infer<typeof CreateBookingSchema>

@@ -1,19 +1,14 @@
-// Importuri necesare pentru generarea sitemap-ului si conexiunea cu Supabase
 import { MetadataRoute } from 'next'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-// Interfata pentru datele despre terenuri
 interface Court {
   id: string
 }
 
-// Tipul pentru frecventa de actualizare a paginilor in sitemap
 type ChangeFrequency = 'daily' | 'weekly' | 'monthly' | 'yearly' | 'always' | 'hourly' | 'never'
 
-// Functia principala pentru generarea sitemap-ului
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Initializam clientul Supabase pentru server
   const cookieStore = await cookies()
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,25 +19,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           return cookieStore.get(name)?.value
         },
         set(name: string, value: string, options: any) {
-          // Aceasta este o componenta server, nu trebuie sa setam cookie-uri
         },
         remove(name: string, options: any) {
-          // Aceasta este o componenta server, nu trebuie sa stergem cookie-uri
         },
       },
     }
   )
   
-  // Preluam toate terenurile active din baza de date
   const { data: courts } = await supabase
     .from('courts')
     .select('id')
     .eq('is_active', true)
 
-  // URL-ul de baza al aplicatiei
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://sunlighttennis.ro'
 
-  // Rutele statice ale aplicatiei cu prioritatile si frecventele lor de actualizare
   const routes = [
     {
       url: baseUrl,
@@ -64,7 +54,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]
 
-  // Generam rutele dinamice pentru fiecare teren
   const courtRoutes = courts?.map((court: Court) => ({
     url: `${baseUrl}/courts/${court.id}`,
     lastModified: new Date(),
@@ -72,6 +61,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   })) ?? []
 
-  // Combinam si returnam toate rutele
   return [...routes, ...courtRoutes]
 } 

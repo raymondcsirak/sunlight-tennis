@@ -1,30 +1,30 @@
-// Tipul pentru raspunsul primit de la API-ul OpenWeather
+// Type for OpenWeather API response
 type WeatherResponse = {
   list: Array<{
-    dt: number                // Timestamp Unix pentru prognoza
+    dt: number         
     main: {
-      temp: number           // Temperatura in grade Celsius
+      temp: number       
     }
     weather: Array<{
-      main: string          // Conditia meteo principala
-      icon: string          // Codul pentru iconita vremii
+      main: string       
+      icon: string       
     }>
   }>
 }
 
-// Tipul pentru prognoza meteo formatata pentru aplicatia noastra
+// Type for weather forecast formatted for our application
 export type WeatherForecast = {
-  temperature: number        // Temperatura rotunjita
-  condition: string         // Conditia meteo (ex: 'Rain', 'Clear', etc.)
-  icon: string             // Codul iconitei pentru afisare
-  timestamp: string        // Data si ora prognozei
-  message?: string         // Mesaj optional pentru cazuri speciale
+  temperature: number
+  condition: string
+  icon: string       
+  timestamp: string  
+  message?: string   
 }
 
-// Functie pentru obtinerea prognozei meteo pentru o data si ora specifice
+// Function to get weather forecast for a specific date and time
 export async function fetchWeatherForecast(date: string, time: string): Promise<WeatherForecast | null> {
   try {
-    // Verificam daca data selectata este peste 5 zile (limita API-ului gratuit)
+    // Check if selected date is beyond 5 days (free API limit)
     const selectedDate = new Date(`${date}T${time}:00`)
     const fiveDaysFromNow = new Date()
     fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5)
@@ -39,7 +39,7 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
       }
     }
 
-    // Coordonatele pentru Satu Mare
+    // Coordinates for Satu Mare
     const lat = 47.75
     const lon = 23
     const API_KEY = process.env.OPENWEATHER_API_KEY
@@ -51,17 +51,17 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
 
     console.log('Weather fetch started:', { date, time, hasApiKey: !!API_KEY })
 
-    // Verificam daca avem cheia API configurata
+    // Check if API key is configured
     if (!API_KEY) {
       console.error('OpenWeather API key not found')
       return null
     }
 
-    // Construim URL-ul pentru cererea API
+    // Build API request URL
     const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${API_KEY}`
     console.log('Fetching from URL:', url.replace(API_KEY, 'API_KEY_HIDDEN'))
 
-    // Facem cererea catre API
+    // Make API request
     const response = await fetch(url, {
       method: 'GET',
       headers: {
@@ -70,28 +70,28 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
     })
     console.log('API Response status:', response.status, response.statusText)
 
-    // Verificam daca cererea a fost cu succes
+    // Check if request was successful
     if (!response.ok) {
       const errorText = await response.text()
       console.error('Weather API error response:', errorText)
       throw new Error(`Weather API request failed: ${response.status}`)
     }
 
-    // Parsam raspunsul JSON
+    // Parse JSON response
     const data = await response.json() as WeatherResponse
     console.log('API Response data:', data)
     
-    // Validam structura datelor primite
+    // Validate received data structure
     if (!data.list || !Array.isArray(data.list) || data.list.length === 0) {
       console.error('Invalid data format received:', data)
       return null
     }
 
-    // Cautam prognoza cea mai apropiata de data si ora selectate
+    // Find forecast closest to selected date and time
     const targetTime = new Date(`${date}T${time}:00`)
     console.log('Looking for forecast closest to:', targetTime.toISOString())
 
-    // Filtram prognozele doar pentru data selectata
+    // Filter forecasts for selected date only
     const selectedDateForecasts = data.list.filter(forecast => {
       const forecastDate = new Date(forecast.dt * 1000)
       return forecastDate.toDateString() === targetTime.toDateString()
@@ -102,7 +102,7 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
       return null
     }
 
-    // Gasim prognoza cea mai apropiata de ora dorita
+    // Find forecast closest to desired time
     const closestForecast = selectedDateForecasts.reduce((prev, curr) => {
       const prevTime = new Date(prev.dt * 1000)
       const currTime = new Date(curr.dt * 1000)
@@ -113,7 +113,7 @@ export async function fetchWeatherForecast(date: string, time: string): Promise<
 
     console.log('Selected forecast:', closestForecast)
 
-    // Formatam rezultatul pentru aplicatia noastra
+    // Format result for our application
     const result = {
       temperature: Math.round(closestForecast.main.temp),
       condition: closestForecast.weather[0].main,

@@ -1,6 +1,6 @@
 import Image from "next/image"
 
-// Array cu datele antrenorilor
+// Array with coaches data
 const coaches = [
   {
     name: "Zsolt",
@@ -22,14 +22,14 @@ const coaches = [
   }
 ]
 
-// Componenta pentru sectiunea de antrenori din pagina de landing
+// Component for coaches section of the landing page
 export function CoachesSection() {
   return (
-    // Container principal cu fundal semi-transparent
+    // Main container with semi-transparent background
     <div className="py-24 bg-muted/30">
-      {/* Container pentru continut cu margini responsive */}
+      {/* Content container with responsive margins */}
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Sectiunea de titlu si descriere centrată */}
+        {/* Centered title and description section */}
         <div className="max-w-3xl mx-auto text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">
             Dezvoltă-ți abilitățile cu echipa academiei
@@ -39,23 +39,23 @@ export function CoachesSection() {
           </p>
         </div>
 
-        {/* Grid pentru cardurile antrenorilor */}
+        {/* Grid for coach cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Iterare prin array-ul de antrenori pentru afisare */}
+          {/* Iterate through coaches array for display */}
           {coaches.map((coach) => (
             <div key={coach.name} className="group relative">
-              {/* Container pentru imagine cu aspect ratio 3:4 */}
+              {/* Image container with 3:4 aspect ratio */}
               <div className="relative aspect-[3/4] w-full overflow-hidden rounded-lg">
-                {/* Imaginea antrenorului cu efect de hover */}
+                {/* Coach image with hover effect */}
                 <Image
                   src={coach.image}
                   alt={coach.name}
                   fill
                   className="object-cover transition duration-300 group-hover:scale-105"
                 />
-                {/* Gradient pentru lizibilitatea textului */}
+                {/* Gradient for text readability */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                {/* Informatii despre antrenor pozitionate peste imagine */}
+                {/* Coach information positioned over image */}
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <h3 className="text-xl font-semibold text-white mb-1">
                     {coach.name}

@@ -1,8 +1,8 @@
-// Import pentru raspunsuri HTTP in Next.js
+// Import for HTTP responses in Next.js
 import { NextResponse } from 'next/server'
 
-// Endpoint pentru verificarea starii aplicatiei
-// GET /api/health - Returneaza status 'ok' daca aplicatia functioneaza
+// Endpoint for checking application status
+// GET /api/health - Returns 'ok' status if the application is running
 export async function GET() {
   return NextResponse.json({ status: 'ok' })
 } 

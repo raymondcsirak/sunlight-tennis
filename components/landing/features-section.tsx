@@ -1,7 +1,7 @@
-// Importuri pentru iconitele folosite in sectiunea de caracteristici
+// Imports for icons used in features section
 import { CalendarDays, Users, Trophy, Clock } from "lucide-react"
 
-// Array cu datele caracteristicilor principale ale platformei
+// Array with main platform features data
 const features = [
   {
     name: "Rezervare Simplă",
@@ -29,14 +29,14 @@ const features = [
   },
 ]
 
-// Componenta pentru sectiunea de caracteristici din pagina de landing
+// Component for features section of the landing page
 export function FeaturesSection() {
   return (
-    // Container principal cu padding si fundal
+    // Main container with padding and background
     <div className="py-24 bg-background">
-      {/* Container pentru continut cu latimea maxima limitata */}
+      {/* Content container with limited maximum width */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Sectiunea de titlu si descriere centrată */}
+        {/* Centered title and description section */}
         <div className="text-center">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Tot ce ai nevoie pentru a te bucura de tenis
@@ -46,23 +46,23 @@ export function FeaturesSection() {
           </p>
         </div>
 
-        {/* Grid pentru afisarea caracteristicilor */}
+        {/* Grid for displaying features */}
         <div className="mt-20">
           <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Iterare prin array-ul de caracteristici pentru afisare */}
+            {/* Iterate through features array for display */}
             {features.map((feature) => (
               <div key={feature.name} className="relative">
-                {/* Container pentru fiecare caracteristica cu iconita si text */}
+                {/* Container for each feature with icon and text */}
                 <div className="flex flex-col items-center">
-                  {/* Iconita caracteristicii cu fundal si culoare personalizata */}
+                  {/* Feature icon with custom background and color */}
                   <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
                     <feature.icon className="h-8 w-8" aria-hidden="true" />
                   </div>
-                  {/* Titlul caracteristicii */}
+                  {/* Feature title */}
                   <h3 className="mt-6 text-xl font-semibold text-foreground">
                     {feature.name}
                   </h3>
-                  {/* Descrierea caracteristicii */}
+                  {/* Feature description */}
                   <p className="mt-2 text-center text-muted-foreground">
                     {feature.description}
                   </p>
